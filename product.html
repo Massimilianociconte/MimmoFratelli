@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prodotto | Avenue Gallarate</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav style="color: var(--text-color); mix-blend-mode: normal;">
+        <div class="logo"><a href="index.html">Avenue.</a></div>
+        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collection.html?gender=man">Uomo</a></li>
+            <li><a href="collection.html?gender=woman">Donna</a></li>
+            <li><a href="contacts.html">Contatti</a></li>
+        </ul>
+    </div>
+
+    <div class="product-container">
+        <!-- Thumbnails Column -->
+        <div class="thumbs-col" id="thumbsCol">
+            <!-- Injected by JS -->
+        </div>
+
+        <!-- Main Image Column -->
+        <div class="main-image-col">
+            <img id="mainImage" src="" alt="Product Image" class="main-image">
+        </div>
+
+        <!-- Info Column -->
+        <div class="product-details-col">
+            <div class="pd-brand">Avenue Collection</div>
+            <h1 class="pd-title" id="pdTitle">Nome Prodotto</h1>
+            <div class="pd-price" id="pdPrice">€ 000</div>
+            <div class="pd-description" id="pdDesc">
+                Un capo essenziale per il guardaroba moderno. Realizzato con materiali di prima qualità, questo design
+                unisce estetica contemporanea e comfort senza tempo. Perfetto per ogni occasione, dal giorno alla sera.
+            </div>
+            <button class="add-to-cart-btn">Aggiungi al Carrello</button>
+        </div>
+    </div>
+
+    <script>
+        // --- MENU TOGGLE ---
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuBtn = document.querySelector('.menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuBtn.textContent = 'Close';
+                menuBtn.style.color = 'white';
+            } else {
+                menuOverlay.classList.remove('active');
+                menuBtn.textContent = 'Menu';
+                menuBtn.style.color = '';
+            }
+        }
+
+        // --- PRODUCT DATA & LOGIC ---
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const gender = params.get('gender') || 'woman';
+
+        // Mock Data (Same as collection)
+        const products = [
+            {
+                id: 1,
+                name: gender === 'man' ? "Trench Oversize" : "Abito Seta",
+                price: "€ 450",
+                img: gender === 'man' ? "Images/Men/prod_man1/A (front).png" : "Images/Women/prod_woman1/A (front).png"
+            },
+            {
+                id: 2,
+                name: gender === 'man' ? "Giacca Pelle" : "Blazer Strutturato",
+                price: "€ 890",
+                img: gender === 'man' ? "Images/Men/prod_man2/A (front).png" : "Images/Women/prod_woman2/A (front).png"
+            },
+            {
+                id: 3,
+                name: gender === 'man' ? "Pantaloni Lana" : "Pantaloni Lino",
+                price: "€ 220",
+                img: gender === 'man' ? "Images/Men/prod_man3/A (front).png" : "Images/Women/prod_woman3/A (front).png"
+            }
+        ];
+
+        const product = products.find(p => p.id == id) || products[0];
+
+        // Populate Info
+        document.getElementById('pdTitle').textContent = product.name;
+        document.getElementById('pdPrice').textContent = product.price;
+
+        // Generate Thumbs (Using A, B, C naming convention in subfolders)
+        // product.img is like "Images/Men/prod_man1/A (front).png"
+
+        // Extract base folder path
+        const lastSlashIndex = product.img.lastIndexOf('/');
+        const folderPath = product.img.substring(0, lastSlashIndex + 1); // "Images/Men/prod_man1/"
+
+        const thumbs = [
+            `${folderPath}A (front).png`,
+            `${folderPath}B (detail).png`,
+            `${folderPath}C (lifestyle).png`
+        ];
+
+        const thumbsCol = document.getElementById('thumbsCol');
+
+        // Set main image to 'a' variant by default
+        document.getElementById('mainImage').src = thumbs[0];
+        document.getElementById('mainImage').onerror = function () { this.src = 'https://via.placeholder.com/800x1200?text=Image+Not+Found'; };
+
+        thumbs.forEach((src, index) => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = `thumb ${index === 0 ? 'active' : ''}`;
+            img.onerror = function () {
+                this.style.display = 'none'; // Hide missing thumbnails
+            };
+            img.onclick = () => {
+                document.getElementById('mainImage').src = src;
+                document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+                img.classList.add('active');
+            };
+            thumbsCol.appendChild(img);
+        });
+
+    </script>
+</body>
+
+</html>

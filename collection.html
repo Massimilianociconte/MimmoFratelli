@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collezione | Avenue Gallarate</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="collection-page">
+
+    <!-- Navigation -->
+    <nav style="color: var(--text-color); mix-blend-mode: normal;">
+        <div class="logo"><a href="index.html">Avenue.</a></div>
+        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collection.html?gender=man">Uomo</a></li>
+            <li><a href="collection.html?gender=woman">Donna</a></li>
+            <li><a href="contacts.html">Contatti</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Section with Parallax -->
+    <div class="collection-hero">
+        <div class="hero-content">
+            <div class="hero-label">Nuova Collezione</div>
+            <h1 class="hero-title" id="pageTitle">Collezione</h1>
+            <div class="hero-scroll-indicator">
+                <span>Scorri</span>
+                <div class="scroll-line"></div>
+            </div>
+        </div>
+        <div class="hero-bg-pattern"></div>
+    </div>
+
+    <!-- Favorites Section -->
+    <div class="favorites-section" id="favoritesSection" style="display: none;">
+        <div class="favorites-header">
+            <h2 class="favorites-title">I Tuoi Preferiti</h2>
+            <button class="clear-favorites-btn" onclick="clearAllFavorites()">Cancella Tutti</button>
+        </div>
+        <div class="favorites-grid" id="favoritesGrid">
+            <!-- Favorite products will be injected here -->
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">Tutti</button>
+            <button class="filter-btn" data-filter="new">Nuovi Arrivi</button>
+            <button class="filter-btn" data-filter="sale">In Saldo</button>
+            <button class="filter-btn favorites-filter" data-filter="favorites" id="favoritesBtn">
+                Preferiti <span class="favorites-count" id="favoritesCount">0</span>
+            </button>
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="grid">⊞</button>
+            <button class="view-btn" data-view="list">☰</button>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <section class="collection-grid-modern" id="productGrid">
+        <!-- Products will be injected here by JS -->
+    </section>
+
+    <!-- Floating Quick View -->
+    <div class="quick-view-overlay" id="quickView">
+        <div class="quick-view-content">
+            <button class="quick-view-close" onclick="closeQuickView()">✕</button>
+            <div class="quick-view-body">
+                <div class="quick-view-image">
+                    <img id="quickViewImg" src="" alt="">
+                </div>
+                <div class="quick-view-info">
+                    <h2 id="quickViewName"></h2>
+                    <p class="quick-view-price" id="quickViewPrice"></p>
+                    <p class="quick-view-desc">Capo di alta qualità realizzato con materiali pregiati. Perfetto per ogni occasione.</p>
+                    <button class="quick-view-cta" onclick="goToProduct()">Vedi Dettagli</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MENU TOGGLE ---
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuBtn = document.querySelector('.menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuBtn.textContent = 'Close';
+                menuBtn.style.color = 'white';
+            } else {
+                menuOverlay.classList.remove('active');
+                menuBtn.textContent = 'Menu';
+                menuBtn.style.color = '';
+            }
+        }
+
+        // --- DYNAMIC CONTENT ---
+        const params = new URLSearchParams(window.location.search);
+        const gender = params.get('gender') || 'woman';
+
+        document.getElementById('pageTitle').textContent = gender === 'man' ? 'Uomo' : 'Donna';
+
+        // Mock Data using generated images
+        const products = [
+            {
+                id: 1,
+                name: gender === 'man' ? "Trench Oversize" : "Abito Seta",
+                price: "€ 450",
+                img: gender === 'man' ? "Images/Men/prod_man1/A (front).png" : "Images/Women/prod_woman1/A (front).png"
+            },
+            {
+                id: 2,
+                name: gender === 'man' ? "Giacca Pelle" : "Blazer Strutturato",
+                price: "€ 890",
+                img: gender === 'man' ? "Images/Men/prod_man2/A (front).png" : "Images/Women/prod_woman2/A (front).png"
+            },
+            {
+                id: 3,
+                name: gender === 'man' ? "Pantaloni Lana" : "Pantaloni Lino",
+                price: "€ 220",
+                img: gender === 'man' ? "Images/Men/prod_man3/A (front).png" : "Images/Women/prod_woman3/A (front).png"
+            }
+        ];
+
+        const grid = document.getElementById('productGrid');
+        let currentQuickViewProduct = null;
+
+        // --- FAVORITES SYSTEM ---
+        const FAVORITES_KEY = `avenue_favorites_${gender}`;
+        
+        function getFavorites() {
+            const stored = localStorage.getItem(FAVORITES_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveFavorites(favorites) {
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+            updateFavoritesCount();
+            updateFavoritesSection();
+        }
+
+        function toggleFavorite(productId) {
+            let favorites = getFavorites();
+            const index = favorites.indexOf(productId);
+            
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(productId);
+            }
+            
+            saveFavorites(favorites);
+            return favorites.includes(productId);
+        }
+
+        function isFavorite(productId) {
+            return getFavorites().includes(productId);
+        }
+
+        function updateFavoritesCount() {
+            const count = getFavorites().length;
+            const countEl = document.getElementById('favoritesCount');
+            countEl.textContent = count;
+            countEl.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        function updateFavoritesSection() {
+            const favorites = getFavorites();
+            const favSection = document.getElementById('favoritesSection');
+            const favGrid = document.getElementById('favoritesGrid');
+            
+            if (favorites.length === 0) {
+                favSection.style.display = 'none';
+                return;
+            }
+
+            favSection.style.display = 'block';
+            favGrid.innerHTML = '';
+
+            favorites.forEach(favId => {
+                const product = products.find(p => p.id === favId);
+                if (!product) return;
+
+                const favCard = document.createElement('div');
+                favCard.className = 'favorite-card';
+                favCard.onclick = () => goToProductPage(product.id);
+                
+                favCard.innerHTML = `
+                    <div class="favorite-card-image">
+                        <img src="${product.img}" alt="${product.name}">
+                    </div>
+                    <div class="favorite-card-info">
+                        <h4>${product.name}</h4>
+                        <p>${product.price}</p>
+                    </div>
+                    <button class="favorite-card-remove" onclick="event.stopPropagation(); removeFavorite(${product.id})">✕</button>
+                `;
+                
+                favGrid.appendChild(favCard);
+            });
+        }
+
+        function removeFavorite(productId) {
+            toggleFavorite(productId);
+            
+            // Update the heart icon in the main grid
+            const cards = document.querySelectorAll('.product-card-modern');
+            cards.forEach(card => {
+                const btn = card.querySelector('.card-favorite');
+                if (btn && btn.dataset.productId == productId) {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '<span class="heart-icon">♡</span>';
+                }
+            });
+        }
+
+        function clearAllFavorites() {
+            if (confirm('Vuoi rimuovere tutti i preferiti?')) {
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify([]));
+                updateFavoritesCount();
+                updateFavoritesSection();
+                
+                // Reset all heart icons
+                document.querySelectorAll('.card-favorite').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '<span class="heart-icon">♡</span>';
+                });
+            }
+        }
+
+        // Initialize favorites
+        updateFavoritesCount();
+        updateFavoritesSection();
+
+        products.forEach((product, index) => {
+            const card = document.createElement('div');
+            card.className = 'product-card-modern';
+            card.style.animationDelay = `${index * 0.1}s`;
+
+            // Calculate variant paths
+            const lastSlashIndex = product.img.lastIndexOf('/');
+            const folderPath = product.img.substring(0, lastSlashIndex + 1);
+            const images = [
+                `${folderPath}A (front).png`,
+                `${folderPath}B (detail).png`,
+                `${folderPath}C (lifestyle).png`
+            ];
+
+            card.innerHTML = `
+                <div class="card-image-wrapper">
+                    <div class="carousel-container" id="carousel-${product.id}">
+                        ${images.map((img, idx) => `
+                            <img src="${img}" class="carousel-img ${idx === 0 ? 'active' : ''}" data-index="${idx}" onerror="this.style.display='none'">
+                        `).join('')}
+                    </div>
+                    <div class="card-overlay">
+                        <button class="quick-view-btn" onclick="openQuickView(${product.id}, event)">
+                            <span>Vista Rapida</span>
+                        </button>
+                    </div>
+                    <div class="carousel-dots">
+                        ${images.map((_, idx) => `<span class="dot ${idx === 0 ? 'active' : ''}" onclick="goToImage(event, ${product.id}, ${idx})"></span>`).join('')}
+                    </div>
+                </div>
+                <div class="card-info">
+                    <div class="card-header">
+                        <h3 class="card-name">${product.name}</h3>
+                        <button class="card-favorite ${isFavorite(product.id) ? 'active' : ''}" data-product-id="${product.id}">
+                            <span class="heart-icon">${isFavorite(product.id) ? '♥' : '♡'}</span>
+                            <span class="heart-particles">
+                                <span class="particle"></span>
+                                <span class="particle"></span>
+                                <span class="particle"></span>
+                                <span class="particle"></span>
+                                <span class="particle"></span>
+                            </span>
+                        </button>
+                    </div>
+                    <p class="card-price">${product.price}</p>
+                    <button class="card-cta" onclick="goToProductPage(${product.id})">Scopri</button>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+
+            // Auto-rotate images on hover
+            let hoverInterval;
+            const cardWrapper = card.querySelector('.card-image-wrapper');
+            cardWrapper.addEventListener('mouseenter', () => {
+                hoverInterval = setInterval(() => {
+                    nextImage(null, product.id);
+                }, 1500);
+            });
+            cardWrapper.addEventListener('mouseleave', () => {
+                clearInterval(hoverInterval);
+            });
+        });
+
+        // --- CAROUSEL FUNCTIONS ---
+        function nextImage(event, productId) {
+            if (event) event.stopPropagation();
+            const container = document.getElementById(`carousel-${productId}`);
+            const images = container.querySelectorAll('.carousel-img');
+            const dots = container.parentElement.querySelectorAll('.dot');
+            let activeIndex = 0;
+
+            images.forEach((img, index) => {
+                if (img.classList.contains('active')) {
+                    activeIndex = index;
+                    img.classList.remove('active');
+                }
+            });
+
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            let nextIndex = (activeIndex + 1) % images.length;
+            images[nextIndex].classList.add('active');
+            if (dots[nextIndex]) dots[nextIndex].classList.add('active');
+        }
+
+        function goToImage(event, productId, index) {
+            event.stopPropagation();
+            const container = document.getElementById(`carousel-${productId}`);
+            const images = container.querySelectorAll('.carousel-img');
+            const dots = container.parentElement.querySelectorAll('.dot');
+
+            images.forEach(img => img.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            images[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+
+        function goToProductPage(productId) {
+            window.location.href = `product.html?id=${productId}&gender=${gender}`;
+        }
+
+        // --- QUICK VIEW ---
+        function openQuickView(productId, event) {
+            event.stopPropagation();
+            const product = products.find(p => p.id === productId);
+            currentQuickViewProduct = product;
+            
+            document.getElementById('quickViewImg').src = product.img;
+            document.getElementById('quickViewName').textContent = product.name;
+            document.getElementById('quickViewPrice').textContent = product.price;
+            document.getElementById('quickView').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeQuickView() {
+            document.getElementById('quickView').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function goToProduct() {
+            if (currentQuickViewProduct) {
+                window.location.href = `product.html?id=${currentQuickViewProduct.id}&gender=${gender}`;
+            }
+        }
+
+        // --- FILTER & VIEW TOGGLE ---
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const view = btn.dataset.view;
+                grid.className = view === 'list' ? 'collection-grid-modern list-view' : 'collection-grid-modern';
+            });
+        });
+
+        // --- PARALLAX SCROLL ---
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.collection-hero');
+            if (hero) {
+                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+                hero.style.opacity = 1 - scrolled / 600;
+            }
+        });
+
+        // --- FAVORITE TOGGLE ---
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.card-favorite');
+            if (btn) {
+                e.stopPropagation();
+                const productId = parseInt(btn.dataset.productId);
+                const isFav = toggleFavorite(productId);
+                
+                btn.classList.toggle('active', isFav);
+                const heartIcon = btn.querySelector('.heart-icon');
+                heartIcon.textContent = isFav ? '♥' : '♡';
+                
+                // Trigger animation
+                if (isFav) {
+                    btn.classList.add('animating');
+                    setTimeout(() => btn.classList.remove('animating'), 600);
+                }
+            }
+        });
+
+        // --- FAVORITES FILTER ---
+        document.getElementById('favoritesBtn').addEventListener('click', () => {
+            const favSection = document.getElementById('favoritesSection');
+            const isVisible = favSection.style.display !== 'none';
+            favSection.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                favSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+    </script>
+</body>
+
+</html>

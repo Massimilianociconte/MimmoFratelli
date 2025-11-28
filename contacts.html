@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contatti | Avenue Gallarate</title>
+    <meta name="description"
+        content="Contatta Avenue Gallarate. Vieni a trovarci in boutique o scrivici per maggiori informazioni.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="contacts-nav">
+        <a href="index.html" class="logo">Avenue.</a>
+        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collection.html?gender=man">Uomo</a></li>
+            <li><a href="collection.html?gender=woman">Donna</a></li>
+            <li><a href="contacts.html">Contatti</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="contacts-hero-section">
+        <div class="contacts-hero-content">
+            <h1 class="contacts-hero-title">Contatti</h1>
+            <p class="contacts-hero-text">Un'esperienza di shopping esclusiva ti aspetta nel cuore di Gallarate</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="contacts-main-wrapper">
+        
+        <!-- Contact Cards -->
+        <div class="contact-cards">
+            <div class="contact-card">
+                <div class="card-icon-wrapper">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
+                <h3>La Nostra Boutique</h3>
+                <p class="card-text">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Via+Giuseppe+Mazzini+20+Gallarate"
+                        target="_blank">
+                        Via Giuseppe Mazzini, 20<br>
+                        21013 Gallarate (VA)<br>
+                        Italia
+                    </a>
+                </p>
+                <a href="https://www.google.com/maps/search/?api=1&query=Via+Giuseppe+Mazzini+20+Gallarate"
+                    target="_blank" class="card-link">Ottieni Indicazioni →</a>
+            </div>
+
+            <div class="contact-card">
+                <div class="card-icon-wrapper">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                </div>
+                <h3>Chiamaci</h3>
+                <p class="card-text">
+                    <a href="tel:+390331152 7237">+39 0331 1527237</a>
+                </p>
+                <p class="card-note">Lun-Sab: 09:30 - 19:30</p>
+                <a href="tel:+390331152 7237" class="card-link">Chiama Ora →</a>
+            </div>
+
+            <div class="contact-card">
+                <div class="card-icon-wrapper">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <h3>Scrivici</h3>
+                <p class="card-text">
+                    <a href="mailto:info@avenuegallarate.it">info@avenuegallarate.it</a>
+                </p>
+                <p class="card-note">Risposta entro 24h</p>
+                <a href="mailto:info@avenuegallarate.it" class="card-link">Invia Email →</a>
+            </div>
+        </div>
+
+        <!-- Hours Section -->
+        <div class="hours-section">
+            <h2 class="section-title">Orari di Apertura</h2>
+            <div class="hours-grid">
+                <div class="hour-row">
+                    <span class="day-name">Lunedì</span>
+                    <span class="day-hours">15:00 - 19:30</span>
+                </div>
+                <div class="hour-row">
+                    <span class="day-name">Martedì</span>
+                    <span class="day-hours">09:30 - 12:30 / 15:00 - 19:30</span>
+                </div>
+                <div class="hour-row">
+                    <span class="day-name">Mercoledì</span>
+                    <span class="day-hours">09:30 - 12:30 / 15:00 - 19:30</span>
+                </div>
+                <div class="hour-row">
+                    <span class="day-name">Giovedì</span>
+                    <span class="day-hours">09:30 - 12:30 / 15:00 - 19:30</span>
+                </div>
+                <div class="hour-row">
+                    <span class="day-name">Venerdì</span>
+                    <span class="day-hours">09:30 - 12:30 / 15:00 - 19:30</span>
+                </div>
+                <div class="hour-row">
+                    <span class="day-name">Sabato</span>
+                    <span class="day-hours">09:30 - 12:30 / 15:00 - 19:30</span>
+                </div>
+                <div class="hour-row closed">
+                    <span class="day-name">Domenica</span>
+                    <span class="day-hours">Chiuso</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-section">
+            <div class="map-container">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2791.688863668854!2d8.79156731556134!3d45.65938897910386!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47868b6c0b0b0b0b%3A0x0!2sVia+Giuseppe+Mazzini%2C+20%2C+21013+Gallarate+VA!5e0!3m2!1sit!2sit!4v1620000000000!5m2!1sit!2sit"
+                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="contact-form-section">
+            <div class="form-wrapper">
+                <h2 class="section-title">Inviaci un Messaggio</h2>
+                <p class="form-description">Hai domande o richieste? Compila il form e ti risponderemo al più presto.</p>
+                
+                <form class="contact-form" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="name">
+                                <span class="label-icon">👤</span>
+                                Nome *
+                            </label>
+                            <input type="text" id="name" name="name" autocomplete="name" placeholder="Il tuo nome" required>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="form-field">
+                            <label for="email">
+                                <span class="label-icon">✉️</span>
+                                Email *
+                            </label>
+                            <input type="email" id="email" name="email" autocomplete="email" placeholder="tua@email.com" required>
+                            <span class="field-line"></span>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="phone">
+                            <span class="label-icon">📱</span>
+                            Telefono
+                        </label>
+                        <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+39 123 456 7890">
+                        <span class="field-line"></span>
+                    </div>
+                    <div class="form-field">
+                        <label for="subject">
+                            <span class="label-icon">📋</span>
+                            Oggetto *
+                        </label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Seleziona un'opzione</option>
+                            <option value="Informazioni Generali">Informazioni Generali</option>
+                            <option value="Prenotazione Appuntamento">Prenotazione Appuntamento</option>
+                            <option value="Domande sui Prodotti">Domande sui Prodotti</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                        <span class="field-line"></span>
+                    </div>
+                    <div class="form-field">
+                        <label for="message">
+                            <span class="label-icon">💬</span>
+                            Messaggio *
+                        </label>
+                        <textarea id="message" name="message" rows="5" placeholder="Scrivi qui il tuo messaggio..." required></textarea>
+                        <span class="field-line"></span>
+                    </div>
+                    <button type="submit" class="form-submit">
+                        <span class="btn-text">Invia Messaggio</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Avenue.</div>
+            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=woman">Donna</a>
+                <a href="collection.html?gender=man">Uomo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- MENU TOGGLE ---
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuBtn = document.querySelector('.menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuBtn.textContent = 'Close';
+            } else {
+                menuOverlay.classList.remove('active');
+                menuBtn.textContent = 'Menu';
+            }
+        }
+
+        // --- CONTACT FORM HANDLING ---
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Raccogli i dati del form
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value.trim();
+            
+            // Validazione base
+            if (!name || !email || !subject || !message) {
+                alert('Per favore compila tutti i campi obbligatori');
+                return;
+            }
+            
+            // Costruisci il corpo dell'email con encoding corretto
+            let emailBody = 'Nome: ' + name + '\n';
+            emailBody += 'Email: ' + email + '\n';
+            if (phone) {
+                emailBody += 'Telefono: ' + phone + '\n';
+            }
+            emailBody += '\n--- Messaggio ---\n\n';
+            emailBody += message;
+            
+            // Crea il link mailto con encoding URI
+            const mailtoLink = 'mailto:info@avenuegallarate.it' +
+                '?subject=' + encodeURIComponent(subject) +
+                '&body=' + encodeURIComponent(emailBody);
+            
+            // Animazione pulsante
+            const btn = this.querySelector('.form-submit');
+            const btnText = btn.querySelector('.btn-text');
+            const btnIcon = btn.querySelector('.btn-icon');
+            
+            btnText.textContent = 'Apertura email...';
+            btnIcon.textContent = '⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            
+            // Apri il client email
+            setTimeout(() => {
+                // Crea un link temporaneo e cliccalo
+                const tempLink = document.createElement('a');
+                tempLink.href = mailtoLink;
+                tempLink.style.display = 'none';
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                document.body.removeChild(tempLink);
+                
+                // Feedback visivo
+                btnText.textContent = '✓ Email aperta!';
+                btnIcon.textContent = '✓';
+                btn.style.background = '#4CAF50';
+                
+                // Reset dopo 3 secondi
+                setTimeout(() => {
+                    this.reset();
+                    btnText.textContent = 'Invia Messaggio';
+                    btnIcon.textContent = '→';
+                    btn.style.background = '';
+                    btn.style.opacity = '';
+                    btn.disabled = false;
+                    
+                    // Rimuovi classe focused da tutti i campi
+                    document.querySelectorAll('.form-field').forEach(field => {
+                        field.classList.remove('focused');
+                    });
+                }, 3000);
+            }, 500);
+        });
+
+        // --- FORM FIELD ANIMATIONS ---
+        document.querySelectorAll('.form-field input, .form-field select, .form-field textarea').forEach(field => {
+            field.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            field.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+            
+            // Check if field has value on load
+            if (field.value) {
+                field.parentElement.classList.add('focused');
+            }
+        });
+
+        // --- SCROLL ANIMATIONS ---
+        const observeElements = () => {
+            const elements = document.querySelectorAll('.contact-card, .hour-row, .form-field');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 100);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            elements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s cubic-bezier(0.77, 0, 0.175, 1)';
+                observer.observe(el);
+            });
+        };
+
+        // Initialize animations when page loads
+        window.addEventListener('load', observeElements);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avenue Gallarate | Fashion Store</title>
+    <meta name="description" content="Avenue Gallarate - Abbigliamento Uomo e Donna. Stile, eleganza e tendenza.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html" class="logo">Avenue.</a>
+        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collection.html?gender=man">Uomo</a></li>
+            <li><a href="collection.html?gender=woman">Donna</a></li>
+            <li><a href="contacts.html">Contatti</a></li>
+        </ul>
+    </div>
+
+    <!-- Split Hero Section -->
+    <div class="split-container">
+        <!-- Woman Side -->
+        <div class="split split-left" onclick="window.location.href='collection.html?gender=woman'">
+            <img src="../../.gemini/antigravity/brain/a7a5b3b7-ce6b-4a58-9505-3d22739b0191/hero_women_1763898835035.png"
+                alt="Woman Fashion" class="split-bg">
+            <div class="split-content">
+                <h2>Donna</h2>
+                <a href="collection.html?gender=woman" class="btn">Scopri Collezione</a>
+            </div>
+        </div>
+
+        <!-- Man Side -->
+        <div class="split split-right" onclick="window.location.href='collection.html?gender=man'">
+            <img src="../../.gemini/antigravity/brain/a7a5b3b7-ce6b-4a58-9505-3d22739b0191/hero_men_1763898818893.png"
+                alt="Man Fashion" class="split-bg">
+            <div class="split-content">
+                <h2>Uomo</h2>
+                <a href="collection.html?gender=man" class="btn">Scopri Collezione</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Avenue.</div>
+            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=woman">Donna</a>
+                <a href="collection.html?gender=man">Uomo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- MENU TOGGLE ---
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuBtn = document.querySelector('.menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuBtn.textContent = 'Close';
+            } else {
+                menuOverlay.classList.remove('active');
+                menuBtn.textContent = 'Menu';
+            }
+        }
+
+        // --- SMOOTH SCROLL REVEAL ---
+        const splitContents = document.querySelectorAll('.split-content');
+        splitContents.forEach((el, i) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            setTimeout(() => {
+                el.style.transition = 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 300 + (i * 200));
+        });
+    </script>
+</body>
+
+</html>

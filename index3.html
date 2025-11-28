@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muse Editorial Design | Template Fashion & Arte</title>
+    <meta name="description" content="Muse: un template editoriale sofisticato per moda e arte. Layout tipografico elegante e navigazione immersiva firmata WebNovis.">
+    <link rel="icon" type="image/png" sizes="32x32" href="../Img/favicon.png">
+    <link rel="shortcut icon" href="../Img/favicon.png">
+    
+    <!-- Fonts: Cormorant (Serif elegante) e Montserrat (Sans moderno) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- VARIABILI & RESET --- */
+        :root {
+            --bg-color: #f3f0eb; /* Beige Crema */
+            --text-color: #1a1a1a; /* Nero morbido */
+            --accent-color: #a83f39; /* Rosso mattone */
+            --line-color: #dcd8d0;
+            
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Montserrat', sans-serif;
+            
+            --easing: cubic-bezier(0.77, 0, 0.175, 1); /* Movimento elegante */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            opacity: 0;
+            animation: pageLoad 1s ease forwards;
+        }
+
+        @keyframes pageLoad { to { opacity: 1; } }
+
+        a { text-decoration: none; color: inherit; transition: color 0.3s; }
+        ul { list-style: none; }
+
+        /* --- NAVIGAZIONE --- */
+        nav {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            /* mix-blend-mode rimosso per garantire contrasto e leggibilità costanti */
+            color: var(--text-color); 
+        }
+
+        .logo {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .menu-btn {
+            font-family: var(--font-sans);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            cursor: pointer;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* --- FULLSCREEN MENU --- */
+        .menu-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            background: #111;
+            color: #f3f0eb;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); /* Chiuso (in alto) */
+            transition: clip-path 0.8s var(--easing);
+        }
+
+        .menu-overlay.active {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); /* Aperto */
+        }
+
+        .menu-links { text-align: center; }
+        .menu-links li { overflow: hidden; margin-bottom: 1rem; }
+        
+        .menu-links a {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            display: block;
+            transform: translateY(100%);
+            transition: transform 0.5s var(--easing);
+            color: #888;
+        }
+
+        .menu-links a:hover { color: #fff; font-style: italic; }
+
+        .menu-overlay.active .menu-links a { transform: translateY(0); }
+        .menu-overlay.active li:nth-child(1) a { transition-delay: 0.1s; }
+        .menu-overlay.active li:nth-child(2) a { transition-delay: 0.2s; }
+        .menu-overlay.active li:nth-child(3) a { transition-delay: 0.3s; }
+
+        /* --- HERO SECTION (CORRETTA) --- */
+        .hero {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Il titolo */
+        .hero h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(4rem, 13vw, 11rem);
+            font-weight: 300;
+            line-height: 0.8;
+            margin-bottom: 0;
+            z-index: 10; /* Importante: sopra l'immagine */
+            color: #fff; 
+            mix-blend-mode: difference; /* Magia: il testo inverte il colore dell'immagine */
+            pointer-events: none;
+        }
+
+        /* Il contenitore dell'immagine */
+        .hero-img-wrapper {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40vw;  /* Larghezza immagine */
+            height: 65vh; /* Altezza immagine */
+            overflow: hidden;
+            z-index: 1;
+            background-color: #ccc; /* Colore mentre carica */
+        }
+
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.4);
+            animation: zoomOut 2s var(--easing) forwards;
+            opacity: 0.95;
+        }
+
+        @keyframes zoomOut { to { transform: scale(1); } }
+
+        /* --- SCROLL REVEAL (Effetto Tenda) --- */
+        .reveal-img {
+            position: relative;
+            overflow: hidden;
+            background-color: #ccc; /* Placeholder */
+        }
+        
+        .reveal-img::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); /* Colore tenda uguale allo sfondo */
+            transform: scaleY(1);
+            transform-origin: top;
+            transition: transform 1.2s var(--easing);
+            z-index: 5;
+        }
+
+        .reveal-img.active::after { transform: scaleY(0); } /* Si apre */
+
+        .reveal-img img {
+            width: 100%;
+            display: block;
+            transform: scale(1.2);
+            transition: transform 1.5s var(--easing);
+        }
+
+        .reveal-img.active img { transform: scale(1); }
+
+        /* --- CONTENT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 8rem 2rem;
+        }
+
+        .intro-text {
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
+            line-height: 1.5;
+            max-width: 600px;
+            margin-left: auto;
+            margin-bottom: 10rem;
+        }
+
+        .intro-text span {
+            color: var(--accent-color);
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        /* GRIGLIA */
+        .editorial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .grid-item:nth-child(2) { margin-top: 150px; }
+
+        .caption {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--line-color);
+            padding-top: 0.8rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SCROLLING TEXT */
+        .big-type {
+            padding: 8rem 0;
+            border-top: 1px solid var(--line-color);
+            border-bottom: 1px solid var(--line-color);
+            margin: 6rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .scrolling-text {
+            font-family: var(--font-serif);
+            font-size: clamp(4rem, 8vw, 8rem);
+            animation: scroll 25s linear infinite;
+            display: inline-block;
+            color: var(--text-color);
+        }
+        
+        @keyframes scroll { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 6rem 0 2rem 0;
+        }
+
+        footer p { text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 1rem;}
+
+        footer h2 {
+            font-family: var(--font-serif);
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-style: italic;
+            margin-bottom: 4rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        footer h2:hover { color: var(--accent-color); }
+
+        .footer-bottom {
+            display:flex; 
+            justify-content: space-between; 
+            border-top: 1px solid var(--line-color); 
+            padding-top: 2rem; 
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* --- MEDIA QUERIES --- */
+        @media (max-width: 768px) {
+            nav { padding: 1.5rem; }
+            .hero-img-wrapper { width: 85vw; height: 60vh; }
+            .editorial-grid { grid-template-columns: 1fr; gap: 4rem; }
+            .grid-item:nth-child(2) { margin-top: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">Muse.</div>
+        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="#" onclick="toggleMenu()">Collezioni</a></li>
+            <li><a href="#" onclick="toggleMenu()">Lo Studio</a></li>
+            <li><a href="#" onclick="toggleMenu()">Contatti</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Section Corretta -->
+    <header class="hero">
+        <h1>Muse<br>Editorial</h1>
+        
+        <div class="hero-img-wrapper">
+            <!-- Immagine sicura (Modella in tunnel scuro) -->
+            <img src="https://images.unsplash.com/photo-1485230405346-71acb9518d9c?q=80&w=2094&auto=format&fit=crop" class="hero-img" alt="Muse Editorial Fashion Portrait">
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Intro Text -->
+        <div class="intro-text">
+            <p>Non cerchiamo l'attenzione, la comandiamo. Muse è un collettivo di artisti visivi dedicati all'essenza della forma pura. <span>Meno rumore, più segnale.</span></p>
+        </div>
+
+        <!-- Editorial Grid -->
+        <section class="editorial-grid">
+            <!-- Item 1 -->
+            <div class="grid-item">
+                <div class="reveal-img">
+                    <img src="https://images.unsplash.com/photo-1506152983158-b4a74a01c721?q=80&w=2573&auto=format&fit=crop" alt="Architecture Maison 01">
+                </div>
+                <div class="caption">
+                    <span>Maison 01</span>
+                    <span>Paris</span>
+                </div>
+            </div>
+
+            <!-- Item 2 (Offset) -->
+            <div class="grid-item">
+                <div class="reveal-img">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2564&auto=format&fit=crop" alt="Fashion Portrait Fall Collection">
+                </div>
+                <div class="caption">
+                    <span>Fall Collection</span>
+                    <span>Milano</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scrolling Text -->
+    <div class="big-type">
+        <div class="scrolling-text">
+            AESTHETICS — FUNCTION — TIMELESS — AESTHETICS — FUNCTION — TIMELESS — 
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="editorial-grid">
+             <div class="grid-item">
+                <div class="intro-text" style="margin:0;">
+                    <h3 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1rem;">La Filosofia</h3>
+                    <p>Il design non è solo ciò che vedi, ma come ti fa sentire. Utilizziamo spazi negativi e tipografia classica per comunicare un'autorità silenziosa.</p>
+                </div>
+            </div>
+
+            <div class="grid-item">
+                <div class="reveal-img">
+                    <img src="https://images.unsplash.com/photo-1515462277126-2dd0c162007a?q=80&w=2570&auto=format&fit=crop" alt="Design Objects Kyoto">
+                </div>
+                <div class="caption">
+                    <span>Objects</span>
+                    <span>Kyoto</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Prossimo Progetto</p>
+            <h2>hello@muse-studio.com</h2>
+            
+            <div class="footer-bottom">
+                <span>© 2023 Muse Inc.</span>
+                <span>Instagram / Behance</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- MENU TOGGLE ---
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuBtn = document.querySelector('.menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if(isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuBtn.textContent = 'Close';
+                menuBtn.style.color = 'white';
+            } else {
+                menuOverlay.classList.remove('active');
+                menuBtn.textContent = 'Menu';
+                menuBtn.style.color = ''; // Reset al colore originale
+            }
+        }
+
+        // --- SCROLL REVEAL ANIMATION ---
+        const images = document.querySelectorAll('.reveal-img');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Rimuove l'observer dopo l'attivazione
+                }
+            });
+        }, {
+            root: null,
+            threshold: 0.15, // Attiva quando il 15% dell'elemento è visibile
+            rootMargin: "0px 0px -50px 0px"
+        });
+
+        images.forEach(img => observer.observe(img));
+    </script>
+</body>
+</html>
