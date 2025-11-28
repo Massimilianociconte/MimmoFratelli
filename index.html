@@ -5,14 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avenue Gallarate | Fashion Store</title>
-    <meta name="description" content="Avenue Gallarate - Abbigliamento Uomo e Donna. Stile, eleganza e tendenza.">
+    <meta name="description" content="Avenue Gallarate - Boutique di abbigliamento Uomo e Donna a Gallarate. Stile, eleganza e tendenza dal 1985.">
+    
+    <!-- SEO & Social -->
+    <meta name="keywords" content="abbigliamento, moda, fashion, Gallarate, boutique, uomo, donna, lusso">
+    <meta name="author" content="Avenue Gallarate">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://avenuegallarate.it/">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Avenue Gallarate | Fashion Store">
+    <meta property="og:description" content="Boutique di abbigliamento Uomo e Donna. Stile, eleganza e tendenza dal 1985.">
+    <meta property="og:image" content="Images/Hero/hero_women.png">
+    <meta property="og:url" content="https://avenuegallarate.it/">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Avenue Gallarate | Fashion Store">
+    <meta name="twitter:description" content="Boutique di abbigliamento Uomo e Donna a Gallarate.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#f3f0eb">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
     
@@ -44,7 +66,7 @@
         <!-- Woman Side -->
         <div class="split split-left" onclick="window.location.href='collection.html?gender=woman'">
             <img src="Images/Hero/hero_women.png"
-                alt="Woman Fashion" class="split-bg" loading="eager">
+                alt="Collezione Donna Avenue Gallarate - Moda femminile elegante" class="split-bg" loading="eager">
             <div class="split-content">
                 <h2>Donna</h2>
                 <a href="collection.html?gender=woman" class="btn">Scopri Collezione</a>
@@ -54,7 +76,7 @@
         <!-- Man Side -->
         <div class="split split-right" onclick="window.location.href='collection.html?gender=man'">
             <img src="Images/Hero/hero-men-3.png"
-                alt="Man Fashion" class="split-bg" loading="eager">
+                alt="Collezione Uomo Avenue Gallarate - Moda maschile elegante" class="split-bg" loading="eager">
             <div class="split-content">
                 <h2>Uomo</h2>
                 <a href="collection.html?gender=man" class="btn">Scopri Collezione</a>
@@ -103,6 +125,20 @@
                 el.style.opacity = '1';
                 el.style.transform = 'translateY(0)';
             }, 300 + (i * 200));
+        });
+
+        // --- CLOSE MENU WITH ESC KEY ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isMenuOpen) {
+                toggleMenu();
+            }
+        });
+
+        // --- CLOSE MENU ON OVERLAY CLICK ---
+        menuOverlay.addEventListener('click', (e) => {
+            if (e.target === menuOverlay) {
+                toggleMenu();
+            }
         });
     </script>
 </body>

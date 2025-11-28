@@ -5,13 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collezione | Avenue Gallarate</title>
+    <meta name="description" content="Scopri la collezione Avenue Gallarate. Abbigliamento uomo e donna di alta qualità.">
+    
+    <!-- Favicon & Theme -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
+    <meta name="theme-color" content="#f3f0eb">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -439,7 +442,34 @@
             }
         });
 
+        // --- CLOSE MENU WITH ESC KEY ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (isMenuOpen) toggleMenu();
+                if (document.getElementById('quickView').classList.contains('active')) closeQuickView();
+            }
+        });
+
+        // --- CLOSE QUICK VIEW ON OVERLAY CLICK ---
+        document.getElementById('quickView').addEventListener('click', (e) => {
+            if (e.target.id === 'quickView') closeQuickView();
+        });
+
     </script>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Avenue.</div>
+            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=woman">Donna</a>
+                <a href="collection.html?gender=man">Uomo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
 </body>
 
 </html>
