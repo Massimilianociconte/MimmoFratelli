@@ -127,12 +127,14 @@
 
         // Set main image to 'a' variant by default
         document.getElementById('mainImage').src = thumbs[0];
+        document.getElementById('mainImage').loading = 'eager';
         document.getElementById('mainImage').onerror = function () { this.src = 'https://via.placeholder.com/800x1200?text=Image+Not+Found'; };
 
         thumbs.forEach((src, index) => {
             const img = document.createElement('img');
             img.src = src;
             img.className = `thumb ${index === 0 ? 'active' : ''}`;
+            img.loading = 'lazy';
             img.onerror = function () {
                 this.style.display = 'none'; // Hide missing thumbnails
             };

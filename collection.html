@@ -209,7 +209,7 @@
                 
                 favCard.innerHTML = `
                     <div class="favorite-card-image">
-                        <img src="${product.img}" alt="${product.name}">
+                        <img src="${product.img}" alt="${product.name}" loading="lazy">
                     </div>
                     <div class="favorite-card-info">
                         <h4>${product.name}</h4>
@@ -272,7 +272,7 @@
                 <div class="card-image-wrapper">
                     <div class="carousel-container" id="carousel-${product.id}">
                         ${images.map((img, idx) => `
-                            <img src="${img}" class="carousel-img ${idx === 0 ? 'active' : ''}" data-index="${idx}" onerror="this.style.display='none'">
+                            <img src="${img}" class="carousel-img ${idx === 0 ? 'active' : ''}" data-index="${idx}" loading="lazy" onerror="this.style.display='none'">
                         `).join('')}
                     </div>
                     <div class="card-overlay">
