@@ -4,17 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prodotto | Avenue Gallarate</title>
-    <meta name="description" content="Scopri i dettagli del prodotto Avenue Gallarate. Abbigliamento di alta qualità.">
+    <title>Prodotto | Mimmo Fratelli</title>
+    <meta name="description" content="Scopri i dettagli del prodotto fresco di Mimmo Fratelli.">
     
     <!-- Favicon & Theme -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
-    <meta name="theme-color" content="#f3f0eb">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
 
-    <!-- Fonts -->
+    <!-- Fonts - Elegant Food-focused -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -22,26 +22,66 @@
 <body>
 
     <!-- Navigation -->
-    <nav style="color: var(--text-color); mix-blend-mode: normal;">
-        <div class="logo"><a href="index.html">Avenue.</a></div>
-        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    <nav style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px);">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
     </nav>
+
 
     <!-- Full Screen Overlay Menu -->
     <div class="menu-overlay" id="menuOverlay">
-        <ul class="menu-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="collection.html?gender=man">Uomo</a></li>
-            <li><a href="collection.html?gender=woman">Donna</a></li>
-            <li><a href="contacts.html">Contatti</a></li>
-        </ul>
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="collection.html?gender=gastronomia">🧀 Gastronomia</a></li>
+                <li><a href="collection.html?gender=preparati">🍲 I Nostri Preparati</a></li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
     </div>
 
     <div class="product-container">
         <!-- Thumbnails Column -->
-        <div class="thumbs-col" id="thumbsCol">
-            <!-- Injected by JS -->
-        </div>
+        <div class="thumbs-col" id="thumbsCol"></div>
 
         <!-- Main Image Column -->
         <div class="main-image-col">
@@ -50,128 +90,301 @@
 
         <!-- Info Column -->
         <div class="product-details-col">
-            <div class="pd-brand">Avenue Collection</div>
+            <div class="pd-brand">Mimmo Fratelli - Prodotto Fresco</div>
             <h1 class="pd-title" id="pdTitle">Nome Prodotto</h1>
-            <div class="pd-price" id="pdPrice">€ 000</div>
+            <div class="pd-price" id="pdPrice">€ 0.00</div>
             <div class="pd-description" id="pdDesc">
-                Un capo essenziale per il guardaroba moderno. Realizzato con materiali di prima qualità, questo design
-                unisce estetica contemporanea e comfort senza tempo. Perfetto per ogni occasione, dal giorno alla sera.
+                Prodotto fresco selezionato con cura dai nostri fornitori di fiducia. 
+                Provenienza locale e qualità garantita per portare sulla tua tavola solo il meglio della natura.
+            </div>
+            <div class="quantity-selector">
+                <label>Quantità (kg)</label>
+                <div class="quantity-controls">
+                    <button class="qty-btn" onclick="changeQty(-0.5)">−</button>
+                    <span class="qty-value" id="qtyValue">1</span>
+                    <button class="qty-btn" onclick="changeQty(0.5)">+</button>
+                </div>
             </div>
             <button class="add-to-cart-btn">Aggiungi al Carrello</button>
         </div>
     </div>
 
-    <script>
-        // --- MENU TOGGLE ---
-        const menuOverlay = document.getElementById('menuOverlay');
-        const menuBtn = document.querySelector('.menu-btn');
-        let isMenuOpen = false;
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    
+    <script type="module">
+        import { productService } from './js/services/products.js';
+        import { wishlistService } from './js/services/wishlist.js';
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { isSupabaseConfigured } from './js/supabase.js';
+        import { inAppNotifications } from './js/services/in-app-notifications.js';
 
-        function toggleMenu() {
-            isMenuOpen = !isMenuOpen;
-            if (isMenuOpen) {
-                menuOverlay.classList.add('active');
-                menuBtn.textContent = 'Close';
-                menuBtn.style.color = 'white';
-            } else {
+        // Initialize in-app notifications
+        inAppNotifications.init();
+
+        let currentProduct = null;
+        let currentQty = 1;
+
+        window.changeQty = function(delta) {
+            currentQty = Math.max(0.5, currentQty + delta);
+            document.getElementById('qtyValue').textContent = currentQty;
+        };
+
+        // Menu toggle
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            
+            if (isOpen) {
                 menuOverlay.classList.remove('active');
+                document.body.classList.remove('menu-open');
                 menuBtn.textContent = 'Menu';
                 menuBtn.style.color = '';
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+            } else {
+                menuOverlay.classList.add('active');
+                document.body.classList.add('menu-open');
+                menuBtn.textContent = 'Close';
+                menuBtn.style.color = 'white';
+            }
+        };
+
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            authModal.init();
+            profileDrawer.init();
+            cartDrawer.init();
+            
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+            const productSlug = params.get('slug');
+            const gender = params.get('gender') || 'frutta';
+
+            let product = null;
+
+            if (isSupabaseConfigured()) {
+                if (productId) {
+                    const { product: fetchedProduct } = await productService.getProductById(productId);
+                    product = fetchedProduct;
+                } else if (productSlug) {
+                    const { product: fetchedProduct } = await productService.getProductBySlug(productSlug);
+                    product = fetchedProduct;
+                } else {
+                    const { products } = await productService.getProducts({ gender, limit: 1 });
+                    if (products?.length > 0) product = products[0];
+                }
+            }
+
+            if (!product) {
+                product = getMockProduct(productId, gender);
+            }
+
+            if (product) {
+                currentProduct = product;
+                renderProduct(product);
+            }
+
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) profileDrawer.show();
+                else authModal.show('login');
+            });
+
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+
+            authService.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    await wishlistService.mergeWishlists(session.user.id);
+                    await cartService.mergeCartsOnLogin(session.user.id);
+                }
+                updateCartBadge();
+                updateWishlistBadge();
+            });
+
+            document.querySelector('.add-to-cart-btn').addEventListener('click', async () => {
+                if (!currentProduct) return;
+
+                const item = {
+                    productId: currentProduct.id,
+                    name: currentProduct.name,
+                    price: currentProduct.sale_price || currentProduct.price,
+                    image: currentProduct.images?.[0] || '',
+                    size: `${currentQty} ${currentProduct.unit || 'kg'}`,
+                    color: 'Fresco',
+                    quantity: 1
+                };
+
+                await cartService.addItem(item);
+                cartDrawer.show();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const menuOverlay = document.getElementById('menuOverlay');
+                    if (menuOverlay.classList.contains('active')) toggleMenu();
+                }
+            });
+
+            updateCartBadge();
+            updateWishlistBadge();
+            cartService.onChange(() => updateCartBadge());
+            wishlistService.onChange(() => updateWishlistBadge());
+        });
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        async function updateWishlistBadge() {
+            const { items } = await wishlistService.getAllFavorites();
+            const badge = document.getElementById('wishlistBadge');
+            if (badge) {
+                const count = items ? items.length : 0;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
             }
         }
 
-        // --- PRODUCT DATA & LOGIC ---
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        const gender = params.get('gender') || 'woman';
-
-        // Mock Data (Same as collection)
-        const products = [
-            {
-                id: 1,
-                name: gender === 'man' ? "Trench Oversize" : "Abito Seta",
-                price: "€ 450",
-                img: gender === 'man' ? "Images/Men/prod_man1/A (front).png" : "Images/Women/prod_woman1/A (front).png"
-            },
-            {
-                id: 2,
-                name: gender === 'man' ? "Giacca Pelle" : "Blazer Strutturato",
-                price: "€ 890",
-                img: gender === 'man' ? "Images/Men/prod_man2/A (front).png" : "Images/Women/prod_woman2/A (front).png"
-            },
-            {
-                id: 3,
-                name: gender === 'man' ? "Pantaloni Lana" : "Pantaloni Lino",
-                price: "€ 220",
-                img: gender === 'man' ? "Images/Men/prod_man3/A (front).png" : "Images/Women/prod_woman3/A (front).png"
+        function renderProduct(product) {
+            const isUnavailable = !product.is_active && product.is_active !== undefined;
+            const hasDiscount = product.sale_price && product.sale_price < product.price;
+            
+            document.getElementById('pdTitle').textContent = product.name;
+            
+            const priceEl = document.getElementById('pdPrice');
+            const unit = product.unit || 'kg';
+            if (hasDiscount) {
+                const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
+                priceEl.innerHTML = `
+                    <span class="original-price">€ ${product.price.toFixed(2)}/${unit}</span>
+                    <span class="sale-price">€ ${product.sale_price.toFixed(2)}/${unit}</span>
+                    <span class="discount-badge">-${discountPercent}%</span>
+                `;
+                priceEl.classList.add('has-discount');
+            } else {
+                priceEl.textContent = `€ ${product.price?.toFixed ? product.price.toFixed(2) : product.price}/${unit}`;
             }
-        ];
-
-        const product = products.find(p => p.id == id) || products[0];
-
-        // Populate Info
-        document.getElementById('pdTitle').textContent = product.name;
-        document.getElementById('pdPrice').textContent = product.price;
-
-        // Generate Thumbs (Using A, B, C naming convention in subfolders)
-        // product.img is like "Images/Men/prod_man1/A (front).png"
-
-        // Extract base folder path
-        const lastSlashIndex = product.img.lastIndexOf('/');
-        const folderPath = product.img.substring(0, lastSlashIndex + 1); // "Images/Men/prod_man1/"
-
-        const thumbs = [
-            `${folderPath}A (front).png`,
-            `${folderPath}B (detail).png`,
-            `${folderPath}C (lifestyle).png`
-        ];
-
-        const thumbsCol = document.getElementById('thumbsCol');
-
-        // Set main image to 'a' variant by default
-        document.getElementById('mainImage').src = thumbs[0];
-        document.getElementById('mainImage').loading = 'eager';
-        document.getElementById('mainImage').onerror = function () { this.src = 'https://via.placeholder.com/800x1200?text=Image+Not+Found'; };
-
-        thumbs.forEach((src, index) => {
-            const img = document.createElement('img');
-            img.src = src;
-            img.className = `thumb ${index === 0 ? 'active' : ''}`;
-            img.loading = 'lazy';
-            img.onerror = function () {
-                this.style.display = 'none'; // Hide missing thumbnails
-            };
-            img.onclick = () => {
-                document.getElementById('mainImage').src = src;
-                document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-                img.classList.add('active');
-            };
-            thumbsCol.appendChild(img);
-        });
-
-        // --- CLOSE MENU WITH ESC KEY ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isMenuOpen) {
-                toggleMenu();
+            
+            if (product.description) {
+                document.getElementById('pdDesc').textContent = product.description;
             }
-        });
 
-        // Update page title with product name
-        document.title = `${product.name} | Avenue Gallarate`;
+            document.title = `${product.name} | Mimmo Fratelli`;
 
+            if (isUnavailable) {
+                document.querySelector('.product-container').classList.add('product-unavailable');
+                const addToCartBtn = document.querySelector('.add-to-cart-btn');
+                addToCartBtn.textContent = 'Prodotto Non Disponibile';
+                addToCartBtn.disabled = true;
+                addToCartBtn.classList.add('disabled');
+                
+                const banner = document.createElement('div');
+                banner.className = 'unavailable-banner';
+                banner.innerHTML = '<span>⚠️ Questo prodotto non è attualmente disponibile</span>';
+                document.querySelector('.product-details-col').insertBefore(banner, document.querySelector('.pd-brand'));
+            }
+
+            const images = product.images?.length > 0 ? product.images : [getPlaceholder()];
+            const thumbsCol = document.getElementById('thumbsCol');
+            const mainImage = document.getElementById('mainImage');
+
+            mainImage.src = images[0];
+            mainImage.onerror = function() { this.src = getPlaceholder(); };
+
+            images.forEach((src, index) => {
+                const img = document.createElement('img');
+                img.src = src;
+                img.className = `thumb ${index === 0 ? 'active' : ''}`;
+                img.loading = 'lazy';
+                img.onerror = function() { this.style.display = 'none'; };
+                img.onclick = () => {
+                    mainImage.src = src;
+                    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+                    img.classList.add('active');
+                };
+                thumbsCol.appendChild(img);
+            });
+        }
+
+        function getMockProduct(id, gender) {
+            const products = gender === 'verdura' ? [
+                { id: '1', name: "Pomodori Cuore di Bue", price: 3.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1546470427-227c7369a9b9?w=600&q=70&fm=webp"], description: "Pomodori cuore di bue coltivati localmente. Perfetti per insalate e sughi freschi." },
+                { id: '2', name: "Zucchine Biologiche", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1563252722-6434563a985d?w=600&q=70&fm=webp"], description: "Zucchine biologiche certificate. Ideali per grigliate e contorni leggeri." },
+                { id: '3', name: "Insalata Mista", price: 1.90, unit: 'conf', images: ["https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=70&fm=webp"], description: "Mix di insalate fresche pronte da gustare. Lavate e confezionate." }
+            ] : [
+                { id: '1', name: "Mele Golden", price: 2.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600&q=70&fm=webp"], description: "Mele Golden dolci e croccanti. Perfette per uno spuntino sano." },
+                { id: '2', name: "Arance Tarocco", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=600&q=70&fm=webp"], description: "Arance Tarocco siciliane, ricche di vitamina C. Ideali per spremute." },
+                { id: '3', name: "Banane Bio", price: 2.90, unit: 'kg', images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&q=70&fm=webp"], description: "Banane biologiche dal commercio equo. Energia naturale." }
+            ];
+            return products.find(p => p.id === id) || products[0];
+        }
+
+        function getPlaceholder() {
+            return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200"%3E%3Crect fill="%23f8fdf5" width="800" height="1200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="30" x="50%25" y="50%25" text-anchor="middle"%3E🍎 Immagine%3C/text%3E%3C/svg%3E';
+        }
     </script>
 
     <!-- Footer -->
     <footer class="site-footer">
         <div class="footer-content">
-            <div class="footer-brand">Avenue.</div>
-            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
             <div class="footer-links">
-                <a href="collection.html?gender=woman">Donna</a>
-                <a href="collection.html?gender=man">Uomo</a>
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
                 <a href="contacts.html">Contatti</a>
             </div>
-            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
         </div>
     </footer>
 </body>

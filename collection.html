@@ -4,76 +4,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collezione | Avenue Gallarate</title>
-    <meta name="description" content="Scopri la collezione Avenue Gallarate. Abbigliamento uomo e donna di alta qualità.">
+    <title>Prodotti | Mimmo Fratelli</title>
+    <meta name="description" content="Scopri la selezione di frutta e verdura fresca di Mimmo Fratelli.">
     
     <!-- Favicon & Theme -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
-    <meta name="theme-color" content="#f3f0eb">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
 
-    <!-- Fonts -->
+    <!-- Fonts - Elegant Food-focused -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Critical CSS -->
+    <style>
+        body{margin:0;background:#fafcf8;opacity:0;animation:p .5s ease forwards}
+        @keyframes p{to{opacity:1}}
+        .collection-grid-modern{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;padding:1.5rem}
+    </style>
 </head>
 
 <body class="collection-page">
 
     <!-- Navigation -->
-    <nav style="color: var(--text-color); mix-blend-mode: normal;">
-        <div class="logo"><a href="index.html">Avenue.</a></div>
-        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    <nav class="nav-on-green" id="mainNav">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
     </nav>
+
 
     <!-- Full Screen Overlay Menu -->
     <div class="menu-overlay" id="menuOverlay">
-        <ul class="menu-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="collection.html?gender=man">Uomo</a></li>
-            <li><a href="collection.html?gender=woman">Donna</a></li>
-            <li><a href="contacts.html">Contatti</a></li>
-        </ul>
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="collection.html?gender=gastronomia">🧀 Gastronomia</a></li>
+                <li><a href="collection.html?gender=preparati">🍲 I Nostri Preparati</a></li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
     </div>
 
-    <!-- Hero Section with Parallax -->
-    <div class="collection-hero">
+    <!-- Premium Hero Section -->
+    <div class="collection-hero collection-hero-premium">
+        <div class="hero-bg-gradient"></div>
+        <div class="hero-floating-elements">
+            <span class="floating-emoji" style="--delay: 0s; --x: 10%; --y: 20%;">🍎</span>
+            <span class="floating-emoji" style="--delay: 0.5s; --x: 85%; --y: 30%;">🥬</span>
+            <span class="floating-emoji" style="--delay: 1s; --x: 20%; --y: 70%;">🍊</span>
+            <span class="floating-emoji" style="--delay: 1.5s; --x: 75%; --y: 65%;">🥕</span>
+        </div>
         <div class="hero-content">
-            <div class="hero-label">Nuova Collezione</div>
-            <h1 class="hero-title" id="pageTitle">Collezione</h1>
+            <div class="hero-label">
+                <span class="hero-label-icon">✨</span>
+                Prodotti Freschi
+            </div>
+            <h1 class="hero-title" id="pageTitle">Frutta</h1>
+            <p class="hero-subtitle">Selezionati con cura, consegnati con amore</p>
             <div class="hero-scroll-indicator">
                 <span>Scorri</span>
                 <div class="scroll-line"></div>
             </div>
         </div>
-        <div class="hero-bg-pattern"></div>
-    </div>
-
-    <!-- Favorites Section -->
-    <div class="favorites-section" id="favoritesSection" style="display: none;">
-        <div class="favorites-header">
-            <h2 class="favorites-title">I Tuoi Preferiti</h2>
-            <button class="clear-favorites-btn" onclick="clearAllFavorites()">Cancella Tutti</button>
-        </div>
-        <div class="favorites-grid" id="favoritesGrid">
-            <!-- Favorite products will be injected here -->
-        </div>
     </div>
 
     <!-- Filter Bar -->
     <div class="filter-bar">
-        <div class="filter-container">
+        <div class="filter-container" id="filterContainer">
             <button class="filter-btn active" data-filter="all">Tutti</button>
-            <button class="filter-btn" data-filter="new">Nuovi Arrivi</button>
-            <button class="filter-btn" data-filter="sale">In Saldo</button>
+            <button class="filter-btn" data-filter="new">Novità</button>
+            <button class="filter-btn" data-filter="sale">In Offerta</button>
             <button class="filter-btn favorites-filter" data-filter="favorites" id="favoritesBtn">
                 Preferiti <span class="favorites-count" id="favoritesCount">0</span>
             </button>
+            <!-- Scroll Arrow Indicator -->
+            <button class="filter-scroll-arrow" id="filterScrollArrow" aria-label="Scorri per vedere altri filtri">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
         </div>
         <div class="view-toggle">
-            <button class="view-btn active" data-view="grid">⊞</button>
+            <button class="view-btn" data-view="grid">⊞</button>
             <button class="view-btn" data-view="list">☰</button>
+        </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="advanced-filters" id="advancedFilters">
+        <div class="filters-row">
+            <!-- Category Filter -->
+            <div class="filter-group">
+                <label for="categorySelect">Categoria</label>
+                <select id="categorySelect" class="filter-select">
+                    <option value="">Tutte le categorie</option>
+                </select>
+            </div>
+            
+            <!-- Price Range Filter -->
+            <div class="filter-group price-filter">
+                <label>Prezzo</label>
+                <div class="price-inputs">
+                    <input type="number" id="priceMin" placeholder="Min €" min="0" step="0.5">
+                    <span class="price-separator">—</span>
+                    <input type="number" id="priceMax" placeholder="Max €" min="0" step="0.5">
+                </div>
+            </div>
+            
+            <!-- Discount Filter -->
+            <div class="filter-group">
+                <label for="discountSelect">Sconto</label>
+                <select id="discountSelect" class="filter-select">
+                    <option value="">Tutti</option>
+                    <option value="10">10% e oltre</option>
+                    <option value="20">20% e oltre</option>
+                    <option value="30">30% e oltre</option>
+                </select>
+            </div>
+            
+            <!-- Sort Filter -->
+            <div class="filter-group">
+                <label for="sortSelect">Ordina per</label>
+                <select id="sortSelect" class="filter-select">
+                    <option value="newest">Più recenti</option>
+                    <option value="price_asc">Prezzo: crescente</option>
+                    <option value="price_desc">Prezzo: decrescente</option>
+                    <option value="discount_desc">Sconto: maggiore</option>
+                    <option value="popular">Popolari</option>
+                </select>
+            </div>
+            
+            <!-- Clear Filters -->
+            <button class="clear-filters-btn" id="clearFiltersBtn">
+                Rimuovi filtri
+            </button>
         </div>
     </div>
 
@@ -93,383 +198,599 @@
                 <div class="quick-view-info">
                     <h2 id="quickViewName"></h2>
                     <p class="quick-view-price" id="quickViewPrice"></p>
-                    <p class="quick-view-desc">Capo di alta qualità realizzato con materiali pregiati. Perfetto per ogni occasione.</p>
+                    <p class="quick-view-desc">Prodotto fresco selezionato con cura. Provenienza locale e qualità garantita.</p>
                     <button class="quick-view-cta" onclick="goToProduct()">Vedi Dettagli</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+
+    
+    <!-- Fallback for non-module browsers or file:// protocol -->
     <script>
-        // --- MENU TOGGLE ---
-        const menuOverlay = document.getElementById('menuOverlay');
-        const menuBtn = document.querySelector('.menu-btn');
-        let isMenuOpen = false;
-
-        function toggleMenu() {
-            isMenuOpen = !isMenuOpen;
-            if (isMenuOpen) {
-                menuOverlay.classList.add('active');
-                menuBtn.textContent = 'Close';
-                menuBtn.style.color = 'white';
-            } else {
-                menuOverlay.classList.remove('active');
-                menuBtn.textContent = 'Menu';
-                menuBtn.style.color = '';
-            }
+        if (window.location.protocol === 'file:') {
+            document.getElementById('productGrid').innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                    <h3 style="margin-bottom: 1rem;">⚠️ Server HTTP Richiesto</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Per utilizzare tutte le funzionalità, avvia il server locale:</p>
+                    <code style="background: #f5f5f5; padding: 0.5rem 1rem; border-radius: 4px;">npm run dev</code>
+                    <p style="color: #888; margin-top: 1rem; font-size: 0.9rem;">Poi apri <a href="http://localhost:3000/collection.html?gender=frutta">http://localhost:3000</a></p>
+                </div>
+            `;
         }
+    </script>
+    
+    <!-- Initialize Collection Page -->
+    <script type="module">
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { wishlistService } from './js/services/wishlist.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { productService } from './js/services/products.js';
+        import { isSupabaseConfigured } from './js/supabase.js';
+        import { inAppNotifications } from './js/services/in-app-notifications.js';
+        import { notificationPrompt } from './js/components/notification-prompt.js';
 
-        // --- DYNAMIC CONTENT ---
+        // Global state
+        let products = [];
         const params = new URLSearchParams(window.location.search);
-        const gender = params.get('gender') || 'woman';
+        const gender = params.get('gender') || 'frutta';
 
-        document.getElementById('pageTitle').textContent = gender === 'man' ? 'Uomo' : 'Donna';
-
-        // Mock Data using generated images
-        const products = [
-            {
-                id: 1,
-                name: gender === 'man' ? "Trench Oversize" : "Abito Seta",
-                price: "€ 450",
-                img: gender === 'man' ? "Images/Men/prod_man1/A (front).png" : "Images/Women/prod_woman1/A (front).png"
-            },
-            {
-                id: 2,
-                name: gender === 'man' ? "Giacca Pelle" : "Blazer Strutturato",
-                price: "€ 890",
-                img: gender === 'man' ? "Images/Men/prod_man2/A (front).png" : "Images/Women/prod_woman2/A (front).png"
-            },
-            {
-                id: 3,
-                name: gender === 'man' ? "Pantaloni Lana" : "Pantaloni Lino",
-                price: "€ 220",
-                img: gender === 'man' ? "Images/Men/prod_man3/A (front).png" : "Images/Women/prod_woman3/A (front).png"
+        // Menu toggle
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            menuOverlay.classList.toggle('active', !isOpen);
+            document.body.classList.toggle('menu-open', !isOpen);
+            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.style.color = isOpen ? '' : 'white';
+            if (isOpen) {
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
             }
-        ];
+        };
 
-        const grid = document.getElementById('productGrid');
-        let currentQuickViewProduct = null;
-
-        // --- FAVORITES SYSTEM ---
-        const FAVORITES_KEY = `avenue_favorites_${gender}`;
-        
-        function getFavorites() {
-            const stored = localStorage.getItem(FAVORITES_KEY);
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        function saveFavorites(favorites) {
-            localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-            updateFavoritesCount();
-            updateFavoritesSection();
-        }
-
-        function toggleFavorite(productId) {
-            let favorites = getFavorites();
-            const index = favorites.indexOf(productId);
-            
-            if (index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push(productId);
-            }
-            
-            saveFavorites(favorites);
-            return favorites.includes(productId);
-        }
-
-        function isFavorite(productId) {
-            return getFavorites().includes(productId);
-        }
-
-        function updateFavoritesCount() {
-            const count = getFavorites().length;
-            const countEl = document.getElementById('favoritesCount');
-            countEl.textContent = count;
-            countEl.style.display = count > 0 ? 'inline-flex' : 'none';
-        }
-
-        function updateFavoritesSection() {
-            const favorites = getFavorites();
-            const favSection = document.getElementById('favoritesSection');
-            const favGrid = document.getElementById('favoritesGrid');
-            
-            if (favorites.length === 0) {
-                favSection.style.display = 'none';
-                return;
-            }
-
-            favSection.style.display = 'block';
-            favGrid.innerHTML = '';
-
-            favorites.forEach(favId => {
-                const product = products.find(p => p.id === favId);
-                if (!product) return;
-
-                const favCard = document.createElement('div');
-                favCard.className = 'favorite-card';
-                favCard.onclick = () => goToProductPage(product.id);
-                
-                favCard.innerHTML = `
-                    <div class="favorite-card-image">
-                        <img src="${product.img}" alt="${product.name}" loading="lazy">
-                    </div>
-                    <div class="favorite-card-info">
-                        <h4>${product.name}</h4>
-                        <p>${product.price}</p>
-                    </div>
-                    <button class="favorite-card-remove" onclick="event.stopPropagation(); removeFavorite(${product.id})">✕</button>
-                `;
-                
-                favGrid.appendChild(favCard);
-            });
-        }
-
-        function removeFavorite(productId) {
-            toggleFavorite(productId);
-            
-            // Update the heart icon in the main grid
-            const cards = document.querySelectorAll('.product-card-modern');
-            cards.forEach(card => {
-                const btn = card.querySelector('.card-favorite');
-                if (btn && btn.dataset.productId == productId) {
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<span class="heart-icon">♡</span>';
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
                 }
             });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            
+            // Initialize in-app notifications
+            inAppNotifications.init();
+            
+            // Show notification prompt after a delay
+            notificationPrompt.init();
+            authModal.init();
+            profileDrawer.init();
+            cartDrawer.init();
+
+            // Navbar scroll effect
+            const nav = document.getElementById('mainNav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            });
+            
+            // Update page title
+            const titleMap = { 
+                'frutta': 'Frutta', 
+                'verdura': 'Verdura',
+                'gastronomia': 'Gastronomia',
+                'preparati': 'I Nostri Preparati',
+                'altro': 'Altri Prodotti'
+            };
+            document.getElementById('pageTitle').textContent = titleMap[gender] || 'Prodotti';
+            document.title = `${titleMap[gender] || 'Prodotti'} | Mimmo Fratelli`;
+            
+            // Load products
+            await loadProducts();
+            await updateFavoritesCount();
+            await updateWishlistBadge();
+
+            // Auth button
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) {
+                    profileDrawer.show();
+                } else {
+                    authModal.show('login');
+                }
+            });
+
+            // Cart button
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+
+            // Auth state changes
+            authService.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    await wishlistService.mergeWishlists(session.user.id);
+                    await cartService.mergeCartsOnLogin(session.user.id);
+                }
+                await loadProducts();
+                await updateFavoritesCount();
+                await updateWishlistBadge();
+                await updateCartBadge();
+            });
+            
+            updateCartBadge();
+            updateWishlistBadge();
+            cartService.onChange(() => updateCartBadge());
+            wishlistService.onChange(() => updateWishlistBadge());
+
+            // ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('menuOverlay').classList.contains('active')) toggleMenu();
+                    if (document.getElementById('quickView')?.classList.contains('active')) closeQuickView();
+                }
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const filter = btn.dataset.filter;
+                    if (filter === 'favorites') {
+                        window.location.href = 'wishlist.html';
+                        return;
+                    }
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    if (filter === 'all') {
+                        await renderProducts();
+                    } else if (filter === 'new') {
+                        await renderFilteredProducts(products.filter(p => p.is_new));
+                    } else if (filter === 'sale') {
+                        await renderFilteredProducts(products.filter(p => p.sale_price && p.sale_price < p.price));
+                    }
+                });
+            });
+            
+            // View toggle
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const grid = document.getElementById('productGrid');
+                    grid.className = btn.dataset.view === 'list' ? 'collection-grid-modern list-view' : 'collection-grid-modern';
+                });
+            });
+            
+            // Set list view as default on mobile
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                const listBtn = document.querySelector('.view-btn[data-view="list"]');
+                const gridBtn = document.querySelector('.view-btn[data-view="grid"]');
+                const grid = document.getElementById('productGrid');
+                if (listBtn && gridBtn && grid) {
+                    gridBtn.classList.remove('active');
+                    listBtn.classList.add('active');
+                    grid.classList.add('list-view');
+                }
+            } else {
+                // On desktop, grid is default
+                const gridBtn = document.querySelector('.view-btn[data-view="grid"]');
+                if (gridBtn) gridBtn.classList.add('active');
+            }
+            
+            // Filter scroll arrow functionality
+            setupFilterScrollArrow();
+
+            await loadCategories();
+            setupAdvancedFilters();
+        });
+
+        // Filter scroll arrow functionality
+        function setupFilterScrollArrow() {
+            const filterContainer = document.getElementById('filterContainer');
+            const scrollArrow = document.getElementById('filterScrollArrow');
+            
+            if (!filterContainer || !scrollArrow) return;
+            
+            const checkScrollability = () => {
+                const isScrollable = filterContainer.scrollWidth > filterContainer.clientWidth;
+                const isAtEnd = filterContainer.scrollLeft >= (filterContainer.scrollWidth - filterContainer.clientWidth - 10);
+                
+                if (isScrollable && !isAtEnd) {
+                    scrollArrow.classList.remove('hidden');
+                } else {
+                    scrollArrow.classList.add('hidden');
+                }
+            };
+            
+            // Check on load and resize
+            checkScrollability();
+            window.addEventListener('resize', checkScrollability);
+            
+            // Check on scroll
+            filterContainer.addEventListener('scroll', checkScrollability);
+            
+            // Click to scroll
+            scrollArrow.addEventListener('click', () => {
+                filterContainer.scrollBy({ left: 100, behavior: 'smooth' });
+            });
         }
 
-        function clearAllFavorites() {
-            if (confirm('Vuoi rimuovere tutti i preferiti?')) {
-                localStorage.setItem(FAVORITES_KEY, JSON.stringify([]));
-                updateFavoritesCount();
-                updateFavoritesSection();
+        // Current filters state
+        let currentFilters = {
+            gender: gender,
+            category_id: null,
+            price_min: null,
+            price_max: null,
+            min_discount: null,
+            sort_by: 'newest'
+        };
+
+        function setupAdvancedFilters() {
+            const categorySelect = document.getElementById('categorySelect');
+            const priceMin = document.getElementById('priceMin');
+            const priceMax = document.getElementById('priceMax');
+            const discountSelect = document.getElementById('discountSelect');
+            const sortSelect = document.getElementById('sortSelect');
+            const clearBtn = document.getElementById('clearFiltersBtn');
+
+            categorySelect.addEventListener('change', async (e) => {
+                currentFilters.category_id = e.target.value || null;
+                e.target.classList.toggle('has-value', !!e.target.value);
+                await applyFilters();
+            });
+
+            discountSelect.addEventListener('change', async (e) => {
+                currentFilters.min_discount = e.target.value ? parseInt(e.target.value) : null;
+                e.target.classList.toggle('has-value', !!e.target.value);
+                await applyFiltersClientSide();
+            });
+
+            let priceTimeout;
+            const handlePriceChange = async () => {
+                clearTimeout(priceTimeout);
+                priceTimeout = setTimeout(async () => {
+                    currentFilters.price_min = priceMin.value ? parseFloat(priceMin.value) : null;
+                    currentFilters.price_max = priceMax.value ? parseFloat(priceMax.value) : null;
+                    priceMin.classList.toggle('has-value', !!priceMin.value);
+                    priceMax.classList.toggle('has-value', !!priceMax.value);
+                    await applyFilters();
+                }, 500);
+            };
+            priceMin.addEventListener('input', handlePriceChange);
+            priceMax.addEventListener('input', handlePriceChange);
+
+            sortSelect.addEventListener('change', async (e) => {
+                currentFilters.sort_by = e.target.value;
+                await applyFilters();
+            });
+
+            clearBtn.addEventListener('click', async () => {
+                currentFilters = { gender: gender, category_id: null, price_min: null, price_max: null, min_discount: null, sort_by: 'newest' };
+                categorySelect.value = '';
+                priceMin.value = '';
+                priceMax.value = '';
+                discountSelect.value = '';
+                sortSelect.value = 'newest';
+                categorySelect.classList.remove('has-value');
+                priceMin.classList.remove('has-value');
+                priceMax.classList.remove('has-value');
+                discountSelect.classList.remove('has-value');
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+                await loadProducts();
+            });
+        }
+
+        async function applyFiltersClientSide() {
+            let filtered = [...products];
+            if (currentFilters.min_discount) {
+                filtered = filtered.filter(p => {
+                    if (!p.sale_price || p.sale_price >= p.price) return false;
+                    const discountPercent = Math.round((1 - p.sale_price / p.price) * 100);
+                    return discountPercent >= currentFilters.min_discount;
+                });
+            }
+            if (currentFilters.sort_by === 'discount_desc') {
+                filtered.sort((a, b) => {
+                    const discountA = a.sale_price && a.sale_price < a.price ? (1 - a.sale_price / a.price) : 0;
+                    const discountB = b.sale_price && b.sale_price < b.price ? (1 - b.sale_price / b.price) : 0;
+                    return discountB - discountA;
+                });
+            }
+            await renderFilteredProducts(filtered);
+        }
+
+        async function applyFilters() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '<div class="loading-spinner">Caricamento...</div>';
+            try {
+                if (isSupabaseConfigured()) {
+                    const { products: filteredProducts } = await productService.getProducts(currentFilters);
+                    products = filteredProducts?.length > 0 ? filteredProducts : [];
+                } else {
+                    let filtered = getMockProducts();
+                    if (currentFilters.price_min) filtered = filtered.filter(p => p.price >= currentFilters.price_min);
+                    if (currentFilters.price_max) filtered = filtered.filter(p => p.price <= currentFilters.price_max);
+                    if (currentFilters.sort_by === 'price_asc') filtered.sort((a, b) => a.price - b.price);
+                    else if (currentFilters.sort_by === 'price_desc') filtered.sort((a, b) => b.price - a.price);
+                    products = filtered;
+                }
+                if (currentFilters.min_discount) await applyFiltersClientSide();
+                else await renderProducts();
+            } catch (err) {
+                console.error('Error applying filters:', err);
+                grid.innerHTML = '<div class="error-message">Errore nel caricamento</div>';
+            }
+        }
+
+        async function loadCategories() {
+            if (!isSupabaseConfigured()) return;
+            
+            // Get categories that have products with the current gender
+            const select = document.getElementById('categorySelect');
+            
+            // First load all products for this gender to find their categories
+            const { products: genderProducts } = await productService.getProducts({ gender });
+            
+            if (genderProducts?.length > 0) {
+                // Extract unique category IDs from products
+                const categoryIds = new Set();
+                const categoryMap = new Map();
                 
-                // Reset all heart icons
-                document.querySelectorAll('.card-favorite').forEach(btn => {
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<span class="heart-icon">♡</span>';
+                genderProducts.forEach(p => {
+                    if (p.category_id && p.categories) {
+                        categoryIds.add(p.category_id);
+                        categoryMap.set(p.category_id, p.categories.name);
+                    }
+                });
+                
+                // Add only relevant categories to the dropdown
+                categoryMap.forEach((name, id) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = name;
+                    select.appendChild(option);
                 });
             }
         }
 
-        // Initialize favorites
-        updateFavoritesCount();
-        updateFavoritesSection();
+        async function loadProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '<div class="loading-spinner">Caricamento...</div>';
+            try {
+                if (isSupabaseConfigured()) {
+                    const { products: dbProducts } = await productService.getProducts({ gender });
+                    products = dbProducts?.length > 0 ? dbProducts : getMockProducts();
+                } else {
+                    products = getMockProducts();
+                }
+                renderProducts();
+            } catch (err) {
+                console.error('Error loading products:', err);
+                products = getMockProducts();
+                renderProducts();
+            }
+        }
 
-        products.forEach((product, index) => {
-            const card = document.createElement('div');
-            card.className = 'product-card-modern';
-            card.style.animationDelay = `${index * 0.1}s`;
-
-            // Calculate variant paths
-            const lastSlashIndex = product.img.lastIndexOf('/');
-            const folderPath = product.img.substring(0, lastSlashIndex + 1);
-            const images = [
-                `${folderPath}A (front).png`,
-                `${folderPath}B (detail).png`,
-                `${folderPath}C (lifestyle).png`
+        function getMockProducts() {
+            if (gender === 'verdura') {
+                return [
+                    { id: '1', name: "Pomodori Cuore di Bue", price: 3.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1546470427-227c7369a9b9?w=400&q=60&fm=webp"], is_new: true },
+                    { id: '2', name: "Zucchine Biologiche", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&q=60&fm=webp"] },
+                    { id: '3', name: "Insalata Mista", price: 1.90, unit: 'conf', images: ["https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=60&fm=webp"] },
+                    { id: '4', name: "Carote Bio", price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&q=60&fm=webp"], is_new: true },
+                    { id: '5', name: "Peperoni Misti", price: 4.50, sale_price: 3.80, unit: 'kg', images: ["https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&q=60&fm=webp"] },
+                    { id: '6', name: "Melanzane", price: 2.90, unit: 'kg', images: ["https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&q=60&fm=webp"] }
+                ];
+            }
+            return [
+                { id: '1', name: "Mele Golden", price: 2.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&q=60&fm=webp"], is_new: true },
+                { id: '2', name: "Arance Tarocco", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&q=60&fm=webp"] },
+                { id: '3', name: "Banane Bio", price: 2.90, unit: 'kg', images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&q=60&fm=webp"] },
+                { id: '4', name: "Fragole", price: 4.50, unit: 'vasch', images: ["https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=60&fm=webp"], is_new: true },
+                { id: '5', name: "Kiwi Zespri", price: 3.90, sale_price: 3.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400&q=60&fm=webp"] },
+                { id: '6', name: "Uva Italia", price: 3.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&q=60&fm=webp"] }
             ];
+        }
 
-            card.innerHTML = `
-                <div class="card-image-wrapper">
-                    <div class="carousel-container" id="carousel-${product.id}">
-                        ${images.map((img, idx) => `
-                            <img src="${img}" class="carousel-img ${idx === 0 ? 'active' : ''}" data-index="${idx}" loading="lazy" onerror="this.style.display='none'">
-                        `).join('')}
-                    </div>
-                    <div class="card-overlay">
-                        <button class="quick-view-btn" onclick="openQuickView(${product.id}, event)">
-                            <span>Vista Rapida</span>
+        async function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            if (products.length === 0) {
+                grid.innerHTML = '<div class="no-products"><p>Nessun prodotto trovato</p></div>';
+                return;
+            }
+            const { items: favorites } = await wishlistService.getAllFavorites();
+            const favoriteIds = new Set(favorites.map(f => f.product_id));
+
+            grid.innerHTML = products.map((product, i) => {
+                const isFav = favoriteIds.has(product.id);
+                const hasDiscount = product.sale_price && product.sale_price < product.price;
+                const img = product.images?.[0] || '';
+                const productUrl = `product.html?id=${product.id}&gender=${gender}`;
+                const isUnavailable = !product.is_active && product.is_active !== undefined;
+                const unit = product.unit || 'kg';
+
+                return `
+                    <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${product.id}" style="animation-delay: ${i * 0.03}s">
+                        <a href="${productUrl}" class="card-image-small">
+                            <img src="${img}" alt="${product.name}" loading="lazy" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
+                            ${hasDiscount && !isUnavailable ? '<span class="sale-badge">Offerta</span>' : ''}
+                            ${product.is_new ? '<span class="fresh-badge">Novità</span>' : ''}
+                        </a>
+                        <button class="card-favorite-small ${isFav ? 'active' : ''}" data-product-id="${product.id}" onclick="event.stopPropagation(); toggleFavorite('${product.id}', this)">
+                            ${isFav ? '♥' : '♡'}
                         </button>
-                    </div>
-                    <div class="carousel-dots">
-                        ${images.map((_, idx) => `<span class="dot ${idx === 0 ? 'active' : ''}" onclick="goToImage(event, ${product.id}, ${idx})"></span>`).join('')}
-                    </div>
-                </div>
-                <div class="card-info">
-                    <div class="card-header">
-                        <h3 class="card-name">${product.name}</h3>
-                        <button class="card-favorite ${isFavorite(product.id) ? 'active' : ''}" data-product-id="${product.id}">
-                            <span class="heart-icon">${isFavorite(product.id) ? '♥' : '♡'}</span>
-                            <span class="heart-particles">
-                                <span class="particle"></span>
-                                <span class="particle"></span>
-                                <span class="particle"></span>
-                                <span class="particle"></span>
-                                <span class="particle"></span>
-                            </span>
+                        ${!isUnavailable ? `
+                        <button class="card-quick-add" data-product-id="${product.id}" onclick="event.stopPropagation(); quickAddToCart('${product.id}')" title="Aggiungi al carrello">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
                         </button>
+                        ` : ''}
+                        <div class="card-info-small">
+                            <h3 class="card-name-small">${product.name}</h3>
+                            <p class="card-price-small">
+                                ${hasDiscount ? `<span class="original">€${product.price.toFixed(2)}</span><span class="sale">€${product.sale_price.toFixed(2)}</span>` : `€${product.price.toFixed(2)}`}
+                                <span class="card-unit">/${unit}</span>
+                            </p>
+                        </div>
                     </div>
-                    <p class="card-price">${product.price}</p>
-                    <button class="card-cta" onclick="goToProductPage(${product.id})">Scopri</button>
-                </div>
-            `;
+                `;
+            }).join('');
+        }
+
+        async function renderFilteredProducts(filtered) {
+            products = filtered;
+            await renderProducts();
+        }
+
+        async function updateFavoritesCount() {
+            const { items } = await wishlistService.getAllFavorites();
+            document.getElementById('favoritesCount').textContent = items.length;
+        }
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        window.toggleFavorite = async function(productId, btn) {
+            // Use the unified toggleFavorite method that handles both guest and authenticated users
+            const { isFavorite, error } = await wishlistService.toggleFavorite(productId);
             
-            grid.appendChild(card);
-
-            // Auto-rotate images on hover
-            let hoverInterval;
-            const cardWrapper = card.querySelector('.card-image-wrapper');
-            cardWrapper.addEventListener('mouseenter', () => {
-                hoverInterval = setInterval(() => {
-                    nextImage(null, product.id);
-                }, 1500);
-            });
-            cardWrapper.addEventListener('mouseleave', () => {
-                clearInterval(hoverInterval);
-            });
-        });
-
-        // --- CAROUSEL FUNCTIONS ---
-        function nextImage(event, productId) {
-            if (event) event.stopPropagation();
-            const container = document.getElementById(`carousel-${productId}`);
-            const images = container.querySelectorAll('.carousel-img');
-            const dots = container.parentElement.querySelectorAll('.dot');
-            let activeIndex = 0;
-
-            images.forEach((img, index) => {
-                if (img.classList.contains('active')) {
-                    activeIndex = index;
-                    img.classList.remove('active');
-                }
-            });
-
-            dots.forEach(dot => dot.classList.remove('active'));
-
-            let nextIndex = (activeIndex + 1) % images.length;
-            images[nextIndex].classList.add('active');
-            if (dots[nextIndex]) dots[nextIndex].classList.add('active');
-        }
-
-        function goToImage(event, productId, index) {
-            event.stopPropagation();
-            const container = document.getElementById(`carousel-${productId}`);
-            const images = container.querySelectorAll('.carousel-img');
-            const dots = container.parentElement.querySelectorAll('.dot');
-
-            images.forEach(img => img.classList.remove('active'));
-            dots.forEach(dot => dot.classList.remove('active'));
-
-            images[index].classList.add('active');
-            dots[index].classList.add('active');
-        }
-
-        function goToProductPage(productId) {
-            window.location.href = `product.html?id=${productId}&gender=${gender}`;
-        }
-
-        // --- QUICK VIEW ---
-        function openQuickView(productId, event) {
-            event.stopPropagation();
-            const product = products.find(p => p.id === productId);
-            currentQuickViewProduct = product;
+            if (error) {
+                console.error('Error toggling favorite:', error);
+                return;
+            }
             
-            document.getElementById('quickViewImg').src = product.img;
-            document.getElementById('quickViewName').textContent = product.name;
-            document.getElementById('quickViewPrice').textContent = product.price;
-            document.getElementById('quickView').classList.add('active');
-            document.body.style.overflow = 'hidden';
+            if (isFavorite) {
+                btn.classList.add('active');
+                btn.textContent = '♥';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '♡';
+            }
+            await updateFavoritesCount();
+            await updateWishlistBadge();
+        };
+        
+        async function updateWishlistBadge() {
+            const { items } = await wishlistService.getAllFavorites();
+            const badge = document.getElementById('wishlistBadge');
+            const count = items.length;
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
         }
 
-        function closeQuickView() {
+        window.closeQuickView = function() {
             document.getElementById('quickView').classList.remove('active');
-            document.body.style.overflow = '';
-        }
+        };
 
-        function goToProduct() {
-            if (currentQuickViewProduct) {
-                window.location.href = `product.html?id=${currentQuickViewProduct.id}&gender=${gender}`;
-            }
-        }
+        // Quick add to cart from product card
+        window.quickAddToCart = async function(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
 
-        // --- FILTER & VIEW TOGGLE ---
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const view = btn.dataset.view;
-                grid.className = view === 'list' ? 'collection-grid-modern list-view' : 'collection-grid-modern';
-            });
-        });
-
-        // --- PARALLAX SCROLL ---
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const hero = document.querySelector('.collection-hero');
-            if (hero) {
-                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-                hero.style.opacity = 1 - scrolled / 600;
-            }
-        });
-
-        // --- FAVORITE TOGGLE ---
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('.card-favorite');
+            const btn = document.querySelector(`.card-quick-add[data-product-id="${productId}"]`);
             if (btn) {
-                e.stopPropagation();
-                const productId = parseInt(btn.dataset.productId);
-                const isFav = toggleFavorite(productId);
+                btn.classList.add('adding');
+            }
+
+            try {
+                const item = {
+                    productId: product.id,
+                    name: product.name,
+                    price: product.sale_price && product.sale_price < product.price ? product.sale_price : product.price,
+                    image: product.images?.[0] || '',
+                    size: product.unit || 'kg',
+                    color: 'Standard',
+                    quantity: 1
+                };
+
+                await cartService.addItem(item);
                 
-                btn.classList.toggle('active', isFav);
-                const heartIcon = btn.querySelector('.heart-icon');
-                heartIcon.textContent = isFav ? '♥' : '♡';
-                
-                // Trigger animation
-                if (isFav) {
-                    btn.classList.add('animating');
-                    setTimeout(() => btn.classList.remove('animating'), 600);
+                if (btn) {
+                    btn.classList.remove('adding');
+                    btn.classList.add('added');
+                    setTimeout(() => btn.classList.remove('added'), 1500);
                 }
+            } catch (err) {
+                console.error('Error adding to cart:', err);
+                if (btn) btn.classList.remove('adding');
             }
-        });
-
-        // --- FAVORITES FILTER ---
-        document.getElementById('favoritesBtn').addEventListener('click', () => {
-            const favSection = document.getElementById('favoritesSection');
-            const isVisible = favSection.style.display !== 'none';
-            favSection.style.display = isVisible ? 'none' : 'block';
-            
-            if (!isVisible) {
-                favSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-
-        // --- CLOSE MENU WITH ESC KEY ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (isMenuOpen) toggleMenu();
-                if (document.getElementById('quickView').classList.contains('active')) closeQuickView();
-            }
-        });
-
-        // --- CLOSE QUICK VIEW ON OVERLAY CLICK ---
-        document.getElementById('quickView').addEventListener('click', (e) => {
-            if (e.target.id === 'quickView') closeQuickView();
-        });
-
+        };
     </script>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="footer-content">
-            <div class="footer-brand">Avenue.</div>
-            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
-            <div class="footer-links">
-                <a href="collection.html?gender=woman">Donna</a>
-                <a href="collection.html?gender=man">Uomo</a>
-                <a href="contacts.html">Contatti</a>
-            </div>
-            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
-        </div>
-    </footer>
+    
+    <!-- Notification Banner -->
+    <script type="module">
+        import { notificationBanner } from './js/components/notification-banner.js';
+        import { initReferralLanding } from './js/utils/referral-landing.js';
+        
+        // Initialize notification banner
+        notificationBanner.init();
+        
+        // Check for referral code in URL and open registration modal
+        initReferralLanding();
+    </script>
 </body>
-
 </html>

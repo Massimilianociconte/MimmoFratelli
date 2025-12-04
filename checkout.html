@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Mimmo Fratelli</title>
+    <meta name="description" content="Completa il tuo ordine su Mimmo Fratelli.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="nav-collection" style="background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px);">
+        <a href="index.html" class="logo">Mimmo Fratelli</a>
+        <div class="nav-icons">
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <a href="collection.html" class="nav-icon-link">Prodotti</a>
+        </div>
+    </nav>
+
+    <main class="checkout-page">
+        <div class="checkout-container">
+            <h1 class="checkout-title">Checkout</h1>
+            
+            <div id="loginRequired" class="checkout-login-required" style="display: none;">
+                <p>Devi effettuare il login per procedere al checkout.</p>
+                <button class="btn btn-primary" onclick="openAuthModal()">Accedi</button>
+            </div>
+
+            <div id="checkoutContent" class="checkout-content" style="display: none;">
+                <div class="checkout-grid">
+                    <div class="checkout-summary">
+                        <h2>Riepilogo Ordine</h2>
+                        <div id="cartItems" class="checkout-items"></div>
+                        
+                        <!-- Promo Code Section -->
+                        <div class="checkout-promo">
+                            <div class="promo-header">
+                                <span class="promo-icon">🏷️</span>
+                                <span>Hai un codice sconto?</span>
+                            </div>
+                            <div class="promo-input-group">
+                                <input type="text" id="promoCode" placeholder="Inserisci codice sconto" class="promo-input" autocomplete="off">
+                                <button id="applyPromo" class="btn btn-promo btn-apply-promo-code">Applica</button>
+                            </div>
+                            <div id="promoMessage" class="promo-message" style="display: none;"></div>
+                        </div>
+                        
+                        <!-- User Credit Section (auto-detected) -->
+                        <div id="userCreditSection" class="checkout-credit" style="display: none;">
+                            <div class="credit-header">
+                                <span class="credit-icon">💰</span>
+                                <div class="credit-info">
+                                    <span class="credit-label">Il tuo credito disponibile</span>
+                                    <span class="credit-balance" id="userCreditBalance">€0.00</span>
+                                </div>
+                            </div>
+                            <div class="credit-toggle">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="useCreditToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label">Usa il credito per questo ordine</span>
+                            </div>
+                            <div id="creditAppliedInfo" class="credit-applied-info"></div>
+                        </div>
+                        
+                        <!-- Gift Card Code Section (for unredeemed cards) -->
+                        <div class="checkout-giftcard">
+                            <div class="promo-header">
+                                <span class="promo-icon">🎁</span>
+                                <span>Hai una Gift Card da riscattare?</span>
+                            </div>
+                            <div class="promo-input-group">
+                                <input type="text" id="giftCardCode" placeholder="Codice gift card (14 caratteri)" class="promo-input" autocomplete="off" maxlength="20">
+                                <button id="applyGiftCard" class="btn btn-promo btn-apply-giftcard">Riscatta</button>
+                            </div>
+                            <div id="giftCardMessage" class="promo-message" style="display: none;"></div>
+                            <p class="giftcard-hint">Inserisci il codice per aggiungere il credito al tuo account</p>
+                        </div>
+                        
+                        <!-- Referral Bonus Banner -->
+                        <div id="checkoutReferralBanner" class="checkout-referral-banner" style="display: none;"></div>
+                        
+                        <div class="checkout-totals">
+                            <div class="total-row"><span>Subtotale</span><span id="subtotal">€0.00</span></div>
+                            <div class="total-row discount-row" style="display: none;"><span>Sconto</span><span id="discount">-€0.00</span></div>
+                            <div class="total-row credit-row" style="display: none;"><span>Credito utilizzato</span><span id="creditAmount">-€0.00</span></div>
+                            <div class="total-row"><span>Consegna</span><span id="shipping">€0.00</span></div>
+                            <div class="total-row total-final"><span>Totale</span><span id="total">€0.00</span></div>
+                        </div>
+                    </div>
+
+                    <div class="checkout-shipping">
+                        <h2>Indirizzo di Consegna</h2>
+                        <form id="shippingForm" class="shipping-form">
+                            <div class="form-row">
+                                <input type="text" id="firstName" placeholder="Nome" required>
+                                <input type="text" id="lastName" placeholder="Cognome" required>
+                            </div>
+                            <input type="text" id="address" placeholder="Indirizzo" required>
+                            <div class="form-row">
+                                <input type="text" id="city" placeholder="Città" required>
+                                <input type="text" id="postalCode" placeholder="CAP" required>
+                            </div>
+                            <input type="text" id="province" placeholder="Provincia" required>
+                            <input type="tel" id="phone" placeholder="Telefono" required>
+                        </form>
+                    </div>
+
+                    <div class="checkout-payment">
+                        <h2>Metodo di Pagamento</h2>
+                        <div class="payment-methods">
+                            <button id="payStripe" class="payment-btn payment-stripe">
+                                <span>💳</span> Carta di Credito
+                            </button>
+                            <button id="payPayPal" class="payment-btn payment-paypal">
+                                <span>🅿️</span> PayPal
+                            </button>
+                        </div>
+                        <p class="payment-secure">🔒 Pagamento sicuro e crittografato</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="emptyCart" class="checkout-empty" style="display: none;">
+                <p>Il tuo carrello è vuoto.</p>
+                <a href="collection.html" class="btn btn-primary">Scopri i Prodotti</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script type="module" src="js/pages/checkout.js"></script>
+</body>
+</html>

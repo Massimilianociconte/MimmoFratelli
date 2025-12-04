@@ -1,0 +1,5 @@
+# Components folder - Contains UI components
+# - modal.js: Modal dialogs
+# - cart-drawer.js: Cart sidebar
+# - filters.js: Product filters
+# - notifications.js: Toast notifications

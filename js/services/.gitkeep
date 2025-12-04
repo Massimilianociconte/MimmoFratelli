@@ -1,0 +1,10 @@
+# Services folder - Contains business logic modules
+# - auth.js: Authentication service
+# - wishlist.js: Wishlist management
+# - cart.js: Shopping cart
+# - products.js: Product catalog
+# - orders.js: Order management
+# - payment.js: Payment gateway
+# - promotions.js: Promotions system
+# - giftcard.js: Gift card service
+# - cms.js: CMS operations

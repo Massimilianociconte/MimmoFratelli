@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "fetch"
+      ]
+    },
+    "MimmoFratelli": {
+      "url": "https://mcp.supabase.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sbp_98565c9e6d1670f27400cfa7610d15a75b6a5212"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "execute_sql",
+        "list_projects",
+        "list_tables",
+        "get_logs",
+        "get_cost",
+        "list_organizations",
+        "confirm_cost",
+        "create_project",
+        "list_migrations",
+        "apply_migration",
+        "get_project_url",
+        "get_anon_key",
+        "deploy_edge_function",
+        "deploy_edge_function",
+        "list_edge_functions",
+        "get_edge_function",
+        "get_project",
+        "search_docs",
+        "get_advisors"
+      ]
+    }
+  }
+}

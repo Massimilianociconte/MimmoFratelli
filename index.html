@@ -4,128 +4,443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avenue Gallarate | Fashion Store</title>
-    <meta name="description" content="Avenue Gallarate - Boutique di abbigliamento Uomo e Donna a Gallarate. Stile, eleganza e tendenza dal 1985.">
+    <title>Mimmo Fratelli | Frutta e Verdura Fresca</title>
+    <meta name="description" content="Mimmo Fratelli - Frutta e Verdura fresca di stagione. Qualità, freschezza e natura dal produttore alla tua tavola.">
     
     <!-- SEO & Social -->
-    <meta name="keywords" content="abbigliamento, moda, fashion, Gallarate, boutique, uomo, donna, lusso">
-    <meta name="author" content="Avenue Gallarate">
+    <meta name="keywords" content="frutta, verdura, fresca, biologica, stagione, ortofrutta, natura, qualità">
+    <meta name="author" content="Mimmo Fratelli">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://avenuegallarate.it/">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="Avenue Gallarate | Fashion Store">
-    <meta property="og:description" content="Boutique di abbigliamento Uomo e Donna. Stile, eleganza e tendenza dal 1985.">
-    <meta property="og:image" content="Images/Hero/hero_women.png">
-    <meta property="og:url" content="https://avenuegallarate.it/">
+    <meta property="og:title" content="Mimmo Fratelli | Frutta e Verdura Fresca">
+    <meta property="og:description" content="Frutta e Verdura fresca di stagione. Qualità, freschezza e natura.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1200">
     <meta property="og:type" content="website">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Avenue Gallarate | Fashion Store">
-    <meta name="twitter:description" content="Boutique di abbigliamento Uomo e Donna a Gallarate.">
+    <meta name="twitter:title" content="Mimmo Fratelli | Frutta e Verdura Fresca">
+    <meta name="twitter:description" content="Frutta e Verdura fresca di stagione.">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
     
     <!-- Theme Color -->
-    <meta name="theme-color" content="#f3f0eb">
+    <meta name="theme-color" content="#f8fdf5">
 
-    <!-- Fonts -->
+    <!-- Fonts - Elegant Food-focused typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- Preload critical images -->
-    <link rel="preload" as="image" href="Images/Hero/hero_women.png">
-    <link rel="preload" as="image" href="Images/Hero/hero-men-3-zoomout.png">
+    <!-- Preload critical images with optimized sizes -->
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp" type="image/webp">
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp" type="image/webp">
+    
+    <!-- Critical CSS inline for faster render -->
+    <style>
+        body{margin:0;background:#f8fdf5;opacity:0;animation:pageLoad .6s ease forwards}
+        @keyframes pageLoad{to{opacity:1}}
+        .hero-main{min-height:100vh;position:relative;overflow:hidden}
+        .split-container{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);width:100%;gap:16px;padding:16px}
+        .split{position:relative;overflow:hidden;border-radius:20px}
+        .split-bg{position:absolute;width:100%;height:100%;object-fit:cover}
+        @media(max-width:768px){.split-container{grid-template-columns:1fr;grid-template-rows:repeat(4,1fr)}}
+    </style>
 </head>
 
 <body>
 
     <!-- Navigation -->
-    <nav>
-        <a href="index.html" class="logo">Avenue.</a>
-        <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+    <nav class="nav-home nav-transparent" id="mainNav">
+        <a href="index.html" class="logo">
+            <span class="logo-icon"></span>
+            <span class="logo-text">Mimmo Fratelli</span>
+        </a>
+        <div class="nav-right">
+            <a href="promos.html" class="nav-promo-badge">
+                <span class="promo-pulse"></span>
+                Offerte
+            </a>
+            <div class="menu-btn" onclick="toggleMenu()">
+                <span class="menu-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+                <span class="menu-text">Menu</span>
+            </div>
+        </div>
     </nav>
 
     <!-- Full Screen Overlay Menu -->
     <div class="menu-overlay" id="menuOverlay">
-        <ul class="menu-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="collection.html?gender=man">Uomo</a></li>
-            <li><a href="collection.html?gender=woman">Donna</a></li>
-            <li><a href="contacts.html">Contatti</a></li>
-        </ul>
+        <div class="menu-bg-pattern"></div>
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html"><span class="menu-emoji">🏠</span> Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title"><span class="menu-emoji">🍎</span> Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title"><span class="menu-emoji">🥬</span> Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="collection.html?gender=gastronomia"><span class="menu-emoji">🧀</span> Gastronomia</a></li>
+                <li><a href="collection.html?gender=preparati"><span class="menu-emoji">🍲</span> I Nostri Preparati</a></li>
+                <li><a href="promos.html"><span class="menu-emoji">🏷️</span> Offerte</a></li>
+                <li><a href="about.html"><span class="menu-emoji">ℹ️</span> Chi Siamo</a></li>
+                <li><a href="contacts.html"><span class="menu-emoji">📞</span> Contatti</a></li>
+            </ul>
+            <div class="menu-footer">
+                <p>Freschezza garantita ogni giorno 🌿</p>
+            </div>
+        </div>
     </div>
 
-    <!-- Split Hero Section -->
-    <div class="split-container">
-        <!-- Woman Side -->
-        <div class="split split-left" onclick="window.location.href='collection.html?gender=woman'">
-            <img src="Images/Hero/hero_women.png"
-                alt="Collezione Donna Avenue Gallarate - Moda femminile elegante" class="split-bg" loading="eager">
-            <div class="split-content">
-                <h2>Donna</h2>
-                <a href="collection.html?gender=woman" class="btn">Scopri Collezione</a>
+    <!-- Hero Main Section -->
+    <section class="hero-main">
+        <!-- Animated Background -->
+        <div class="hero-bg-animated">
+            <div class="hero-gradient"></div>
+            <div class="floating-elements">
+                <span class="float-item" style="--delay: 0s; --x: 10%; --y: 20%;">🍎</span>
+                <span class="float-item" style="--delay: 1s; --x: 85%; --y: 15%;">🥬</span>
+                <span class="float-item" style="--delay: 2s; --x: 75%; --y: 70%;">🍋</span>
+                <span class="float-item" style="--delay: 0.5s; --x: 20%; --y: 75%;">🥕</span>
+                <span class="float-item" style="--delay: 1.5s; --x: 50%; --y: 10%;">🍇</span>
+                <span class="float-item" style="--delay: 2.5s; --x: 90%; --y: 50%;">🍅</span>
             </div>
         </div>
 
-        <!-- Man Side -->
-        <div class="split split-right" onclick="window.location.href='collection.html?gender=man'">
-            <img src="Images/Hero/hero-men-3-zoomout.png"
-                alt="Collezione Uomo Avenue Gallarate - Moda maschile elegante" class="split-bg" loading="eager">
-            <div class="split-content">
-                <h2>Uomo</h2>
-                <a href="collection.html?gender=man" class="btn">Scopri Collezione</a>
+        <!-- Hero Content -->
+        <div class="hero-content-main">
+            <div class="hero-badge animate-fade-up">
+                <span class="badge-dot"></span>
+                Freschezza Garantita
+            </div>
+            <h1 class="hero-title-main animate-fade-up" style="--delay: 0.1s">
+                <span class="title-line">Frutta & Verdura</span>
+                <span class="title-accent">di Stagione</span>
+            </h1>
+            <p class="hero-subtitle animate-fade-up" style="--delay: 0.2s">
+                Dal produttore alla tua tavola. Qualità, freschezza e natura ogni giorno.
+            </p>
+            <div class="hero-cta animate-fade-up" style="--delay: 0.3s">
+                <a href="collection.html" class="btn-primary">
+                    <span>Scopri i Prodotti</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="about.html" class="btn-secondary">Chi Siamo</a>
             </div>
         </div>
-    </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <span>Scorri</span>
+            <div class="scroll-line-animated"></div>
+        </div>
+    </section>
+
+    <!-- Categories Section - Premium Grid -->
+    <section class="categories-section">
+        <div class="section-header">
+            <span class="section-label">Le Nostre Categorie</span>
+            <h2 class="section-title">Scegli la Freschezza</h2>
+        </div>
+        
+        <div class="split-container">
+            <!-- Frutta -->
+            <div class="split" onclick="window.location.href='collection.html?gender=frutta'">
+                <picture>
+                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp" type="image/webp">
+                    <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60"
+                        alt="Frutta Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async" fetchpriority="high">
+                </picture>
+                <div class="split-overlay"></div>
+                <div class="split-content">
+                    <span class="split-icon">🍎</span>
+                    <h2>Frutta</h2>
+                    <p class="split-desc">Fresca e di stagione</p>
+                    <a href="collection.html?gender=frutta" class="btn-explore">
+                        <span>Esplora</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Verdura -->
+            <div class="split" onclick="window.location.href='collection.html?gender=verdura'">
+                <picture>
+                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp" type="image/webp">
+                    <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60"
+                        alt="Verdura Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async" fetchpriority="high">
+                </picture>
+                <div class="split-overlay"></div>
+                <div class="split-content">
+                    <span class="split-icon">🥬</span>
+                    <h2>Verdura</h2>
+                    <p class="split-desc">Ortaggi selezionati</p>
+                    <a href="collection.html?gender=verdura" class="btn-explore">
+                        <span>Esplora</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Gastronomia -->
+            <div class="split" onclick="window.location.href='collection.html?gender=gastronomia'">
+                <picture>
+                    <source srcset="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=60&fm=webp" type="image/webp">
+                    <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=60"
+                        alt="Gastronomia - Mimmo Fratelli" class="split-bg" loading="lazy" decoding="async">
+                </picture>
+                <div class="split-overlay"></div>
+                <div class="split-content">
+                    <span class="split-icon">🧀</span>
+                    <h2>Gastronomia</h2>
+                    <p class="split-desc">Sapori autentici</p>
+                    <a href="collection.html?gender=gastronomia" class="btn-explore">
+                        <span>Esplora</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- I Nostri Preparati -->
+            <div class="split" onclick="window.location.href='collection.html?gender=preparati'">
+                <picture>
+                    <source srcset="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=60&fm=webp" type="image/webp">
+                    <img src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=60"
+                        alt="I Nostri Preparati - Mimmo Fratelli" class="split-bg" loading="lazy" decoding="async">
+                </picture>
+                <div class="split-overlay"></div>
+                <div class="split-content">
+                    <span class="split-icon">🍲</span>
+                    <h2>I Nostri Preparati</h2>
+                    <p class="split-desc">Pronti da gustare</p>
+                    <a href="collection.html?gender=preparati" class="btn-explore">
+                        <span>Esplora</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🚚</span>
+                </div>
+                <h3>Consegna Veloce</h3>
+                <p>Prodotti freschi consegnati direttamente a casa tua</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🌱</span>
+                </div>
+                <h3>100% Naturale</h3>
+                <p>Selezioniamo solo prodotti di alta qualità</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>💚</span>
+                </div>
+                <h3>Freschezza Garantita</h3>
+                <p>Dalla terra alla tua tavola in 24 ore</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🏆</span>
+                </div>
+                <h3>Qualità Premium</h3>
+                <p>Oltre 30 anni di esperienza nel settore</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promo Banner -->
+    <section class="promo-banner">
+        <div class="promo-content">
+            <div class="promo-text">
+                <span class="promo-label">Offerta Speciale</span>
+                <h2>Scopri le Offerte della Settimana</h2>
+                <p>Risparmia sui migliori prodotti di stagione</p>
+            </div>
+            <a href="promos.html" class="promo-btn">
+                Vedi Offerte
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        <div class="promo-decoration">
+            <span>🏷️</span>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="site-footer">
         <div class="footer-content">
-            <div class="footer-brand">Avenue.</div>
-            <p class="footer-tagline">Stile, eleganza e tendenza dal 1985</p>
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
             <div class="footer-links">
-                <a href="collection.html?gender=woman">Donna</a>
-                <a href="collection.html?gender=man">Uomo</a>
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
                 <a href="contacts.html">Contatti</a>
             </div>
-            <p class="footer-copy">© 2025 Avenue Gallarate. Tutti i diritti riservati.</p>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
         </div>
     </footer>
+
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    
+    <!-- File protocol warning -->
+    <script>
+        if (window.location.protocol === 'file:') {
+            console.warn('Mimmo Fratelli: Per funzionalità complete, usa npm run dev e apri http://localhost:3000');
+        }
+    </script>
 
     <script>
         // --- MENU TOGGLE ---
         const menuOverlay = document.getElementById('menuOverlay');
         const menuBtn = document.querySelector('.menu-btn');
+        const menuText = document.querySelector('.menu-text');
+        const mainNav = document.getElementById('mainNav');
         let isMenuOpen = false;
 
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
             if (isMenuOpen) {
                 menuOverlay.classList.add('active');
-                menuBtn.textContent = 'Close';
+                document.body.classList.add('menu-open');
+                menuBtn.classList.add('active');
+                if (menuText) menuText.textContent = 'Chiudi';
             } else {
                 menuOverlay.classList.remove('active');
-                menuBtn.textContent = 'Menu';
+                document.body.classList.remove('menu-open');
+                menuBtn.classList.remove('active');
+                if (menuText) menuText.textContent = 'Menu';
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
             }
         }
 
-        // --- SMOOTH SCROLL REVEAL ---
-        const splitContents = document.querySelectorAll('.split-content');
-        splitContents.forEach((el, i) => {
+        // --- MENU CATEGORY TOGGLE (Mobile) ---
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
+
+        // --- NAVBAR SCROLL EFFECT ---
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                mainNav.classList.add('scrolled');
+            } else {
+                mainNav.classList.remove('scrolled');
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // --- SCROLL REVEAL ANIMATION ---
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for scroll reveal
+        document.querySelectorAll('.split, .feature-card, .promo-banner').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
-            setTimeout(() => {
-                el.style.transition = 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)';
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
-            }, 300 + (i * 200));
+            el.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            observer.observe(el);
         });
+
+        // Add revealed class styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .revealed {
+                opacity: 1 !important;
+                transform: translateY(0) !important;
+            }
+        `;
+        document.head.appendChild(style);
 
         // --- CLOSE MENU WITH ESC KEY ---
         document.addEventListener('keydown', (e) => {
@@ -136,10 +451,41 @@
 
         // --- CLOSE MENU ON OVERLAY CLICK ---
         menuOverlay.addEventListener('click', (e) => {
-            if (e.target === menuOverlay) {
+            if (e.target === menuOverlay || e.target.classList.contains('menu-content')) {
                 toggleMenu();
             }
         });
+
+        // --- SMOOTH SCROLL FOR SCROLL INDICATOR ---
+        document.querySelector('.scroll-indicator')?.addEventListener('click', () => {
+            document.querySelector('.categories-section')?.scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap Icons for notification banner -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Notification Banner & Referral Landing -->
+    <script type="module">
+        import { notificationBanner } from './js/components/notification-banner.js';
+        import { inAppNotifications } from './js/services/in-app-notifications.js';
+        import { notificationPrompt } from './js/components/notification-prompt.js';
+        import { whatsappChannelButton } from './js/components/whatsapp-channel-button.js';
+        import { initReferralLanding } from './js/utils/referral-landing.js';
+        
+        // Initialize notification banner
+        notificationBanner.init();
+        
+        // Initialize in-app notifications for seasonal products
+        inAppNotifications.init();
+        
+        // Show push notification prompt
+        notificationPrompt.init();
+        
+        // Check for referral code in URL and open registration modal
+        initReferralLanding();
     </script>
 </body>
 

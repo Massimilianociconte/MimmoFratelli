@@ -1,0 +1,15 @@
+{
+  "cleanUrls": false,
+  "rewrites": [],
+  "headers": [
+    {
+      "source": "**/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}

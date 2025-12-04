@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Siamo | Mimmo Fratelli</title>
+    <meta name="description" content="Scopri la storia e la passione di Mimmo Fratelli per la frutta e verdura fresca di qualità.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="nav-on-green" id="mainNav">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
+    </nav>
+
+    <!-- Full Screen Overlay Menu -->
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <main class="about-page-premium">
+        <!-- Hero Section -->
+        <section class="about-hero-premium">
+            <div class="about-hero-inner">
+                <span class="about-hero-label">La Nostra Storia</span>
+                <h1 class="about-hero-title">Mimmo Fratelli</h1>
+                <p class="about-hero-subtitle">Freschezza, Qualità e Natura dal 1996</p>
+                <div class="about-hero-line"></div>
+            </div>
+        </section>
+
+        <!-- Intro Section -->
+        <section class="about-intro">
+            <div class="about-intro-content">
+                <p class="about-intro-text">
+                    Da quasi trent'anni, Mimmo Fratelli rappresenta un punto di riferimento per chi cerca 
+                    frutta e verdura di qualità superiore. La nostra attività è nata dalla passione per i 
+                    prodotti della terra e dal desiderio di portare sulla tavola dei nostri clienti solo 
+                    il meglio che la natura può offrire, rispettando la stagionalità e la provenienza locale.
+                </p>
+            </div>
+        </section>
+
+        <!-- Story Section -->
+        <section class="about-story-premium">
+            <div class="about-story-content">
+                <div class="about-section-header">
+                    <span class="section-label">Il Nostro Percorso</span>
+                    <h2>Una Storia di Passione</h2>
+                </div>
+                <div class="timeline-premium">
+                    <div class="timeline-item-premium">
+                        <div class="timeline-marker">
+                            <span class="timeline-year-premium">1996</span>
+                        </div>
+                        <div class="timeline-content-premium">
+                            <h3>L'Inizio</h3>
+                            <p>Mimmo Fratelli nasce come piccolo banco al mercato rionale, con la passione per i prodotti freschi e genuini. Un sogno di famiglia che prende forma.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item-premium">
+                        <div class="timeline-marker">
+                            <span class="timeline-year-premium">2005</span>
+                        </div>
+                        <div class="timeline-content-premium">
+                            <h3>Il Primo Negozio</h3>
+                            <p>Apriamo il nostro primo punto vendita fisico, ampliando l'offerta con prodotti biologici e a km zero direttamente dai produttori locali.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item-premium">
+                        <div class="timeline-marker">
+                            <span class="timeline-year-premium">2018</span>
+                        </div>
+                        <div class="timeline-content-premium">
+                            <h3>Crescita</h3>
+                            <p>Stringiamo partnership con agricoltori biologici certificati e iniziamo il servizio di consegna a domicilio per i nostri clienti più affezionati.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item-premium">
+                        <div class="timeline-marker">
+                            <span class="timeline-year-premium">Oggi</span>
+                        </div>
+                        <div class="timeline-content-premium">
+                            <h3>Il Futuro</h3>
+                            <p>Lanciamo il nostro e-commerce per portare la freschezza di Mimmo Fratelli direttamente a casa tua, mantenendo la qualità che ci contraddistingue.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Values Section -->
+        <section class="about-values">
+            <div class="about-values-content">
+                <div class="about-section-header">
+                    <span class="section-label">I Nostri Valori</span>
+                    <h2>Cosa Ci Guida</h2>
+                </div>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                            </svg>
+                        </div>
+                        <h3>Freschezza</h3>
+                        <p>Selezioniamo ogni giorno i prodotti più freschi, raccogliendo direttamente dai campi per garantire la massima qualità.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h3>Qualità</h3>
+                        <p>Solo prodotti selezionati con cura, privilegiando le coltivazioni biologiche e i metodi tradizionali.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <h3>Stagionalità</h3>
+                        <p>Rispettiamo i ritmi della natura, proponendo frutta e verdura di stagione per un gusto autentico.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <h3>Famiglia</h3>
+                        <p>Siamo un'azienda familiare che tratta ogni cliente come parte della nostra grande famiglia.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="about-cta-premium">
+            <div class="about-cta-content">
+                <span class="section-label">Scopri Mimmo Fratelli</span>
+                <h2>Vieni a Trovarci</h2>
+                <p>Scopri la freschezza dei nostri prodotti nel nostro negozio o ordina comodamente online.</p>
+                <div class="cta-buttons-premium">
+                    <a href="collection.html" class="btn-premium btn-primary-premium">Scopri i Prodotti</a>
+                    <a href="contacts.html" class="btn-premium btn-secondary-premium">Contattaci</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script type="module">
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { wishlistService } from './js/services/wishlist.js';
+
+        // Menu toggle
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            menuOverlay.classList.toggle('active', !isOpen);
+            document.body.classList.toggle('menu-open', !isOpen);
+            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            if (isOpen) {
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+            }
+        };
+
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            authModal.init();
+            profileDrawer.init();
+            cartDrawer.init();
+
+            // Navbar scroll effect
+            const nav = document.getElementById('mainNav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            });
+
+            // Auth button
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) {
+                    profileDrawer.show();
+                } else {
+                    authModal.show('login');
+                }
+            });
+
+            // Cart button
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+
+            // Update badges
+            updateCartBadge();
+            updateWishlistBadge();
+            cartService.onChange(() => updateCartBadge());
+            wishlistService.onChange(() => updateWishlistBadge());
+
+            // Close menu with ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('menuOverlay').classList.contains('active')) {
+                        toggleMenu();
+                    }
+                }
+            });
+
+            // Close menu on overlay click
+            document.getElementById('menuOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'menuOverlay' || e.target.classList.contains('menu-content')) {
+                    toggleMenu();
+                }
+            });
+        });
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        async function updateWishlistBadge() {
+            const { items } = await wishlistService.getAllFavorites();
+            const badge = document.getElementById('wishlistBadge');
+            if (badge) {
+                const count = items ? items.length : 0;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>

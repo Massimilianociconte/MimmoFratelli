@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostazioni | Mimmo Fratelli</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#fafcf8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .settings-loading { text-align: center; padding: 2rem; color: #666; }
+        .settings-message { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
+        .settings-message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .settings-message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .settings-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .settings-field input:disabled { background: #f5f5f5; }
+        .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .confirm-modal.active { opacity: 1; visibility: visible; }
+        .confirm-modal-content { background: white; padding: 2rem; border-radius: 12px; max-width: 400px; text-align: center; }
+        .confirm-modal h3 { margin-bottom: 1rem; color: #c53030; }
+        .confirm-modal p { color: #666; margin-bottom: 1.5rem; }
+        .confirm-modal-actions { display: flex; gap: 1rem; justify-content: center; }
+        .confirm-modal-btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; }
+        .confirm-modal-btn.cancel { background: #e2e8f0; color: #4a5568; }
+        .confirm-modal-btn.danger { background: #c53030; color: white; }
+        .settings-not-auth { text-align: center; padding: 3rem; }
+        .settings-not-auth h2 { margin-bottom: 1rem; }
+        .settings-not-auth p { color: #666; margin-bottom: 1.5rem; }
+        .settings-not-auth .btn { display: inline-block; padding: 0.75rem 1.5rem; background: var(--primary-color, #4a7c59); color: white; text-decoration: none; border-radius: 8px; }
+        
+        /* Push Notification Section */
+        .push-notification-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+        .push-notification-card { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: linear-gradient(135deg, #fef3e2 0%, #ffecd2 100%); border-radius: 12px; border: 1px solid #f59e0b; }
+        .push-icon { font-size: 2rem; }
+        .push-info { flex: 1; }
+        .push-info h4 { margin: 0 0 0.25rem 0; font-size: 1rem; color: #92400e; }
+        .push-info p { margin: 0; font-size: 0.85rem; color: #b45309; }
+        .push-action-btn { padding: 0.6rem 1.2rem; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .push-action-btn:hover { background: #d97706; transform: translateY(-1px); }
+        .push-action-btn.subscribed { background: #10b981; }
+        .push-action-btn.blocked { background: #ef4444; cursor: not-allowed; }
+        .push-status-success { color: #10b981 !important; }
+        .push-status-blocked { color: #ef4444 !important; }
+        
+        /* Referral Section Styles */
+        .referral-content { padding: 1rem 0; }
+        .referral-code-box { margin-bottom: 1.5rem; }
+        .referral-code-box label { display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; }
+        .referral-code-display { display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1rem; border-radius: 12px; border: 2px dashed #22c55e; }
+        .referral-code-display code { font-size: 1.5rem; font-weight: 700; color: #166534; letter-spacing: 2px; flex: 1; }
+        .referral-copy-btn { background: #22c55e; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+        .referral-copy-btn:hover { background: #16a34a; transform: scale(1.05); }
+        .referral-share-buttons { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .referral-share-btn { flex: 1; min-width: 100px; padding: 0.75rem 1rem; border: none; border-radius: 10px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
+        .referral-share-btn.whatsapp { background: #25D366; color: white; }
+        .referral-share-btn.email { background: #4a7c59; color: white; }
+        .referral-share-btn.copy { background: #e2e8f0; color: #475569; }
+        .referral-share-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .referral-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 12px; }
+        .referral-stat { text-align: center; }
+        .referral-stat .stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #166534; }
+        .referral-stat .stat-label { font-size: 0.8rem; color: #64748b; }
+    </style>
+</head>
+<body>
+    <nav style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px); position: fixed; z-index: 1000;">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account" style="cursor: pointer; pointer-events: auto;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
+    </nav>
+
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li><a href="collection.html?gender=frutta">🍎 Frutta</a></li>
+                <li><a href="collection.html?gender=verdura">🥬 Verdura</a></li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <main class="settings-page">
+        <div class="settings-container">
+            <!-- Not authenticated message -->
+            <div id="notAuthMessage" class="settings-not-auth" style="display: none;">
+                <h2>⚙️ Impostazioni</h2>
+                <p>Devi effettuare l'accesso per gestire le impostazioni del tuo account.</p>
+                <a href="#" class="btn" id="loginBtn">Accedi</a>
+            </div>
+            
+            <!-- Loading state -->
+            <div id="settingsLoading" class="settings-loading">
+                <p>Caricamento...</p>
+            </div>
+
+            <!-- Settings content (hidden until loaded) -->
+            <div id="settingsContent" style="display: none;">
+                <div class="settings-header">
+                    <h1 class="settings-title">⚙️ Impostazioni</h1>
+                    <p class="settings-subtitle">Gestisci il tuo account e le tue preferenze</p>
+                    <p class="settings-email" id="userEmail" style="color: #666; font-size: 0.9rem;"></p>
+                </div>
+                
+                <!-- Profile Section -->
+                <section class="settings-section">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">👤</span>
+                        <div>
+                            <h2>Profilo</h2>
+                            <p class="settings-section-desc">Informazioni personali e dati di contatto</p>
+                        </div>
+                    </div>
+                    <div id="profileMessage"></div>
+                    <form class="settings-form" id="profileForm">
+                        <div class="settings-form-row">
+                            <div class="settings-field">
+                                <label for="firstName">Nome</label>
+                                <input type="text" id="firstName" name="first_name" placeholder="Il tuo nome">
+                            </div>
+                            <div class="settings-field">
+                                <label for="lastName">Cognome</label>
+                                <input type="text" id="lastName" name="last_name" placeholder="Il tuo cognome">
+                            </div>
+                        </div>
+                        <div class="settings-field">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="email@esempio.com" disabled>
+                        </div>
+                        <div class="settings-field">
+                            <label for="phone">Telefono</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+39 123 456 7890">
+                        </div>
+                        <button type="submit" class="settings-save-btn" id="profileSaveBtn">Salva Modifiche</button>
+                    </form>
+                </section>
+
+                <!-- Address Section -->
+                <section class="settings-section">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">📍</span>
+                        <div>
+                            <h2>Indirizzo di Consegna</h2>
+                            <p class="settings-section-desc">Dove vuoi ricevere i tuoi ordini</p>
+                        </div>
+                    </div>
+                    <div id="addressMessage"></div>
+                    <form class="settings-form" id="addressForm">
+                        <div class="settings-field">
+                            <label for="address">Indirizzo</label>
+                            <input type="text" id="address" name="address" placeholder="Via, numero civico">
+                        </div>
+                        <div class="settings-form-row">
+                            <div class="settings-field">
+                                <label for="city">Città</label>
+                                <input type="text" id="city" name="city" placeholder="Milano">
+                            </div>
+                            <div class="settings-field">
+                                <label for="zip">CAP</label>
+                                <input type="text" id="zip" name="zip" placeholder="20100" maxlength="5">
+                            </div>
+                        </div>
+                        <div class="settings-field">
+                            <label for="province">Provincia</label>
+                            <input type="text" id="province" name="province" placeholder="MI" maxlength="2" style="text-transform: uppercase;">
+                        </div>
+                        <button type="submit" class="settings-save-btn" id="addressSaveBtn">Salva Indirizzo</button>
+                    </form>
+                </section>
+
+                <!-- Notifications Section -->
+                <section class="settings-section">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">🔔</span>
+                        <div>
+                            <h2>Notifiche</h2>
+                            <p class="settings-section-desc">Scegli come vuoi essere contattato</p>
+                        </div>
+                    </div>
+                    <div id="notificationsMessage"></div>
+                    <div class="settings-toggles">
+                        <label class="settings-toggle">
+                            <div class="settings-toggle-info">
+                                <span class="settings-toggle-title">Email promozionali</span>
+                                <span class="settings-toggle-desc">Ricevi offerte e novità via email</span>
+                            </div>
+                            <input type="checkbox" id="newsletter" name="newsletter">
+                            <span class="settings-toggle-switch"></span>
+                        </label>
+                        <label class="settings-toggle">
+                            <div class="settings-toggle-info">
+                                <span class="settings-toggle-title">Stato ordini</span>
+                                <span class="settings-toggle-desc">Notifiche sullo stato delle consegne</span>
+                            </div>
+                            <input type="checkbox" id="orderNotifications" name="order_notifications">
+                            <span class="settings-toggle-switch"></span>
+                        </label>
+                        <label class="settings-toggle" id="seasonalToggle">
+                            <div class="settings-toggle-info">
+                                <span class="settings-toggle-title">Prodotti di stagione</span>
+                                <span class="settings-toggle-desc">Avvisi sui nuovi arrivi stagionali</span>
+                            </div>
+                            <input type="checkbox" id="seasonalNotifications" name="seasonal_notifications">
+                            <span class="settings-toggle-switch"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Browser Push Notifications -->
+                    <div class="push-notification-section" id="pushNotificationSection">
+                        <div class="push-notification-card">
+                            <div class="push-icon">📲</div>
+                            <div class="push-info">
+                                <h4>Notifiche Push Browser</h4>
+                                <p id="pushStatus">Verifica stato...</p>
+                            </div>
+                            <button class="push-action-btn" id="pushActionBtn" style="display: none;">
+                                Attiva Notifiche
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Security Section -->
+                <section class="settings-section">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">🔒</span>
+                        <div>
+                            <h2>Sicurezza</h2>
+                            <p class="settings-section-desc">Password e accesso al tuo account</p>
+                        </div>
+                    </div>
+                    <div id="passwordMessage"></div>
+                    <form class="settings-form" id="passwordForm">
+                        <!-- Hidden username field for accessibility -->
+                        <input type="text" id="usernameHidden" name="username" autocomplete="username" style="display:none;" aria-hidden="true">
+                        <div class="settings-form-row">
+                            <div class="settings-field">
+                                <label for="newPassword">Nuova password</label>
+                                <input type="password" id="newPassword" name="new_password" placeholder="••••••••" minlength="8" autocomplete="new-password">
+                            </div>
+                            <div class="settings-field">
+                                <label for="confirmPassword">Conferma password</label>
+                                <input type="password" id="confirmPassword" name="confirm_password" placeholder="••••••••" minlength="8" autocomplete="new-password">
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">La password deve essere di almeno 8 caratteri</p>
+                        <button type="submit" class="settings-save-btn" id="passwordSaveBtn">Cambia Password</button>
+                    </form>
+                </section>
+
+                <!-- Referral Section -->
+                <section class="settings-section" id="referralSection">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">🎁</span>
+                        <div>
+                            <h2>Invita un Amico</h2>
+                            <p class="settings-section-desc">Condividi e guadagna €5 per ogni amico che ordina</p>
+                        </div>
+                    </div>
+                    <div class="referral-content">
+                        <div class="referral-code-box">
+                            <label>Il tuo codice referral</label>
+                            <div class="referral-code-display">
+                                <code id="referralCode">Caricamento...</code>
+                                <button class="referral-copy-btn" id="copyReferralBtn" title="Copia codice">📋</button>
+                            </div>
+                        </div>
+                        <div class="referral-share-buttons">
+                            <button class="referral-share-btn whatsapp" id="shareWhatsApp">
+                                <span>📱</span> WhatsApp
+                            </button>
+                            <button class="referral-share-btn email" id="shareEmail">
+                                <span>✉️</span> Email
+                            </button>
+                            <button class="referral-share-btn copy" id="shareLink">
+                                <span>🔗</span> Copia Link
+                            </button>
+                        </div>
+                        <div class="referral-stats">
+                            <div class="referral-stat">
+                                <span class="stat-value" id="statInvites">0</span>
+                                <span class="stat-label">Inviti</span>
+                            </div>
+                            <div class="referral-stat">
+                                <span class="stat-value" id="statConversions">0</span>
+                                <span class="stat-label">Convertiti</span>
+                            </div>
+                            <div class="referral-stat">
+                                <span class="stat-value" id="statEarned">€0</span>
+                                <span class="stat-label">Guadagnato</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Danger Zone -->
+                <section class="settings-section settings-danger">
+                    <div class="settings-section-header">
+                        <span class="settings-section-icon">⚠️</span>
+                        <div>
+                            <h2>Zona Pericolosa</h2>
+                            <p class="settings-section-desc">Azioni irreversibili sul tuo account</p>
+                        </div>
+                    </div>
+                    <div class="settings-danger-actions">
+                        <button class="settings-danger-btn" id="deleteAccountBtn">Elimina Account</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirm Delete Modal -->
+    <div class="confirm-modal" id="confirmDeleteModal">
+        <div class="confirm-modal-content">
+            <h3>⚠️ Elimina Account</h3>
+            <p>Sei sicuro di voler eliminare il tuo account? Questa azione è <strong>irreversibile</strong> e tutti i tuoi dati verranno persi.</p>
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn cancel" id="cancelDeleteBtn">Annulla</button>
+                <button class="confirm-modal-btn danger" id="confirmDeleteBtn">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script type="module">
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { wishlistService } from './js/services/wishlist.js';
+        import { supabase, isSupabaseConfigured } from './js/supabase.js';
+        import { referralService } from './js/services/referral.js?v=3';
+
+        let currentProfile = null;
+
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            menuOverlay.classList.toggle('active', !isOpen);
+            document.body.classList.toggle('menu-open', !isOpen);
+            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+        };
+
+        function showMessage(elementId, message, type = 'success') {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.innerHTML = `<div class="settings-message ${type}">${message}</div>`;
+                setTimeout(() => { el.innerHTML = ''; }, 5000);
+            }
+        }
+
+        async function loadProfile() {
+            const { profile, error } = await authService.getProfile();
+            if (error) {
+                console.error('Error loading profile:', error);
+                return;
+            }
+            
+            currentProfile = profile || {};
+            
+            // Fill profile form
+            document.getElementById('firstName').value = currentProfile.first_name || '';
+            document.getElementById('lastName').value = currentProfile.last_name || '';
+            document.getElementById('phone').value = currentProfile.phone || '';
+            
+            // Fill address form
+            document.getElementById('address').value = currentProfile.address || '';
+            document.getElementById('city').value = currentProfile.city || '';
+            document.getElementById('zip').value = currentProfile.zip || '';
+            document.getElementById('province').value = currentProfile.province || '';
+            
+            // Fill notifications
+            document.getElementById('newsletter').checked = currentProfile.newsletter !== false;
+            document.getElementById('orderNotifications').checked = currentProfile.order_notifications !== false;
+            document.getElementById('seasonalNotifications').checked = currentProfile.seasonal_notifications === true;
+            
+            // Load referral data
+            await loadReferralData();
+        }
+
+        async function loadReferralData() {
+            try {
+                const result = await referralService.getMyReferralCode();
+                
+                if (result.error || !result.code) {
+                    document.getElementById('referralCode').textContent = 'Non disponibile';
+                    return;
+                }
+                
+                document.getElementById('referralCode').textContent = result.code;
+                
+                // Load stats
+                const stats = await referralService.getReferralStats();
+                if (!stats.error) {
+                    document.getElementById('statInvites').textContent = stats.totalInvites || 0;
+                    document.getElementById('statConversions').textContent = stats.conversions || 0;
+                    document.getElementById('statEarned').textContent = `€${(stats.totalEarned || 0).toFixed(0)}`;
+                }
+                
+                // Setup share buttons
+                // Copy just the code (not the link)
+                document.getElementById('copyReferralBtn').onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(result.code);
+                        document.getElementById('copyReferralBtn').textContent = '✓';
+                        setTimeout(() => { document.getElementById('copyReferralBtn').textContent = '📋'; }, 2000);
+                    } catch (err) {
+                        console.error('Copy failed:', err);
+                    }
+                };
+                
+                document.getElementById('shareWhatsApp').onclick = () => referralService.shareViaWhatsApp(result.code);
+                document.getElementById('shareEmail').onclick = () => referralService.shareViaEmail(result.code);
+                // Copy the full link
+                document.getElementById('shareLink').onclick = async () => {
+                    const success = await referralService.copyToClipboard(result.code);
+                    if (success) {
+                        document.getElementById('shareLink').innerHTML = '<span>✓</span> Copiato!';
+                        setTimeout(() => { document.getElementById('shareLink').innerHTML = '<span>🔗</span> Copia Link'; }, 2000);
+                    }
+                };
+            } catch (err) {
+                console.error('Error loading referral data:', err);
+            }
+        }
+
+        async function saveProfile(e) {
+            e.preventDefault();
+            const btn = document.getElementById('profileSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Salvataggio...';
+            
+            try {
+                const data = {
+                    first_name: document.getElementById('firstName').value.trim(),
+                    last_name: document.getElementById('lastName').value.trim(),
+                    phone: document.getElementById('phone').value.trim()
+                };
+                
+                const { error } = await authService.updateProfile(data);
+                
+                if (error) {
+                    showMessage('profileMessage', error, 'error');
+                } else {
+                    showMessage('profileMessage', 'Profilo aggiornato con successo!', 'success');
+                    currentProfile = { ...currentProfile, ...data };
+                }
+            } catch (err) {
+                showMessage('profileMessage', 'Errore durante il salvataggio', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salva Modifiche';
+            }
+        }
+
+        async function saveAddress(e) {
+            e.preventDefault();
+            const btn = document.getElementById('addressSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Salvataggio...';
+            
+            try {
+                const data = {
+                    address: document.getElementById('address').value.trim(),
+                    city: document.getElementById('city').value.trim(),
+                    zip: document.getElementById('zip').value.trim(),
+                    province: document.getElementById('province').value.trim().toUpperCase()
+                };
+                
+                const { error } = await authService.updateProfile(data);
+                
+                if (error) {
+                    showMessage('addressMessage', error, 'error');
+                } else {
+                    showMessage('addressMessage', 'Indirizzo aggiornato con successo!', 'success');
+                    currentProfile = { ...currentProfile, ...data };
+                }
+            } catch (err) {
+                showMessage('addressMessage', 'Errore durante il salvataggio', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salva Indirizzo';
+            }
+        }
+
+        async function saveNotifications(field, value) {
+            try {
+                const data = { [field]: value };
+                const { error } = await authService.updateProfile(data);
+                
+                if (error) {
+                    showMessage('notificationsMessage', error, 'error');
+                    // Revert checkbox
+                    document.getElementById(field === 'newsletter' ? 'newsletter' : 
+                                          field === 'order_notifications' ? 'orderNotifications' : 
+                                          'seasonalNotifications').checked = !value;
+                } else {
+                    showMessage('notificationsMessage', 'Preferenze aggiornate!', 'success');
+                    currentProfile = { ...currentProfile, ...data };
+                }
+            } catch (err) {
+                showMessage('notificationsMessage', 'Errore durante il salvataggio', 'error');
+            }
+        }
+
+        async function changePassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('passwordSaveBtn');
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword.length < 8) {
+                showMessage('passwordMessage', 'La password deve essere di almeno 8 caratteri', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('passwordMessage', 'Le password non corrispondono', 'error');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Aggiornamento...';
+            
+            try {
+                const { error } = await authService.updatePassword(newPassword);
+                
+                if (error) {
+                    showMessage('passwordMessage', error, 'error');
+                } else {
+                    showMessage('passwordMessage', 'Password aggiornata con successo!', 'success');
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                }
+            } catch (err) {
+                showMessage('passwordMessage', 'Errore durante l\'aggiornamento', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Cambia Password';
+            }
+        }
+
+        async function deleteAccount() {
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = true;
+            btn.textContent = 'Eliminazione...';
+            
+            try {
+                const { error } = await authService.deleteAccount();
+                
+                if (error) {
+                    alert('Errore: ' + error);
+                    btn.disabled = false;
+                    btn.textContent = 'Elimina';
+                } else {
+                    alert('Account eliminato con successo.');
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                alert('Errore durante l\'eliminazione dell\'account');
+                btn.disabled = false;
+                btn.textContent = 'Elimina';
+            }
+        }
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            authModal.init();
+            cartDrawer.init();
+            profileDrawer.init();
+            
+            // Auth button - open profile drawer or login modal
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) {
+                    profileDrawer.show();
+                } else {
+                    authModal.show('login');
+                }
+            });
+            
+            // Wishlist button
+            document.getElementById('wishlistBtn').addEventListener('click', () => {
+                window.location.href = 'wishlist.html';
+            });
+            
+            // Update wishlist badge
+            async function updateWishlistBadge() {
+                const { items } = await wishlistService.getAllFavorites();
+                const badge = document.getElementById('wishlistBadge');
+                if (badge) {
+                    const count = items ? items.length : 0;
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'flex' : 'none';
+                }
+            }
+            updateWishlistBadge();
+            
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+            
+            updateCartBadge();
+            cartService.onChange(() => updateCartBadge());
+
+            // Check authentication
+            const isAuth = await authService.isAuthenticated();
+            const loadingEl = document.getElementById('settingsLoading');
+            const notAuthEl = document.getElementById('notAuthMessage');
+            const contentEl = document.getElementById('settingsContent');
+            
+            if (!isAuth) {
+                loadingEl.style.display = 'none';
+                notAuthEl.style.display = 'block';
+                
+                document.getElementById('loginBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    authModal.show('login');
+                });
+                
+                // Reload page on login
+                authService.onAuthStateChange((event) => {
+                    if (event === 'SIGNED_IN') {
+                        window.location.reload();
+                    }
+                });
+                return;
+            }
+            
+            // User is authenticated
+            const user = await authService.getUser();
+            document.getElementById('userEmail').textContent = user?.email || '';
+            document.getElementById('email').value = user?.email || '';
+            // Set hidden username for password form accessibility
+            document.getElementById('usernameHidden').value = user?.email || '';
+            
+            // Load profile data
+            await loadProfile();
+            
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
+            
+            // Check if returning from gift card purchase
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('giftcard_success') === 'true') {
+                // Wait a moment for webhook to process, then show the gift card
+                await showPurchasedGiftCard();
+                // Clean URL
+                window.history.replaceState({}, '', 'settings.html');
+            }
+            
+            // Setup form handlers
+            document.getElementById('profileForm').addEventListener('submit', saveProfile);
+            document.getElementById('addressForm').addEventListener('submit', saveAddress);
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            
+            // Notification toggles
+            document.getElementById('newsletter').addEventListener('change', (e) => {
+                saveNotifications('newsletter', e.target.checked);
+            });
+            document.getElementById('orderNotifications').addEventListener('change', (e) => {
+                saveNotifications('order_notifications', e.target.checked);
+            });
+            document.getElementById('seasonalNotifications').addEventListener('change', async (e) => {
+                await saveNotifications('seasonal_notifications', e.target.checked);
+                // When enabling seasonal notifications, suggest enabling push too
+                if (e.target.checked) {
+                    await initPushNotifications();
+                }
+            });
+            
+            // Initialize push notifications UI
+            await initPushNotifications();
+            
+            // Delete account modal
+            const deleteModal = document.getElementById('confirmDeleteModal');
+            
+            document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+                deleteModal.classList.add('active');
+            });
+            
+            document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+                deleteModal.classList.remove('active');
+            });
+            
+            document.getElementById('confirmDeleteBtn').addEventListener('click', deleteAccount);
+            
+            // Close modal on outside click
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal) {
+                    deleteModal.classList.remove('active');
+                }
+            });
+            
+            // Auth state change listener
+            authService.onAuthStateChange((event) => {
+                if (event === 'SIGNED_OUT') {
+                    // Show not authenticated message and login modal
+                    contentEl.style.display = 'none';
+                    notAuthEl.style.display = 'block';
+                    authModal.show('login');
+                }
+            });
+        });
+        
+        // Show gift card after successful purchase
+        async function showPurchasedGiftCard() {
+            const { giftCardService } = await import('./js/services/giftcard.js');
+            
+            // Wait for webhook to process
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Get the most recent gift card
+            let giftCard = null;
+            let retries = 5;
+            
+            while (retries > 0 && !giftCard) {
+                const { giftCards } = await giftCardService.getMyGiftCards();
+                if (giftCards && giftCards.length > 0) {
+                    giftCard = giftCards[0]; // Most recent
+                    break;
+                }
+                retries--;
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            
+            if (!giftCard) {
+                alert('Gift Card in elaborazione. Controlla "Le mie Gift Card" tra qualche secondo.');
+                return;
+            }
+            
+            // Show the gift card modal using profile drawer's method
+            showGiftCardSuccessModal(giftCard);
+        }
+        
+        // Show gift card success modal
+        function showGiftCardSuccessModal(giftCard) {
+            const { giftCardService } = window._giftCardServiceRef || {};
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + '/redeem.html?token=' + giftCard.qr_code_token)}&format=png&margin=10`;
+            const style = giftCard.template || 'elegant';
+            
+            // Create modal
+            const modalHTML = `
+                <div class="gc-success-modal-overlay" id="gcSuccessModal">
+                    <div class="gc-success-modal">
+                        <button class="gc-modal-close" onclick="document.getElementById('gcSuccessModal').remove()">×</button>
+                        
+                        <div class="gc-success-header">
+                            <div class="gc-success-icon">🎉</div>
+                            <h2>Gift Card Creata!</h2>
+                            <p>La tua gift card è pronta per essere regalata</p>
+                        </div>
+                        
+                        <div class="gc-success-content">
+                            <div class="gc-preview-wrapper">
+                                <div class="gc-preview ${style}">
+                                    <div class="gc-pattern"></div>
+                                    <div class="gc-header">
+                                        <div class="gc-logo">Mimmo Fratelli</div>
+                                        <div class="gc-badge">GIFT CARD</div>
+                                    </div>
+                                    <div class="gc-amount">€${giftCard.amount}</div>
+                                    <div class="gc-recipient">
+                                        <span class="gc-label">Per</span>
+                                        <span class="gc-name">${giftCard.recipient_name}</span>
+                                    </div>
+                                    ${giftCard.message ? `<div class="gc-message">"${giftCard.message}"</div>` : ''}
+                                    <div class="gc-footer">
+                                        <div class="gc-from">
+                                            <span class="gc-label">Da</span>
+                                            <span>${giftCard.sender_name}</span>
+                                        </div>
+                                        <div class="gc-code">${giftCard.code}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="gc-info-section">
+                                <div class="gc-qr-box">
+                                    <img src="${qrUrl}" alt="QR Code">
+                                    <span>Scansiona per riscattare</span>
+                                </div>
+                                
+                                <div class="gc-details">
+                                    <div class="gc-detail-row">
+                                        <span>Codice</span>
+                                        <strong>${giftCard.code}</strong>
+                                    </div>
+                                    <div class="gc-detail-row">
+                                        <span>Importo</span>
+                                        <strong style="color: var(--primary);">€${giftCard.amount}</strong>
+                                    </div>
+                                    <div class="gc-detail-row">
+                                        <span>Destinatario</span>
+                                        <span>${giftCard.recipient_name}</span>
+                                    </div>
+                                    <div class="gc-detail-row">
+                                        <span>Email</span>
+                                        <span style="font-size: 0.85rem;">${giftCard.recipient_email}</span>
+                                    </div>
+                                </div>
+                                
+                                <p class="gc-note">📧 Un'email con il QR code verrà inviata al destinatario</p>
+                            </div>
+                        </div>
+                        
+                        <button class="gc-done-btn" onclick="document.getElementById('gcSuccessModal').remove()">
+                            ✓ Fatto
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add styles if not present
+            if (!document.getElementById('gcSuccessModalStyles')) {
+                const styles = document.createElement('style');
+                styles.id = 'gcSuccessModalStyles';
+                styles.textContent = `
+                    .gc-success-modal-overlay {
+                        position: fixed;
+                        inset: 0;
+                        background: rgba(0,0,0,0.6);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10000;
+                        padding: 1rem;
+                    }
+                    .gc-success-modal {
+                        background: white;
+                        border-radius: 20px;
+                        max-width: 500px;
+                        width: 100%;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        position: relative;
+                        padding: 2rem;
+                    }
+                    .gc-modal-close {
+                        position: absolute;
+                        top: 1rem;
+                        right: 1rem;
+                        width: 36px;
+                        height: 36px;
+                        border: none;
+                        background: #f5f5f5;
+                        border-radius: 50%;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .gc-success-header {
+                        text-align: center;
+                        margin-bottom: 1.5rem;
+                    }
+                    .gc-success-icon {
+                        font-size: 3rem;
+                        margin-bottom: 0.5rem;
+                    }
+                    .gc-success-header h2 {
+                        font-family: var(--font-display);
+                        font-style: italic;
+                        color: var(--primary);
+                        margin: 0 0 0.5rem;
+                    }
+                    .gc-success-header p {
+                        color: #666;
+                        margin: 0;
+                    }
+                    .gc-preview-wrapper {
+                        display: flex;
+                        justify-content: center;
+                        margin-bottom: 1.5rem;
+                    }
+                    .gc-preview {
+                        width: 320px;
+                        height: 200px;
+                        border-radius: 16px;
+                        padding: 1.25rem;
+                        position: relative;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                    }
+                    .gc-preview.elegant {
+                        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+                        color: white;
+                    }
+                    .gc-preview.avenue {
+                        background: linear-gradient(135deg, #4a7c59 0%, #6b9b7a 100%);
+                        color: white;
+                    }
+                    .gc-preview.minimal {
+                        background: #fafafa;
+                        color: #1a1a1a;
+                        border: 2px solid #e5e5e5;
+                    }
+                    .gc-preview.festive {
+                        background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+                        color: white;
+                    }
+                    .gc-pattern {
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        width: 150px;
+                        height: 150px;
+                        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                    }
+                    .gc-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: auto;
+                    }
+                    .gc-logo {
+                        font-family: var(--font-display);
+                        font-style: italic;
+                        font-size: 1.1rem;
+                    }
+                    .gc-badge {
+                        font-size: 0.65rem;
+                        padding: 0.25rem 0.5rem;
+                        background: rgba(255,255,255,0.2);
+                        border-radius: 4px;
+                        letter-spacing: 1px;
+                    }
+                    .gc-amount {
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        color: #f9ca24;
+                    }
+                    .gc-preview.avenue .gc-amount { color: #fff; }
+                    .gc-preview.minimal .gc-amount { color: #3d7c47; }
+                    .gc-preview.festive .gc-amount { color: #ffd700; }
+                    .gc-recipient {
+                        margin-top: 0.5rem;
+                    }
+                    .gc-label {
+                        font-size: 0.7rem;
+                        opacity: 0.7;
+                        margin-right: 0.25rem;
+                    }
+                    .gc-name {
+                        font-weight: 600;
+                    }
+                    .gc-message {
+                        font-size: 0.8rem;
+                        font-style: italic;
+                        opacity: 0.8;
+                        margin-top: 0.5rem;
+                    }
+                    .gc-footer {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        margin-top: auto;
+                        padding-top: 0.5rem;
+                    }
+                    .gc-from {
+                        font-size: 0.8rem;
+                    }
+                    .gc-code {
+                        font-family: monospace;
+                        font-size: 0.75rem;
+                        opacity: 0.7;
+                    }
+                    .gc-info-section {
+                        display: flex;
+                        gap: 1.5rem;
+                        align-items: flex-start;
+                    }
+                    .gc-qr-box {
+                        text-align: center;
+                    }
+                    .gc-qr-box img {
+                        width: 120px;
+                        height: 120px;
+                        border-radius: 8px;
+                    }
+                    .gc-qr-box span {
+                        display: block;
+                        font-size: 0.75rem;
+                        color: #666;
+                        margin-top: 0.5rem;
+                    }
+                    .gc-details {
+                        flex: 1;
+                    }
+                    .gc-detail-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 0.5rem 0;
+                        border-bottom: 1px solid #eee;
+                        font-size: 0.9rem;
+                    }
+                    .gc-detail-row:last-child {
+                        border-bottom: none;
+                    }
+                    .gc-note {
+                        text-align: center;
+                        font-size: 0.85rem;
+                        color: #666;
+                        margin-top: 1rem;
+                        padding: 0.75rem;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                    }
+                    .gc-done-btn {
+                        display: block;
+                        width: 100%;
+                        padding: 1rem;
+                        margin-top: 1.5rem;
+                        background: var(--primary, #4a7c59);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                    }
+                    .gc-done-btn:hover {
+                        opacity: 0.9;
+                    }
+                    @media (max-width: 500px) {
+                        .gc-preview {
+                            width: 280px;
+                            height: 175px;
+                        }
+                        .gc-info-section {
+                            flex-direction: column;
+                            align-items: center;
+                        }
+                        .gc-details {
+                            width: 100%;
+                        }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        // Push notifications integration
+        async function initPushNotifications() {
+            const { notificationService } = await import('./js/services/notifications.js');
+            
+            const statusEl = document.getElementById('pushStatus');
+            const actionBtn = document.getElementById('pushActionBtn');
+            
+            if (!notificationService.isSupported) {
+                statusEl.textContent = 'Le notifiche push non sono supportate dal tuo browser';
+                return;
+            }
+            
+            await notificationService.init();
+            
+            // Check if VAPID is configured
+            if (!notificationService.isConfigured()) {
+                statusEl.textContent = 'Le notifiche push saranno disponibili prossimamente';
+                statusEl.className = '';
+                actionBtn.style.display = 'none';
+                return;
+            }
+            
+            const updatePushUI = async () => {
+                if (notificationService.isBlocked()) {
+                    statusEl.textContent = 'Notifiche bloccate. Abilitale dalle impostazioni del browser.';
+                    statusEl.className = 'push-status-blocked';
+                    actionBtn.style.display = 'inline-block';
+                    actionBtn.textContent = 'Bloccato';
+                    actionBtn.className = 'push-action-btn blocked';
+                    actionBtn.disabled = true;
+                } else if (notificationService.isEnabled() && await notificationService.hasSubscription()) {
+                    statusEl.textContent = '✓ Notifiche push attive';
+                    statusEl.className = 'push-status-success';
+                    actionBtn.style.display = 'inline-block';
+                    actionBtn.textContent = 'Disattiva';
+                    actionBtn.className = 'push-action-btn subscribed';
+                    actionBtn.disabled = false;
+                } else {
+                    statusEl.textContent = 'Ricevi notifiche anche quando non sei sul sito';
+                    statusEl.className = '';
+                    actionBtn.style.display = 'inline-block';
+                    actionBtn.textContent = 'Attiva Notifiche';
+                    actionBtn.className = 'push-action-btn';
+                    actionBtn.disabled = false;
+                }
+            };
+            
+            await updatePushUI();
+            
+            actionBtn.addEventListener('click', async () => {
+                if (notificationService.isBlocked()) return;
+                
+                actionBtn.disabled = true;
+                
+                if (notificationService.isEnabled() && await notificationService.hasSubscription()) {
+                    // Unsubscribe
+                    actionBtn.textContent = 'Disattivazione...';
+                    const result = await notificationService.unsubscribe();
+                    if (result.success) {
+                        showMessage('notificationsMessage', 'Notifiche push disattivate', 'success');
+                    } else {
+                        showMessage('notificationsMessage', result.error || 'Errore nella disattivazione', 'error');
+                    }
+                } else {
+                    // Subscribe
+                    actionBtn.textContent = 'Attivazione...';
+                    const result = await notificationService.subscribe();
+                    if (result.success) {
+                        showMessage('notificationsMessage', 'Notifiche push attivate! 🎉', 'success');
+                    } else {
+                        showMessage('notificationsMessage', result.error || 'Errore nell\'attivazione', 'error');
+                    }
+                }
+                
+                await updatePushUI();
+            });
+        }
+    </script>
+</body>
+</html>

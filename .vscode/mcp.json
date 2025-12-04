@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "env": {}
+    },
+    "MimmoFratelli": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp",
+      "headers": {
+        "Authorization": "Bearer sbp_98565c9e6d1670f27400cfa7610d15a75b6a5212"
+      }
+    }
+  }
+}

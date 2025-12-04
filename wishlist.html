@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferiti | Mimmo Fratelli</title>
+    <meta name="description" content="I tuoi prodotti preferiti su Mimmo Fratelli.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="wishlist-page premium-layout">
+    <nav class="nav-on-green" id="mainNav">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
+    </nav>
+
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Premium Header -->
+    <header class="page-header-premium">
+        <h1 class="page-title">❤️ I Tuoi Preferiti</h1>
+        <p class="page-subtitle">I prodotti che ami, sempre a portata di mano</p>
+    </header>
+
+    <main>
+        <div class="wishlist-container">
+            
+            <div id="wishlistContent" class="wishlist-grid">
+                <!-- Products will be loaded here -->
+            </div>
+
+            <div id="wishlistEmpty" class="wishlist-empty" style="display: none;">
+                <p>Non hai ancora aggiunto prodotti ai preferiti.</p>
+                <a href="collection.html" class="btn btn-primary">Scopri i Prodotti</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script type="module">
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { wishlistService } from './js/services/wishlist.js';
+        import { productService } from './js/services/products.js';
+
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            menuOverlay.classList.toggle('active', !isOpen);
+            document.body.classList.toggle('menu-open', !isOpen);
+            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.style.color = isOpen ? '' : 'white';
+            if (isOpen) {
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+            }
+        };
+
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            authModal.init();
+            profileDrawer.init();
+            cartDrawer.init();
+
+            // Navbar scroll effect
+            const nav = document.getElementById('mainNav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            });
+
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) profileDrawer.show();
+                else authModal.show('login');
+            });
+
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+
+            updateCartBadge();
+            updateWishlistBadge();
+            cartService.onChange(() => updateCartBadge());
+            wishlistService.onChange(() => {
+                loadWishlist();
+                updateWishlistBadge();
+            });
+
+            // Sync wishlist on login
+            authService.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    await wishlistService.mergeWishlists(session.user.id);
+                }
+                loadWishlist();
+            });
+
+            loadWishlist();
+        });
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        async function updateWishlistBadge() {
+            const { items } = await wishlistService.getAllFavorites();
+            const badge = document.getElementById('wishlistBadge');
+            if (badge) {
+                const count = items ? items.length : 0;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        async function loadWishlist() {
+            const { items } = await wishlistService.getAllFavorites();
+            const grid = document.getElementById('wishlistContent');
+            const empty = document.getElementById('wishlistEmpty');
+
+            if (items.length === 0) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            empty.style.display = 'none';
+
+            // Fetch product details for each wishlist item
+            const productPromises = items.map(async (item) => {
+                // If item already has product data (from Supabase join), use it
+                if (item.products) {
+                    return { ...item.products, wishlist_product_id: item.product_id };
+                }
+                // Otherwise fetch product details (for localStorage items)
+                const { product } = await productService.getProductById(item.product_id);
+                return product ? { ...product, wishlist_product_id: item.product_id } : null;
+            });
+
+            const productsData = await Promise.all(productPromises);
+            const validProducts = productsData.filter(p => p !== null);
+
+            if (validProducts.length === 0) {
+                // Show items even without product details (for localStorage items without DB connection)
+                grid.innerHTML = items.map((item, i) => `
+                    <div class="product-card-small" style="animation-delay: ${i * 0.05}s">
+                        <div class="card-image-small">
+                            <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp" alt="Prodotto" loading="lazy" decoding="async">
+                        </div>
+                        <button class="card-favorite-small active" onclick="removeFromWishlist('${item.product_id}')">♥</button>
+                        <div class="card-info-small">
+                            <h3 class="card-name-small">Prodotto Preferito</h3>
+                            <p class="card-price-small"><a href="product.html?id=${item.product_id}" class="btn btn-small">Vedi Dettagli</a></p>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
+
+            grid.innerHTML = validProducts.map((product, i) => {
+                const hasDiscount = product.sale_price && product.sale_price < product.price;
+                const img = product.images?.[0] || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp';
+                const unit = product.unit || 'kg';
+                const productId = product.wishlist_product_id || product.id;
+
+                return `
+                    <div class="product-card-small" style="animation-delay: ${i * 0.05}s">
+                        <a href="product.html?id=${product.id}" class="card-image-small">
+                            <img src="${img}" alt="${product.name}" loading="lazy" decoding="async">
+                            ${hasDiscount ? '<span class="sale-badge">Offerta</span>' : ''}
+                        </a>
+                        <button class="card-favorite-small active" onclick="removeFromWishlist('${productId}')">♥</button>
+                        <div class="card-info-small">
+                            <h3 class="card-name-small">${product.name}</h3>
+                            <p class="card-price-small">
+                                ${hasDiscount ? `<span class="original">€${product.price.toFixed(2)}</span><span class="sale">€${product.sale_price.toFixed(2)}</span>` : `€${product.price.toFixed(2)}`}
+                                <span class="card-unit">/${unit}</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.removeFromWishlist = async function(productId) {
+            // Use the unified toggleFavorite to handle both guest and authenticated users
+            await wishlistService.toggleFavorite(productId);
+            loadWishlist();
+        };
+    </script>
+</body>
+</html>

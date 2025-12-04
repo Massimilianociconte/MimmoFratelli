@@ -1,0 +1,4 @@
+# Utils folder - Contains utility functions
+# - validation.js: Input validation
+# - errors.js: Error handling
+# - helpers.js: General helpers

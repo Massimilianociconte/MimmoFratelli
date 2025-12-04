@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin CMS | Mimmo Fratelli</title>
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2d4a2d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MF CMS">
+    
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <link rel="apple-touch-icon" href="../Images/icons/icon-192.png">
+
+    <!-- Fonts - Elegant Food-focused -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">Mimmo Fratelli</div>
+            <h1>Admin CMS</h1>
+            <p>Accedi per gestire il catalogo prodotti</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="admin@mimmofratelli.it" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <div class="form-error" id="loginError"></div>
+                <button type="submit" class="btn-primary">Accedi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container" id="adminContainer" style="display:none;">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
+        
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo">Mimmo Fratelli</span>
+                <span class="badge">CMS</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <span class="icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-section="products">
+                    <span class="icon">🍎</span>
+                    Prodotti
+                </a>
+                <a href="#" class="nav-item" data-section="categories">
+                    <span class="icon">📁</span>
+                    Categorie
+                </a>
+                <a href="#" class="nav-item" data-section="discounts">
+                    <span class="icon">🏷️</span>
+                    Sconti
+                </a>
+                <a href="#" class="nav-item" data-section="orders">
+                    <span class="icon">📦</span>
+                    Ordini
+                </a>
+                <a href="#" class="nav-item" data-section="giftcards">
+                    <span class="icon">🎁</span>
+                    Gestione Gift Card
+                </a>
+                <a href="#" class="nav-item" data-section="analytics">
+                    <span class="icon">📈</span>
+                    Analytics
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-avatar" id="userAvatar">A</span>
+                    <span class="user-name" id="userName">Admin</span>
+                </div>
+                <button class="btn-logout" id="logoutBtn">Esci</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <a href="../index.html" target="_blank" class="btn-secondary">Vedi Sito</a>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section class="section" id="dashboardSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🍎</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalProducts">0</span>
+                            <span class="stat-label">Prodotti</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalCategories">0</span>
+                            <span class="stat-label">Categorie</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalOrders">0</span>
+                            <span class="stat-label">Ordini</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalUsers">0</span>
+                            <span class="stat-label">Utenti</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Notifications -->
+                <div class="notification-test-section" style="margin-top: 24px; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 16px;">🔔 Test Notifiche Push</h3>
+                    <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">Invia una notifica di test a tutti i dispositivi registrati</p>
+                    <button class="btn-primary" id="testNotificationBtn" style="background: #4c8c4a;">
+                        📤 Invia Notifica Test
+                    </button>
+                    <span id="notificationTestResult" style="margin-left: 12px; font-size: 14px;"></span>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Prodotti Recenti</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Immagine</th>
+                                    <th>Nome</th>
+                                    <th>Prezzo</th>
+                                    <th>Categoria</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentProductsTable">
+                                <tr><td colspan="5" class="loading">Caricamento...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section class="section" id="productsSection" style="display:none;">
+                <div class="section-header">
+                    <div class="search-box">
+                        <input type="text" id="productSearch" placeholder="Cerca prodotti...">
+                    </div>
+                    <button class="btn-primary" id="addProductBtn">+ Nuovo Prodotto</button>
+                </div>
+
+                <!-- Mobile view toggle -->
+                <button class="view-toggle-btn" id="viewToggleBtn">📱 Vista Card</button>
+
+                <!-- Scroll hint for table -->
+                <div class="table-scroll-hint">
+                    <span class="scroll-icon">👆</span>
+                    <span>Scorri lateralmente per vedere tutte le colonne</span>
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Immagine</th>
+                                <th>Nome</th>
+                                <th>Listino</th>
+                                <th>Prezzo Attuale</th>
+                                <th>Genere</th>
+                                <th>Inventario</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTable">
+                            <tr><td colspan="8" class="loading">Caricamento...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Cards View -->
+                <div class="mobile-cards-view" id="mobileProductCards">
+                    <!-- Cards will be rendered here by JS -->
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section class="section" id="categoriesSection" style="display:none;">
+                <div class="section-header">
+                    <h2>Gestione Categorie</h2>
+                    <button class="btn-primary" id="addCategoryBtn">+ Nuova Categoria</button>
+                </div>
+
+                <!-- Scroll hint for table -->
+                <div class="table-scroll-hint">
+                    <span class="scroll-icon">👆</span>
+                    <span>Scorri lateralmente per vedere tutte le colonne</span>
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Slug</th>
+                                <th>Prodotti</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTable">
+                            <tr><td colspan="5" class="loading">Caricamento...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Cards View -->
+                <div class="mobile-cards-view" id="mobileCategoryCards">
+                    <!-- Cards will be rendered here by JS -->
+                </div>
+            </section>
+
+            <!-- Discounts Section -->
+            <section class="section" id="discountsSection" style="display:none;">
+                <div class="section-header">
+                    <h2>🏷️ Gestione Sconti</h2>
+                    <p class="section-subtitle">Applica sconti rapidi ai prodotti per genere, categoria o singolarmente</p>
+                </div>
+
+                <!-- Quick Discount Panel -->
+                <div class="discount-panel">
+                    <div class="discount-panel-header">
+                        <h3>⚡ Sconto Rapido</h3>
+                    </div>
+                    
+                    <!-- Step 1: Selection Mode -->
+                    <div class="discount-step">
+                        <label class="discount-step-label">1. Seleziona cosa scontare</label>
+                        <div class="discount-mode-grid">
+                            <button class="discount-mode-btn active" data-mode="all" onclick="setDiscountMode('all')">
+                                <span class="mode-icon">🌐</span>
+                                <span class="mode-text">Tutti i Prodotti</span>
+                            </button>
+                            <button class="discount-mode-btn" data-mode="gender" onclick="setDiscountMode('gender')">
+                                <span class="mode-icon">🍎🥬</span>
+                                <span class="mode-text">Per Tipo</span>
+                            </button>
+                            <button class="discount-mode-btn" data-mode="category" onclick="setDiscountMode('category')">
+                                <span class="mode-icon">📁</span>
+                                <span class="mode-text">Per Categoria</span>
+                            </button>
+                            <button class="discount-mode-btn" data-mode="products" onclick="setDiscountMode('products')">
+                                <span class="mode-icon">🥕</span>
+                                <span class="mode-text">Prodotti Singoli</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Selection Options (dynamic) -->
+                    <div class="discount-step" id="discountSelectionStep" style="display:none;">
+                        <label class="discount-step-label">2. Scegli gli elementi</label>
+                        
+                        <!-- Gender Selection -->
+                        <div class="discount-selection-panel" id="genderSelection" style="display:none;">
+                            <div class="selection-chips">
+                                <label class="selection-chip">
+                                    <input type="checkbox" value="frutta" onchange="updateDiscountSelection()">
+                                    <span>🍎 Frutta</span>
+                                </label>
+                                <label class="selection-chip">
+                                    <input type="checkbox" value="verdura" onchange="updateDiscountSelection()">
+                                    <span>🥬 Verdura</span>
+                                </label>
+                                <label class="selection-chip">
+                                    <input type="checkbox" value="altro" onchange="updateDiscountSelection()">
+                                    <span>🧺 Altro</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Category Selection -->
+                        <div class="discount-selection-panel" id="categorySelection" style="display:none;">
+                            <div class="selection-chips" id="categoryChips">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Product Selection -->
+                        <div class="discount-selection-panel" id="productSelection" style="display:none;">
+                            <div class="product-search-row">
+                                <input type="text" id="discountProductSearch" placeholder="Cerca prodotti..." oninput="filterDiscountProducts()">
+                                <button class="btn-secondary btn-sm" onclick="selectAllDiscountProducts()">Seleziona Tutti</button>
+                                <button class="btn-secondary btn-sm" onclick="deselectAllDiscountProducts()">Deseleziona</button>
+                            </div>
+                            <div class="product-selection-grid" id="productSelectionGrid">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Discount Type & Value -->
+                    <div class="discount-step">
+                        <label class="discount-step-label">3. Tipo e valore sconto</label>
+                        <div class="discount-value-row">
+                            <select id="discountType" class="discount-type-select" onchange="updateDiscountPreview()">
+                                <option value="percentage">Percentuale (%)</option>
+                                <option value="fixed">Fisso (€)</option>
+                            </select>
+                            <div class="discount-value-input">
+                                <input type="number" id="discountValue" min="0" step="1" value="10" placeholder="10" oninput="updateDiscountPreview()">
+                                <span class="discount-value-suffix" id="discountSuffix">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="discount-preview" id="discountPreview">
+                        <div class="preview-header">
+                            <span class="preview-icon">👁️</span>
+                            <span>Anteprima</span>
+                        </div>
+                        <div class="preview-content">
+                            <p id="previewText">Seleziona i prodotti e imposta lo sconto</p>
+                            <div class="preview-stats" id="previewStats" style="display:none;">
+                                <span id="previewCount">0 prodotti</span>
+                                <span id="previewDiscount">-10%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="discount-actions">
+                        <button class="btn-secondary" onclick="resetDiscountForm()">🔄 Reset</button>
+                        <button class="btn-primary btn-apply-discount" id="applyDiscountBtn" onclick="applyDiscount()">
+                            ✅ Applica Sconto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Discounts -->
+                <div class="active-discounts-section">
+                    <div class="section-header">
+                        <h3>📋 Prodotti Scontati</h3>
+                        <button class="btn-danger btn-sm" onclick="removeAllDiscounts()">🗑️ Rimuovi Tutti gli Sconti</button>
+                    </div>
+                    <div class="discounted-products-grid" id="discountedProductsGrid">
+                        <p class="no-discounts">Nessun prodotto scontato al momento</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section class="section" id="ordersSection" style="display:none;">
+                <div class="section-header">
+                    <h2>Gestione Ordini</h2>
+                </div>
+                
+                <!-- Advanced Search Panel -->
+                <div class="orders-search-panel">
+                    <div class="search-main">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="orderSearch" placeholder="Cerca per numero ordine, cliente, città, prodotto, telefono..." class="search-input-large">
+                            <button class="search-clear-btn" id="clearSearchBtn" style="display:none;">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-filters">
+                        <div class="filter-group">
+                            <label>Stato</label>
+                            <select id="orderStatusFilter" class="filter-select">
+                                <option value="">Tutti</option>
+                                <option value="pending">⏳ In attesa</option>
+                                <option value="confirmed">✅ Confermato</option>
+                                <option value="processing">🔄 In lavorazione</option>
+                                <option value="shipped">🚚 Spedito</option>
+                                <option value="delivered">📦 Consegnato</option>
+                                <option value="cancelled">❌ Annullato</option>
+                                <option value="refunded">💸 Rimborsato</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Periodo</label>
+                            <select id="orderDateFilter" class="filter-select">
+                                <option value="">Tutti</option>
+                                <option value="today">Oggi</option>
+                                <option value="week">Ultima settimana</option>
+                                <option value="month">Ultimo mese</option>
+                                <option value="custom">Personalizzato</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group" id="customDateRange" style="display:none;">
+                            <label>Da</label>
+                            <input type="date" id="orderDateFrom" class="filter-input">
+                            <label>A</label>
+                            <input type="date" id="orderDateTo" class="filter-input">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Importo</label>
+                            <select id="orderAmountFilter" class="filter-select">
+                                <option value="">Tutti</option>
+                                <option value="0-25">€0 - €25</option>
+                                <option value="25-50">€25 - €50</option>
+                                <option value="50-100">€50 - €100</option>
+                                <option value="100+">€100+</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Pagamento</label>
+                            <select id="orderPaymentFilter" class="filter-select">
+                                <option value="">Tutti</option>
+                                <option value="stripe">💳 Stripe</option>
+                                <option value="paypal">🅿️ PayPal</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn-reset-filters" id="resetFiltersBtn">🔄 Reset filtri</button>
+                    </div>
+                    
+                    <div class="search-results-info">
+                        <span id="ordersCount">0 ordini</span>
+                        <span id="ordersTotalAmount">Totale: €0.00</span>
+                    </div>
+                </div>
+                
+                <!-- Mobile Order Cards -->
+                <div class="mobile-order-cards" id="mobileOrderCards"></div>
+                
+                <!-- Desktop Table -->
+                <div class="table-container">
+                    <table class="data-table orders-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="order_number">Ordine ↕</th>
+                                <th class="sortable" data-sort="customer">Cliente ↕</th>
+                                <th class="sortable" data-sort="created_at">Data ↕</th>
+                                <th class="sortable" data-sort="total">Totale ↕</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable">
+                            <tr><td colspan="6" class="loading">Caricamento ordini...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section class="section" id="analyticsSection" style="display:none;">
+                <div class="analytics-header">
+                    <h2>📈 Analytics in Tempo Reale</h2>
+                    <p class="analytics-subtitle">Monitora le statistiche del tuo e-commerce</p>
+                </div>
+
+                <!-- Real-time Stats -->
+                <div class="analytics-grid">
+                    <div class="analytics-card analytics-card-primary">
+                        <div class="analytics-icon">👥</div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="analyticsUsers">0</span>
+                            <span class="analytics-label">Utenti Registrati</span>
+                        </div>
+                        <div class="analytics-trend" id="usersTrend"></div>
+                    </div>
+                    <div class="analytics-card analytics-card-success">
+                        <div class="analytics-icon">🟢</div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="analyticsActiveUsers">0</span>
+                            <span class="analytics-label">Utenti Attivi Ora</span>
+                        </div>
+                        <div class="analytics-live-indicator">
+                            <span class="live-dot"></span> Live
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-icon">🛒</div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="analyticsOrders">0</span>
+                            <span class="analytics-label">Ordini Totali</span>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-icon">💰</div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="analyticsRevenue">€0</span>
+                            <span class="analytics-label">Fatturato Totale</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Users List -->
+                <div class="analytics-section">
+                    <h3>🟢 Utenti Attivi in Questo Momento</h3>
+                    <div class="active-users-list" id="activeUsersList">
+                        <p class="no-active-users">Nessun utente attivo al momento</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="analytics-section">
+                    <h3>📊 Statistiche Dettagliate</h3>
+                    <div class="stats-detail-grid">
+                        <div class="stat-detail-card">
+                            <span class="stat-detail-label">Nuovi utenti (oggi)</span>
+                            <span class="stat-detail-value" id="newUsersToday">0</span>
+                        </div>
+                        <div class="stat-detail-card">
+                            <span class="stat-detail-label">Nuovi utenti (settimana)</span>
+                            <span class="stat-detail-value" id="newUsersWeek">0</span>
+                        </div>
+                        <div class="stat-detail-card">
+                            <span class="stat-detail-label">Nuovi utenti (mese)</span>
+                            <span class="stat-detail-value" id="newUsersMonth">0</span>
+                        </div>
+                        <div class="stat-detail-card">
+                            <span class="stat-detail-label">Ordini (oggi)</span>
+                            <span class="stat-detail-value" id="ordersToday">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gift Cards Section - Admin Search -->
+            <section class="section" id="giftcardsSection" style="display:none;">
+                <!-- Stats Cards -->
+                <div class="gc-stats-grid">
+                    <div class="gc-stat-card">
+                        <span class="gc-stat-icon">🎁</span>
+                        <div class="gc-stat-info">
+                            <span class="gc-stat-value" id="gcStatTotal">0</span>
+                            <span class="gc-stat-label">Totali</span>
+                        </div>
+                    </div>
+                    <div class="gc-stat-card">
+                        <span class="gc-stat-icon">💰</span>
+                        <div class="gc-stat-info">
+                            <span class="gc-stat-value" id="gcStatValue">€0</span>
+                            <span class="gc-stat-label">Valore Totale</span>
+                        </div>
+                    </div>
+                    <div class="gc-stat-card">
+                        <span class="gc-stat-icon">✅</span>
+                        <div class="gc-stat-info">
+                            <span class="gc-stat-value" id="gcStatRedeemed">0</span>
+                            <span class="gc-stat-label">Riscattate</span>
+                        </div>
+                    </div>
+                    <div class="gc-stat-card">
+                        <span class="gc-stat-icon">⏳</span>
+                        <div class="gc-stat-info">
+                            <span class="gc-stat-value" id="gcStatActive">0</span>
+                            <span class="gc-stat-label">Attive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="gc-search-section">
+                    <h3>🔍 Cerca Gift Card</h3>
+                    <div class="gc-search-row">
+                        <div class="search-box" style="flex: 2;">
+                            <input type="text" id="gcSearchInput" placeholder="Cerca per nome, cognome o codice...">
+                        </div>
+                        <select id="gcStatusFilter" class="gc-filter-select">
+                            <option value="">Tutti gli stati</option>
+                            <option value="active">Attive</option>
+                            <option value="redeemed">Riscattate</option>
+                            <option value="expired">Scadute</option>
+                        </select>
+                        <button class="btn-primary" id="gcSearchBtn">Cerca</button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="gc-results-section">
+                    <div class="gc-results-header">
+                        <h3>Risultati <span id="gcResultsCount">(0)</span></h3>
+                    </div>
+                    <div class="gc-results-grid" id="gcResultsGrid">
+                        <p class="gc-no-results">Usa la ricerca per trovare gift card</p>
+                    </div>
+                </div>
+
+                <!-- Gift Card Detail Modal -->
+                <div class="gc-detail-modal" id="gcDetailModal" style="display:none;">
+                    <div class="gc-detail-content">
+                        <button class="gc-detail-close" onclick="closeGcDetail()">&times;</button>
+                        <div id="gcDetailBody"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuovo Prodotto</h2>
+                <button class="modal-close" onclick="closeProductModal()">×</button>
+            </div>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                
+                <!-- Image Preview -->
+                <div class="image-preview-section" id="imagePreviewSection" style="display:none;">
+                    <label>Anteprima Immagini</label>
+                    <div class="image-preview-grid" id="imagePreviewGrid"></div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productName">Nome *</label>
+                        <input type="text" id="productName" required placeholder="Nome prodotto">
+                    </div>
+                    <div class="form-group">
+                        <label for="productSlug">Slug *</label>
+                        <input type="text" id="productSlug" required placeholder="nome-prodotto">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="productDescription">Descrizione</label>
+                    <textarea id="productDescription" rows="3" placeholder="Descrizione del prodotto"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Prezzo (€) *</label>
+                        <input type="number" id="productPrice" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="productSalePrice">Prezzo Saldo (€)</label>
+                        <input type="number" id="productSalePrice" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productGender">Tipo</label>
+                        <select id="productGender">
+                            <option value="">Nessun tipo</option>
+                            <option value="frutta">🍎 Frutta</option>
+                            <option value="verdura">🥬 Verdura</option>
+                            <option value="gastronomia">🧀 Gastronomia</option>
+                            <option value="preparati">🍲 I Nostri Preparati</option>
+                            <option value="altro">🧺 Altro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Categoria</label>
+                        <select id="productCategory">
+                            <option value="">Nessuna categoria</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productPageType">Pubblica su Pagina</label>
+                    <select id="productPageType">
+                        <option value="">Solo nella collezione</option>
+                        <option value="home">🏠 Home Page</option>
+                        <option value="promos">🏷️ Pagina Offerte</option>
+                        <option value="featured">⭐ In Evidenza</option>
+                        <option value="seasonal">🍅 Prodotti di Stagione</option>
+                    </select>
+                </div>
+
+                <div class="form-group checkbox-group-inline">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productActive" checked>
+                        <span class="checkbox-text">✓ Disponibile</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productFeatured">
+                        <span class="checkbox-text">⭐ In Evidenza</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productSeasonal">
+                        <span class="checkbox-text">🍅 Di Stagione</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productNew">
+                        <span class="checkbox-text">🆕 Novità</span>
+                    </label>
+                </div>
+                
+                <!-- Seasonal Notification Panel -->
+                <div class="seasonal-notification-panel" id="seasonalNotificationPanel" style="display:none;">
+                    <div class="notification-panel-header">
+                        <span class="notification-icon">🔔</span>
+                        <span>Invia Notifica Push</span>
+                    </div>
+                    <p class="notification-hint">Quando salvi il prodotto, puoi notificare gli utenti che hanno attivato le notifiche di stagione.</p>
+                    <div class="notification-actions">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sendPushNotification">
+                            <span class="checkbox-text">📱 Invia notifica push al salvataggio</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="productImages">URL Immagini (una per riga)</label>
+                    <textarea id="productImages" rows="3" placeholder="Images/Women/prod_woman1/A (front).png&#10;https://esempio.com/immagine2.jpg" oninput="updateImagePreview()"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="productColors">Colori (separati da virgola)</label>
+                    <input type="text" id="productColors" placeholder="Nero, Bianco, Blu">
+                </div>
+
+                <!-- Size Inventory Section -->
+                <div class="form-group">
+                    <label>Taglie e Disponibilità</label>
+                    <p class="form-hint">Inserisci le taglie e la quantità disponibile per ciascuna</p>
+                    <div class="size-inventory-grid" id="sizeInventoryGrid">
+                        <div class="size-inventory-row">
+                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="XS">
+                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
+                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                        </div>
+                        <div class="size-inventory-row">
+                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="S">
+                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
+                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                        </div>
+                        <div class="size-inventory-row">
+                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="M">
+                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
+                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                        </div>
+                        <div class="size-inventory-row">
+                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="L">
+                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
+                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                        </div>
+                        <div class="size-inventory-row">
+                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="XL">
+                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
+                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-size" onclick="addSizeRow()">+ Aggiungi Taglia</button>
+                </div>
+
+                <div class="form-error" id="productError"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeProductModal()">Annulla</button>
+                    <button type="submit" class="btn-primary" id="saveProductBtn">Salva Prodotto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Nuova Categoria</h2>
+                <button class="modal-close" onclick="closeCategoryModal()">×</button>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                
+                <div class="form-group">
+                    <label for="categoryName">Nome *</label>
+                    <input type="text" id="categoryName" required placeholder="Nome categoria">
+                </div>
+                <div class="form-group">
+                    <label for="categorySlug">Slug *</label>
+                    <input type="text" id="categorySlug" required placeholder="nome-categoria">
+                </div>
+                <div class="form-group">
+                    <label for="categoryDescription">Descrizione</label>
+                    <textarea id="categoryDescription" rows="2" placeholder="Descrizione"></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="categoryActive" checked>
+                        Categoria Attiva
+                    </label>
+                </div>
+
+                <div class="form-error" id="categoryError"></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeCategoryModal()">Annulla</button>
+                    <button type="submit" class="btn-primary">Salva Categoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Conferma Eliminazione</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">×</button>
+            </div>
+            <p class="delete-message" id="deleteMessage">Sei sicuro di voler eliminare questo elemento?</p>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Annulla</button>
+                <button type="button" class="btn-danger" id="confirmDeleteBtn">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script type="module" src="admin.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('CMS SW registered:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('CMS SW registration failed:', err);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>

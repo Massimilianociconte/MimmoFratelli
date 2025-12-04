@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Miei Ordini | Mimmo Fratelli</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+    <meta name="theme-color" content="#f8fdf5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="orders-page premium-layout">
+    <nav class="nav-on-green" id="mainNav">
+        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="authBtn" title="Account" style="cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+            </a>
+            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="badge" id="cartBadge" style="display:none;">0</span>
+            </button>
+            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+        </div>
+    </nav>
+
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content">
+            <ul class="menu-links">
+                <li><a href="index.html">🏠 Home</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                    </ul>
+                </li>
+                <li><a href="promos.html">🏷️ Offerte</a></li>
+                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
+                <li><a href="contacts.html">📞 Contatti</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Premium Header -->
+    <header class="page-header-premium">
+        <h1 class="page-title">📦 I Miei Ordini</h1>
+        <p class="page-subtitle">Traccia i tuoi acquisti e rivedi lo storico</p>
+    </header>
+
+    <main>
+        <div class="orders-container">
+            
+            <div id="ordersLoading" class="orders-loading">
+                <div class="loading-spinner"></div>
+                <p>Caricamento ordini...</p>
+            </div>
+            
+            <div id="ordersEmpty" class="orders-empty" style="display:none;">
+                <span class="empty-icon">🛒</span>
+                <h3>Nessun ordine ancora</h3>
+                <p>Non hai ancora effettuato ordini. Inizia a fare shopping!</p>
+                <a href="collection.html" class="btn btn-primary">Scopri i prodotti</a>
+            </div>
+            
+            <div id="ordersNeedLogin" class="orders-empty" style="display:none;">
+                <span class="empty-icon">🔐</span>
+                <h3>Accedi per vedere i tuoi ordini</h3>
+                <p>Effettua il login per visualizzare lo storico dei tuoi ordini.</p>
+                <button class="btn btn-primary" id="loginToSeeOrders">Accedi</button>
+            </div>
+            
+            <div id="ordersContent" class="orders-list" style="display:none;"></div>
+        </div>
+    </main>
+    
+    <!-- Order Detail Modal -->
+    <div class="order-detail-modal" id="orderDetailModal">
+        <div class="order-detail-content">
+            <button class="modal-close-btn" id="closeOrderDetail">×</button>
+            <div id="orderDetailBody"></div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">Mimmo Fratelli</div>
+            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
+            <div class="footer-links">
+                <a href="collection.html?gender=frutta">Frutta</a>
+                <a href="collection.html?gender=verdura">Verdura</a>
+                <a href="promos.html">Offerte</a>
+                <a href="about.html">Chi Siamo</a>
+                <a href="contacts.html">Contatti</a>
+            </div>
+            <div class="footer-payments">
+                <p class="footer-payments-label">Metodi di pagamento accettati</p>
+                <div class="footer-payment-icons">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                </div>
+            </div>
+            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <div class="footer-credit">
+                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    Creato da Web Novis
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script type="module">
+        import { supabase, getCurrentUser } from './js/supabase.js';
+        import { authService } from './js/services/auth.js';
+        import { authModal } from './js/components/auth-modal.js';
+        import { cartService } from './js/services/cart.js';
+        import { cartDrawer } from './js/components/cart-drawer.js';
+        import { profileDrawer } from './js/components/profile-drawer.js';
+        import { wishlistService } from './js/services/wishlist.js';
+
+        window.toggleMenu = function() {
+            const menuOverlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.menu-btn');
+            const isOpen = menuOverlay.classList.contains('active');
+            menuOverlay.classList.toggle('active', !isOpen);
+            document.body.classList.toggle('menu-open', !isOpen);
+            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.style.color = isOpen ? '' : 'white';
+            if (isOpen) {
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+            }
+        };
+
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
+
+        async function updateCartBadge() {
+            const count = await cartService.getCount();
+            const badge = document.getElementById('cartBadge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        async function updateWishlistBadge() {
+            const { items } = await wishlistService.getAllFavorites();
+            const badge = document.getElementById('wishlistBadge');
+            if (badge) {
+                const count = items ? items.length : 0;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+
+        // Load user orders
+        async function loadUserOrders() {
+            const loadingEl = document.getElementById('ordersLoading');
+            const emptyEl = document.getElementById('ordersEmpty');
+            const needLoginEl = document.getElementById('ordersNeedLogin');
+            const contentEl = document.getElementById('ordersContent');
+            
+            const user = await getCurrentUser();
+            
+            if (!user) {
+                loadingEl.style.display = 'none';
+                needLoginEl.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const { data: orders, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        order_items (
+                            id,
+                            product_name,
+                            product_price,
+                            quantity,
+                            size,
+                            color
+                        )
+                    `)
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                
+                loadingEl.style.display = 'none';
+                
+                if (error) throw error;
+                
+                if (!orders || orders.length === 0) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+                
+                contentEl.style.display = 'block';
+                renderOrders(orders);
+                
+            } catch (err) {
+                console.error('Error loading orders:', err);
+                loadingEl.innerHTML = '<p style="color:#e74c3c;">Errore nel caricamento ordini</p>';
+            }
+        }
+        
+        function renderOrders(orders) {
+            const contentEl = document.getElementById('ordersContent');
+            
+            const statusConfig = {
+                'pending': { label: 'In attesa', class: 'pending', icon: '⏳' },
+                'confirmed': { label: 'Confermato', class: 'confirmed', icon: '✅' },
+                'processing': { label: 'In lavorazione', class: 'processing', icon: '🔄' },
+                'shipped': { label: 'Spedito', class: 'shipped', icon: '🚚' },
+                'delivered': { label: 'Consegnato', class: 'delivered', icon: '📦' },
+                'cancelled': { label: 'Annullato', class: 'cancelled', icon: '❌' },
+                'refunded': { label: 'Rimborsato', class: 'refunded', icon: '💸' }
+            };
+            
+            contentEl.innerHTML = orders.map(order => {
+                const date = new Date(order.created_at).toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                
+                const status = statusConfig[order.status] || statusConfig['pending'];
+                const itemCount = order.order_items?.length || 0;
+                const itemsPreview = (order.order_items || []).slice(0, 2).map(i => i.product_name).join(', ');
+                const moreItems = itemCount > 2 ? ` +${itemCount - 2} altri` : '';
+                
+                return `
+                <div class="order-card" data-order-id="${order.id}">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <span class="order-number">#${order.order_number}</span>
+                            <span class="order-date">${date}</span>
+                        </div>
+                        <span class="order-status ${status.class}">${status.icon} ${status.label}</span>
+                    </div>
+                    
+                    <div class="order-items-preview">
+                        <span class="items-text">${itemsPreview}${moreItems}</span>
+                        <span class="items-count">${itemCount} prodott${itemCount === 1 ? 'o' : 'i'}</span>
+                    </div>
+                    
+                    <div class="order-footer">
+                        <span class="order-total">€${parseFloat(order.total).toFixed(2)}</span>
+                        <button class="btn-view-order" onclick="viewOrderDetail('${order.id}')">
+                            Dettagli →
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // Store orders for detail view
+            window._userOrders = orders;
+        }
+        
+        window.viewOrderDetail = function(orderId) {
+            const order = window._userOrders?.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const modal = document.getElementById('orderDetailModal');
+            const body = document.getElementById('orderDetailBody');
+            
+            const statusConfig = {
+                'pending': { label: 'In attesa', class: 'pending', icon: '⏳' },
+                'confirmed': { label: 'Confermato', class: 'confirmed', icon: '✅' },
+                'processing': { label: 'In lavorazione', class: 'processing', icon: '🔄' },
+                'shipped': { label: 'Spedito', class: 'shipped', icon: '🚚' },
+                'delivered': { label: 'Consegnato', class: 'delivered', icon: '📦' },
+                'cancelled': { label: 'Annullato', class: 'cancelled', icon: '❌' },
+                'refunded': { label: 'Rimborsato', class: 'refunded', icon: '💸' }
+            };
+            
+            const status = statusConfig[order.status] || statusConfig['pending'];
+            const addr = order.shipping_address || {};
+            const items = order.order_items || [];
+            
+            const date = new Date(order.created_at).toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            body.innerHTML = `
+                <div class="order-detail-header">
+                    <h2>Ordine #${order.order_number}</h2>
+                    <span class="order-status ${status.class}">${status.icon} ${status.label}</span>
+                </div>
+                
+                <p class="order-detail-date">📅 ${date}</p>
+                
+                ${order.tracking_number ? `
+                <div class="order-tracking">
+                    <strong>🚚 Tracking:</strong> ${order.tracking_number}
+                    ${order.tracking_url ? `<a href="${order.tracking_url}" target="_blank" class="tracking-link">Traccia spedizione →</a>` : ''}
+                </div>
+                ` : ''}
+                
+                <div class="order-detail-section">
+                    <h3>📍 Indirizzo di consegna</h3>
+                    <p>
+                        ${addr.firstName || ''} ${addr.lastName || ''}<br>
+                        ${addr.address || ''}<br>
+                        ${addr.postalCode || ''} ${addr.city || ''} (${addr.province || ''})<br>
+                        📞 ${addr.phone || 'N/D'}
+                    </p>
+                </div>
+                
+                <div class="order-detail-section">
+                    <h3>🛒 Prodotti ordinati</h3>
+                    <div class="order-items-list">
+                        ${items.map(item => `
+                            <div class="order-item-row">
+                                <div class="item-info">
+                                    <span class="item-name">${item.product_name}</span>
+                                    <span class="item-details">Taglia: ${item.size || 'N/D'} • Qtà: ${item.quantity}</span>
+                                </div>
+                                <span class="item-price">€${(item.product_price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="order-detail-section order-summary">
+                    <div class="summary-row"><span>Subtotale</span><span>€${parseFloat(order.subtotal).toFixed(2)}</span></div>
+                    <div class="summary-row"><span>Spedizione</span><span>€${parseFloat(order.shipping_cost).toFixed(2)}</span></div>
+                    ${parseFloat(order.discount) > 0 ? `<div class="summary-row discount"><span>Sconto</span><span>-€${parseFloat(order.discount).toFixed(2)}</span></div>` : ''}
+                    ${parseFloat(order.gift_card_amount) > 0 ? `<div class="summary-row giftcard"><span>Gift Card</span><span>-€${parseFloat(order.gift_card_amount).toFixed(2)}</span></div>` : ''}
+                    <div class="summary-row total"><span>Totale</span><span>€${parseFloat(order.total).toFixed(2)}</span></div>
+                </div>
+                
+                <div class="order-payment-info">
+                    ✅ Pagamento completato via ${order.payment_provider?.toUpperCase() || 'N/D'}
+                </div>
+                
+                ${order.payment_provider === 'stripe' && order.payment_status === 'completed' ? `
+                <div class="order-receipt-section">
+                    <button class="btn-download-receipt" onclick="downloadReceipt('${order.id}')" id="receiptBtn-${order.id}">
+                        🧾 Scarica Ricevuta
+                    </button>
+                </div>
+                ` : ''}
+            `;
+            
+            modal.classList.add('active');
+        };
+        
+        // Download receipt from Stripe
+        window.downloadReceipt = async function(orderId) {
+            const btn = document.getElementById(`receiptBtn-${orderId}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Caricamento...';
+            }
+            
+            try {
+                const { data, error } = await supabase.functions.invoke('get-stripe-receipt', {
+                    body: { orderId }
+                });
+                
+                if (error) throw error;
+                
+                if (data.receiptUrl) {
+                    // Open receipt in new tab
+                    window.open(data.receiptUrl, '_blank');
+                    if (btn) {
+                        btn.innerHTML = '🧾 Scarica Ricevuta';
+                        btn.disabled = false;
+                    }
+                } else {
+                    throw new Error('Ricevuta non disponibile');
+                }
+            } catch (err) {
+                console.error('Error downloading receipt:', err);
+                alert('Impossibile scaricare la ricevuta. Riprova più tardi.');
+                if (btn) {
+                    btn.innerHTML = '🧾 Scarica Ricevuta';
+                    btn.disabled = false;
+                }
+            }
+        };
+        
+        // Close modal
+        document.getElementById('closeOrderDetail')?.addEventListener('click', () => {
+            document.getElementById('orderDetailModal').classList.remove('active');
+        });
+        
+        document.getElementById('orderDetailModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'orderDetailModal') {
+                document.getElementById('orderDetailModal').classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authService.init();
+            authModal.init();
+            cartDrawer.init();
+            profileDrawer.init();
+
+            // Navbar scroll effect
+            const nav = document.getElementById('mainNav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+            });
+
+            // Auth button
+            document.getElementById('authBtn').addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) {
+                    profileDrawer.show();
+                } else {
+                    authModal.show('login');
+                }
+            });
+            
+            // Login to see orders button
+            document.getElementById('loginToSeeOrders')?.addEventListener('click', () => {
+                authModal.show('login');
+            });
+
+            // Wishlist button
+            document.getElementById('wishlistBtn').addEventListener('click', () => {
+                window.location.href = 'wishlist.html';
+            });
+
+            // Cart button
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                cartDrawer.show();
+            });
+
+            updateCartBadge();
+            updateWishlistBadge();
+            cartService.onChange(() => updateCartBadge());
+            
+            // Load orders
+            loadUserOrders();
+            
+            // Reload orders after login
+            authService.onAuthChange((user) => {
+                if (user) loadUserOrders();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "name": "Mimmo Fratelli CMS",
+  "short_name": "MF CMS",
+  "description": "Gestione prodotti e ordini Mimmo Fratelli",
+  "start_url": "/admin/",
+  "display": "standalone",
+  "background_color": "#1a2e1a",
+  "theme_color": "#4a7c4e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234a7c4e' width='100' height='100' rx='20'/><text y='.9em' x='10' font-size='70'>🍎</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Prodotti",
+      "url": "/admin/#products",
+      "description": "Gestisci prodotti"
+    },
+    {
+      "name": "Ordini",
+      "url": "/admin/#orders",
+      "description": "Visualizza ordini"
+    }
+  ]
+}
