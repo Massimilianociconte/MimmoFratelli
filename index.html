@@ -381,13 +381,18 @@
         const menuText = document.querySelector('.menu-text');
         const mainNav = document.getElementById('mainNav');
         let isMenuOpen = false;
+        let menuScrollY = 0;
 
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
+            const isMobile = window.innerWidth <= 768;
+            
             if (isMenuOpen) {
-                // Calculate scrollbar width to prevent layout shift
-                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+                // Save scroll position before locking body (mobile only)
+                if (isMobile) {
+                    menuScrollY = window.scrollY;
+                    document.body.style.top = `-${menuScrollY}px`;
+                }
                 
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
@@ -400,8 +405,11 @@
                 if (menuText) menuText.textContent = 'Menu';
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
                 
-                // Reset scrollbar compensation
-                document.documentElement.style.setProperty('--scrollbar-width', '0px');
+                // Restore scroll position (mobile only)
+                if (isMobile) {
+                    document.body.style.top = '';
+                    window.scrollTo(0, menuScrollY);
+                }
             }
         }
 

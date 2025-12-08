@@ -298,16 +298,21 @@ body.menu-open nav .notif-badge {
 /* --- OVERLAY MENU --- */
 .menu-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* Use fixed height instead of bottom:0 to prevent resize on mobile */
+    height: 100%;
+    height: 100dvh;
     background: linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);
     color: #fff;
     z-index: 90;
-    /* Remove flexbox to prevent layout recalculation */
     display: block;
     padding-top: 80px;
     clip-path: circle(0% at calc(100% - 40px) 35px);
     transition: clip-path 0.5s var(--ease);
     overflow-y: auto;
+    overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
 }
@@ -319,14 +324,9 @@ body.menu-open nav .notif-badge {
 /* Prevent body scroll when menu is open */
 body.menu-open {
     overflow: hidden;
-    touch-action: none;
-    /* Compensate for scrollbar width to prevent layout shift */
-    padding-right: var(--scrollbar-width, 0px);
-}
-
-/* Also compensate navbar position when menu is open */
-body.menu-open nav {
-    padding-right: var(--scrollbar-width, 0px);
+    /* Use height 100% to lock the viewport */
+    height: 100%;
+    height: 100dvh;
 }
 
 .menu-content {
@@ -334,6 +334,7 @@ body.menu-open nav {
     max-width: 500px;
     margin: 0 auto;
     padding: 0.5rem 1.5rem;
+    padding-bottom: 100px; /* Extra padding for mobile safe area */
     text-align: center;
 }
 
@@ -6993,16 +6994,28 @@ img {
 @media (max-width: 768px) {
     .menu-overlay {
         padding-top: 70px;
-        /* Let the overlay handle scrolling, not the content */
-        padding-bottom: 2rem;
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    
+    /* Lock body completely when menu is open on mobile */
+    body.menu-open {
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
     }
     
     .menu-content {
         padding: 0.25rem 1rem;
-        /* Remove max-height to prevent layout recalculation */
+        padding-bottom: 80px;
         max-height: none;
         overflow: visible;
         margin-top: 0;
+    }
+    
+    .menu-links {
+        /* Use fixed spacing instead of flexible */
+        display: block;
     }
     
     .menu-links>li {
@@ -7012,6 +7025,10 @@ img {
     .menu-links>li>a {
         font-size: 1.15rem;
         padding: 0.25rem 0;
+        /* Remove transform animation that can cause reflow */
+        transform: none !important;
+        opacity: 1 !important;
+        transition: color 0.2s var(--ease);
     }
     
     .menu-emoji {

@@ -310,17 +310,23 @@
         const gender = params.get('gender') || 'frutta';
 
         // Menu toggle
+        let menuScrollY = 0;
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');
             const menuBtn = document.querySelector('.menu-btn');
             const isOpen = menuOverlay.classList.contains('active');
+            const isMobile = window.innerWidth <= 768;
             
             if (!isOpen) {
-                // Calculate scrollbar width to prevent layout shift
-                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+                if (isMobile) {
+                    menuScrollY = window.scrollY;
+                    document.body.style.top = `-${menuScrollY}px`;
+                }
             } else {
-                document.documentElement.style.setProperty('--scrollbar-width', '0px');
+                if (isMobile) {
+                    document.body.style.top = '';
+                    window.scrollTo(0, menuScrollY);
+                }
             }
             
             menuOverlay.classList.toggle('active', !isOpen);
