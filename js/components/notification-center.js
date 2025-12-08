@@ -82,7 +82,10 @@ class NotificationCenter {
             <div class="notif-center-panel" id="notifCenterPanel">
                 <div class="notif-center-header">
                     <h3>🔔 Notifiche</h3>
-                    <button class="notif-mark-all-read" id="notifMarkAllRead">Segna tutte lette</button>
+                    <div class="notif-header-actions">
+                        <button class="notif-mark-all-read" id="notifMarkAllRead">Segna tutte lette</button>
+                        <button class="notif-close-btn" id="notifCloseBtn" aria-label="Chiudi">✕</button>
+                    </div>
                 </div>
                 <div class="notif-center-list" id="notifCenterList">
                     <div class="notif-center-empty">
@@ -118,7 +121,7 @@ class NotificationCenter {
     setupEventListeners() {
         const btn = document.getElementById('notifCenterBtn');
         const panel = document.getElementById('notifCenterPanel');
-        const overlay = document.getElementById('notifCenterOverlay');
+        const closeBtn = document.getElementById('notifCloseBtn');
         const markAllBtn = document.getElementById('notifMarkAllRead');
 
         if (btn) {
@@ -128,8 +131,11 @@ class NotificationCenter {
             });
         }
 
-        if (overlay) {
-            overlay.addEventListener('click', () => this.close());
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.close();
+            });
         }
 
         if (markAllBtn) {

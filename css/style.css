@@ -8002,6 +8002,12 @@ img {
     color: var(--text-color);
 }
 
+.notif-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .notif-mark-all-read {
     background: transparent;
     border: none;
@@ -8016,6 +8022,26 @@ img {
 
 .notif-mark-all-read:hover {
     background: var(--primary-soft);
+}
+
+.notif-close-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #666;
+    transition: background 0.2s, color 0.2s;
+}
+
+.notif-close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #333;
 }
 
 /* Notification List */
