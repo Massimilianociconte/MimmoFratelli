@@ -3579,8 +3579,8 @@ body {
 .seasonal-notification-panel {
     margin-top: 1rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #fef3e2 0%, #ffecd2 100%);
-    border: 1px solid #f59e0b;
+    background: linear-gradient(135deg, #fef3e2 0%, #ffecd2 100%) !important;
+    border: 1px solid #f59e0b !important;
     border-radius: var(--radius-sm);
     animation: slideDown 0.3s ease;
 }
@@ -3596,16 +3596,19 @@ body {
     }
 }
 
-.notification-panel-header {
+.seasonal-notification-panel .notification-panel-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
     color: #b45309;
     margin-bottom: 0.5rem;
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
 }
 
-.notification-icon {
+.seasonal-notification-panel .notification-icon {
     font-size: 1.25rem;
     animation: bellRing 1s ease infinite;
 }
@@ -3621,20 +3624,20 @@ body {
     70% { transform: rotate(0); }
 }
 
-.notification-hint {
+.seasonal-notification-panel .notification-hint {
     font-size: 0.85rem;
     color: #92400e;
     margin-bottom: 0.75rem;
     line-height: 1.4;
 }
 
-.notification-actions {
+.seasonal-notification-panel .notification-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.notification-actions .checkbox-label {
+.seasonal-notification-panel .notification-actions .checkbox-label {
     background: #fff;
     padding: 0.5rem 1rem;
     border-radius: 25px;
@@ -3642,12 +3645,12 @@ body {
     transition: all 0.2s;
 }
 
-.notification-actions .checkbox-label:hover {
+.seasonal-notification-panel .notification-actions .checkbox-label:hover {
     background: #fffbeb;
     transform: translateY(-1px);
 }
 
-.notification-actions .checkbox-text {
+.seasonal-notification-panel .notification-actions .checkbox-text {
     font-weight: 500;
     color: #92400e;
 }
@@ -3668,7 +3671,7 @@ body {
         padding: 0.75rem;
     }
     
-    .notification-actions .checkbox-label {
+    .seasonal-notification-panel .notification-actions .checkbox-label {
         width: 100%;
         text-align: center;
     }
