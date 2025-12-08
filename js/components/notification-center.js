@@ -23,6 +23,7 @@ class NotificationCenter {
      * Initialize the notification center
      */
     async init() {
+        console.log('[NotificationCenter] init() called, initialized:', this.initialized);
         if (this.initialized) return;
         this.initialized = true;
 
@@ -31,6 +32,8 @@ class NotificationCenter {
         this.cleanOldNotifications();
         this.render();
         this.setupEventListeners();
+        
+        console.log('[NotificationCenter] UI created and listeners set up');
         
         // Load recent products from database and subscribe to changes
         if (isSupabaseConfigured()) {
@@ -43,9 +46,11 @@ class NotificationCenter {
      * Create the UI elements
      */
     createUI() {
+        console.log('[NotificationCenter] createUI() called');
+        
         // Check if already created
         if (document.getElementById('notifCenterBtn')) {
-            // UI already exists, just update the render
+            console.log('[NotificationCenter] UI already exists');
             this.render();
             return;
         }
@@ -55,8 +60,11 @@ class NotificationCenter {
                             document.querySelector('.nav-actions') ||
                             document.querySelector('nav .menu-btn')?.parentElement;
         
+        console.log('[NotificationCenter] navContainer found:', !!navContainer);
+        
         if (!navContainer) {
             // Retry after a short delay
+            console.log('[NotificationCenter] Retrying createUI in 200ms...');
             setTimeout(() => this.createUI(), 200);
             return;
         }

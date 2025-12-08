@@ -479,23 +479,21 @@
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
         
-        // Initialize notification banner
-        notificationBanner.init();
+        // Initialize components with error isolation
+        try { notificationBanner.init(); } catch(e) { console.error('notificationBanner error:', e); }
+        try { inAppNotifications.init(); } catch(e) { console.error('inAppNotifications error:', e); }
+        try { notificationPrompt.init(); } catch(e) { console.error('notificationPrompt error:', e); }
+        try { initReferralLanding(); } catch(e) { console.error('referralLanding error:', e); }
         
-        // Initialize in-app notifications for seasonal products
-        inAppNotifications.init();
-        
-        // Show push notification prompt
-        notificationPrompt.init();
-        
-        // Check for referral code in URL and open registration modal
-        initReferralLanding();
-        
-        // Initialize notification center in navbar
-        notificationCenter.init();
+        // Initialize notification center in navbar (critical)
+        try { 
+            notificationCenter.init(); 
+        } catch(e) { 
+            console.error('notificationCenter error:', e); 
+        }
         
         // Initialize global search
-        globalSearch.init();
+        try { globalSearch.init(); } catch(e) { console.error('globalSearch error:', e); }
     </script>
 </body>
 
