@@ -17,6 +17,7 @@ class NotificationCenter {
         this.isOpen = false;
         this.container = null;
         this.initialized = false;
+        this._scrollPosition = 0;
     }
 
     /**
@@ -169,12 +170,18 @@ class NotificationCenter {
      */
     open() {
         const panel = document.getElementById('notifCenterPanel');
-        const overlay = document.getElementById('notifCenterOverlay');
         
         if (panel) panel.classList.add('active');
-        // Only show overlay on mobile
-        if (overlay && this.isMobile()) overlay.classList.add('active');
         this.isOpen = true;
+        
+        // Lock body scroll on mobile to prevent background scrolling
+        if (this.isMobile()) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${window.scrollY}px`;
+            this._scrollPosition = window.scrollY;
+        }
     }
 
     /**
@@ -182,11 +189,18 @@ class NotificationCenter {
      */
     close() {
         const panel = document.getElementById('notifCenterPanel');
-        const overlay = document.getElementById('notifCenterOverlay');
         
         if (panel) panel.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
         this.isOpen = false;
+        
+        // Restore body scroll on mobile
+        if (this.isMobile()) {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, this._scrollPosition || 0);
+        }
     }
 
     /**
