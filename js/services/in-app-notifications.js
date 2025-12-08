@@ -62,8 +62,7 @@ class InAppNotificationService {
         
         @media (max-width: 480px) {
           .in-app-notifications {
-            top: auto;
-            bottom: 16px;
+            top: 70px;
             right: 12px;
             left: 12px;
             max-width: none;
