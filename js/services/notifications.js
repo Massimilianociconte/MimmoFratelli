@@ -24,6 +24,20 @@ class NotificationService {
   }
 
   /**
+   * Get the base path for the site (handles GitHub Pages)
+   */
+  _getBasePath() {
+    const { origin, pathname } = window.location;
+    if (origin.includes('github.io')) {
+      const pathParts = pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        return `/${pathParts[0]}`;
+      }
+    }
+    return '';
+  }
+
+  /**
    * Initialize the notification service
    * Registers service worker and checks subscription status
    */
@@ -34,9 +48,10 @@ class NotificationService {
     }
 
     try {
+      const basePath = this._getBasePath();
       // Register service worker
-      this.swRegistration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+      this.swRegistration = await navigator.serviceWorker.register(`${basePath}/sw.js`, {
+        scope: `${basePath}/`
       });
       console.log('[Notifications] Service Worker registered:', this.swRegistration);
 

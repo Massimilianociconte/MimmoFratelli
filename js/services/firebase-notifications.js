@@ -18,6 +18,20 @@ class FirebaseNotificationService {
   }
 
   /**
+   * Get the base path for the site (handles GitHub Pages)
+   */
+  _getBasePath() {
+    const { origin, pathname } = window.location;
+    if (origin.includes('github.io')) {
+      const pathParts = pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        return `/${pathParts[0]}`;
+      }
+    }
+    return '';
+  }
+
+  /**
    * Initialize Firebase and FCM
    */
   async init() {
@@ -92,7 +106,8 @@ class FirebaseNotificationService {
         msgScript.onload = async () => {
           // Register Firebase messaging service worker
           try {
-            await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+            const basePath = this._getBasePath();
+            await navigator.serviceWorker.register(`${basePath}/firebase-messaging-sw.js`, { scope: `${basePath}/` });
             // Wait for it to be ready
             await navigator.serviceWorker.ready;
             resolve();
@@ -126,10 +141,11 @@ class FirebaseNotificationService {
       }
       
       // Ensure service worker is registered
-      let swRegistration = await navigator.serviceWorker.getRegistration('/');
+      const basePath = this._getBasePath();
+      let swRegistration = await navigator.serviceWorker.getRegistration(`${basePath}/`);
       if (!swRegistration || !swRegistration.active?.scriptURL.includes('firebase-messaging-sw.js')) {
-        swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-          scope: '/',
+        swRegistration = await navigator.serviceWorker.register(`${basePath}/firebase-messaging-sw.js`, {
+          scope: `${basePath}/`,
           updateViaCache: 'none'
         });
         await navigator.serviceWorker.ready;
@@ -191,8 +207,9 @@ class FirebaseNotificationService {
       }
 
       // Register service worker explicitly for background notifications
-      const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-        scope: '/',
+      const basePath = this._getBasePath();
+      const swRegistration = await navigator.serviceWorker.register(`${basePath}/firebase-messaging-sw.js`, {
+        scope: `${basePath}/`,
         updateViaCache: 'none'
       });
       
