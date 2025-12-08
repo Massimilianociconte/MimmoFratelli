@@ -22,10 +22,12 @@ interface CartItem {
   productId: string;
   name: string;
   price: number;
+  unitPrice?: number; // Price per unit (kg/pz)
   quantity: number;
   size?: string;
   color?: string;
   image?: string;
+  weight_grams?: number | null;
 }
 
 interface ShippingAddress {
@@ -186,32 +188,49 @@ Deno.serve(async (req: Request) => {
     }
 
     // Build line items with price_data (dynamic products)
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-      price_data: {
-        currency: "eur",
-        product_data: {
-          name: item.name,
-          images: item.image ? [item.image] : [],
-          metadata: {
-            productId: item.productId,
-            size: item.size || "",
-            color: item.color || "",
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => {
+      // Build product name with weight info if applicable
+      let productName = item.name;
+      if (item.weight_grams) {
+        const weightDisplay = item.weight_grams >= 1000 
+          ? `${(item.weight_grams / 1000).toFixed(item.weight_grams % 1000 === 0 ? 0 : 2)} Kg`
+          : `${item.weight_grams} g`;
+        productName = `${item.name} (${weightDisplay})`;
+      }
+      
+      return {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: productName,
+            images: item.image ? [item.image] : [],
+            metadata: {
+              productId: item.productId,
+              size: item.size || "",
+              color: item.color || "",
+              weight_grams: item.weight_grams?.toString() || "",
+            },
           },
+          unit_amount: Math.round(item.price * 100),
         },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+        quantity: item.quantity,
+      };
+    });
 
     // Build session config
+    // Note: Removing payment_method_types to let Stripe automatically show all enabled methods
+    // from the dashboard (card, klarna, paypal, google_pay, apple_pay, etc.)
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
       customer_email: customerEmail,
       locale: "it",
+      // Enable automatic payment methods based on dashboard settings
+      automatic_payment_methods: {
+        enabled: true,
+      },
       shipping_options: [
         {
           shipping_rate_data: {
@@ -237,9 +256,11 @@ Deno.serve(async (req: Request) => {
           productId: i.productId,
           name: i.name,
           price: i.price,
+          unitPrice: i.unitPrice || i.price,
           quantity: i.quantity,
           size: i.size,
-          color: i.color
+          color: i.color,
+          weight_grams: i.weight_grams || null
         }))),
       },
     };

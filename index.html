@@ -56,7 +56,7 @@
 
     <!-- Navigation -->
     <nav class="nav-home nav-transparent" id="mainNav">
-        <a href="index.html" class="logo">
+        <a href="index.html#categorie" class="logo">
             <span class="logo-icon"></span>
             <span class="logo-text">Mimmo Fratelli</span>
         </a>
@@ -115,13 +115,15 @@
         <!-- Animated Background -->
         <div class="hero-bg-animated">
             <div class="hero-gradient"></div>
-            <div class="floating-elements">
-                <span class="float-item" style="--delay: 0s; --x: 10%; --y: 20%;">🍎</span>
-                <span class="float-item" style="--delay: 1s; --x: 85%; --y: 15%;">🥬</span>
-                <span class="float-item" style="--delay: 2s; --x: 75%; --y: 70%;">🍋</span>
-                <span class="float-item" style="--delay: 0.5s; --x: 20%; --y: 75%;">🥕</span>
-                <span class="float-item" style="--delay: 1.5s; --x: 50%; --y: 10%;">🍇</span>
-                <span class="float-item" style="--delay: 2.5s; --x: 90%; --y: 50%;">🍅</span>
+            <!-- Professional geometric decorations -->
+            <div class="hero-decorations">
+                <div class="deco-circle deco-circle-1"></div>
+                <div class="deco-circle deco-circle-2"></div>
+                <div class="deco-circle deco-circle-3"></div>
+                <div class="deco-line deco-line-1"></div>
+                <div class="deco-line deco-line-2"></div>
+                <div class="deco-leaf deco-leaf-1"></div>
+                <div class="deco-leaf deco-leaf-2"></div>
             </div>
         </div>
 
@@ -133,19 +135,19 @@
             </div>
             <h1 class="hero-title-main animate-fade-up" style="--delay: 0.1s">
                 <span class="title-line">Frutta & Verdura</span>
-                <span class="title-accent">di Stagione</span>
+                <span class="title-accent-light">e non solo</span>
             </h1>
             <p class="hero-subtitle animate-fade-up" style="--delay: 0.2s">
                 Dal produttore alla tua tavola. Qualità, freschezza e natura ogni giorno.
             </p>
             <div class="hero-cta animate-fade-up" style="--delay: 0.3s">
-                <a href="collection.html" class="btn-primary">
-                    <span>Scopri i Prodotti</span>
+                <a href="collection.html" class="btn-primary-dark">
+                    <span>Acquista ora i nostri prodotti</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </a>
-                <a href="about.html" class="btn-secondary">Chi Siamo</a>
+                <a href="contacts.html#orari" class="btn-secondary">Scopri dove puoi trovarci</a>
             </div>
         </div>
 
@@ -157,7 +159,7 @@
     </section>
 
     <!-- Categories Section - Premium Grid -->
-    <section class="categories-section">
+    <section class="categories-section" id="categorie">
         <div class="section-header">
             <span class="section-label">Le Nostre Categorie</span>
             <h2 class="section-title">Scegli la Freschezza</h2>
@@ -474,6 +476,8 @@
         import { notificationPrompt } from './js/components/notification-prompt.js';
         import { whatsappChannelButton } from './js/components/whatsapp-channel-button.js';
         import { initReferralLanding } from './js/utils/referral-landing.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
         
         // Initialize notification banner
         notificationBanner.init();
@@ -486,6 +490,12 @@
         
         // Check for referral code in URL and open registration modal
         initReferralLanding();
+        
+        // Initialize notification center in navbar
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
     </script>
 </body>
 

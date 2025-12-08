@@ -67,7 +67,7 @@
 </head>
 <body>
     <nav style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px); position: fixed; z-index: 1000;">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account" style="cursor: pointer; pointer-events: auto;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -382,6 +382,14 @@
         import { wishlistService } from './js/services/wishlist.js';
         import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { referralService } from './js/services/referral.js?v=3';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         let currentProfile = null;
 

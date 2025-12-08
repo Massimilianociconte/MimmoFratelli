@@ -351,9 +351,29 @@ class FirebaseNotificationService {
     const body = notification.body || data.body || '';
     const image = notification.image || data.image;
 
-    // Only show in-app toast for foreground messages
-    // Browser notification is not needed since user is already on the page
+    // Show in-app toast for foreground messages
     this.showInAppToast({ notification: { title, body, image }, data });
+    
+    // Also add to notification center for persistence
+    this.addToNotificationCenter({ title, body, image, data });
+  }
+  
+  /**
+   * Add notification to the notification center
+   */
+  addToNotificationCenter({ title, body, image, data }) {
+    // Try to add to notification center if available
+    if (window.notificationCenter && typeof window.notificationCenter.addNotification === 'function') {
+      const type = data?.type || 'new_product';
+      window.notificationCenter.addNotification({
+        type: type,
+        title: title,
+        message: body,
+        productId: data?.product_id || data?.productId,
+        productSlug: data?.product_slug || data?.productSlug,
+        image: image
+      });
+    }
   }
 
   /**

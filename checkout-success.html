@@ -458,6 +458,14 @@
     <script src="js/config.js"></script>
     <script type="module">
         import { supabase, getCurrentUser } from './js/supabase.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+        
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
         
         // Numero WhatsApp del corriere (formato internazionale senza +)
         const RIDER_WHATSAPP = '393802647367'; // Cambia con il numero reale

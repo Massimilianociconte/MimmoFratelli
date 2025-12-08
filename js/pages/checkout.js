@@ -11,6 +11,10 @@ import { giftCardService } from '../services/giftcard.js';
 import { wishlistService } from '../services/wishlist.js';
 import { referralService } from '../services/referral.js';
 import { capAutofillService } from '../services/cap-autofill.js';
+import { notificationCenter } from '../components/notification-center.js';
+
+// Initialize notification center
+notificationCenter.init();
 
 class CheckoutPage {
   constructor() {
@@ -180,17 +184,25 @@ class CheckoutPage {
 
   renderCartItems() {
     const container = document.getElementById('cartItems');
-    container.innerHTML = this.cartItems.map(item => `
-      <div class="checkout-item">
-        <img src="${item.image || 'Images/placeholder.jpg'}" alt="${item.name}" class="checkout-item-img">
-        <div class="checkout-item-details">
-          <h4>${item.name}</h4>
-          <p>Taglia: ${item.size} | Colore: ${item.color}</p>
-          <p>Quantità: ${item.quantity}</p>
+    container.innerHTML = this.cartItems.map(item => {
+      // Show weight info for weight-based products
+      let variantInfo = `Peso: ${item.size}`;
+      if (item.unitPrice && item.weight_grams) {
+        variantInfo += ` (€${item.unitPrice.toFixed(2)}/Kg)`;
+      }
+      
+      return `
+        <div class="checkout-item">
+          <img src="${item.image || 'Images/placeholder.jpg'}" alt="${item.name}" class="checkout-item-img">
+          <div class="checkout-item-details">
+            <h4>${item.name}</h4>
+            <p>${variantInfo}</p>
+            <p>Quantità: ${item.quantity}</p>
+          </div>
+          <div class="checkout-item-price">€${(item.price * item.quantity).toFixed(2)}</div>
         </div>
-        <div class="checkout-item-price">€${(item.price * item.quantity).toFixed(2)}</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   updateTotals() {

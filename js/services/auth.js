@@ -27,6 +27,25 @@ class AuthService {
   }
 
   /**
+   * Get the correct URL for a page, handling both localhost and GitHub Pages
+   * @param {string} page - The page filename
+   * @returns {string} The full URL to the page
+   */
+  _getPageUrl(page) {
+    const { origin, pathname } = window.location;
+    
+    if (origin.includes('github.io')) {
+      const pathParts = pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        const repoName = pathParts[0];
+        return `${origin}/${repoName}/${page}`;
+      }
+    }
+    
+    return `${origin}/${page}`;
+  }
+
+  /**
    * Initialize auth service and set up listeners
    */
   async init() {
@@ -289,7 +308,7 @@ class AuthService {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password.html`
+        redirectTo: this._getPageUrl('reset-password.html')
       });
 
       if (error) {

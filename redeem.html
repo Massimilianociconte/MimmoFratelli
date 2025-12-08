@@ -13,7 +13,7 @@
 </head>
 <body class="redeem-page-body">
     <nav style="color: var(--text-color); background: rgba(248, 253, 245, 0.95); backdrop-filter: blur(10px); position: fixed; z-index: 1000;">
-        <div class="logo"><a href="index.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -270,6 +270,14 @@
         import { profileDrawer } from './js/components/profile-drawer.js';
         import { giftCardService } from './js/services/giftcard.js';
         import { supabase } from './js/supabase.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         const PENDING_REDEEM_KEY = 'mimmo_pending_giftcard_redeem';
         let currentGiftCard = null;

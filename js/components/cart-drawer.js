@@ -144,6 +144,9 @@ class CartDrawer {
             <button class="cart-continue-btn" id="continueShoppingBtn">
               Continua lo Shopping
             </button>
+            <button class="cart-clear-btn" id="clearCartBtn">
+              🗑️ Svuota Carrello
+            </button>
           </div>
         </div>
       </div>
@@ -174,6 +177,8 @@ class CartDrawer {
 
     document.getElementById('continueShoppingBtn')?.addEventListener('click', () => this.hide());
     
+    document.getElementById('clearCartBtn')?.addEventListener('click', () => this.clearCart());
+    
     document.getElementById('cartApplyPromo')?.addEventListener('click', () => this.applyPromoCode());
     
     document.getElementById('cartPromoCode')?.addEventListener('keypress', (e) => {
@@ -182,6 +187,27 @@ class CartDrawer {
         this.applyPromoCode();
       }
     });
+  }
+
+  async clearCart() {
+    if (!confirm('Sei sicuro di voler svuotare il carrello?')) return;
+    
+    await cartService.clearCart();
+    this.appliedPromo = null;
+    this.discount = 0;
+    
+    // Reset promo input
+    const codeInput = document.getElementById('cartPromoCode');
+    const messageEl = document.getElementById('cartPromoMessage');
+    if (codeInput) {
+      codeInput.value = '';
+      codeInput.disabled = false;
+    }
+    if (messageEl) {
+      messageEl.style.display = 'none';
+    }
+    
+    this.updateCart();
   }
 
   async applyPromoCode() {
@@ -264,48 +290,60 @@ class CartDrawer {
     emptyState.style.display = 'none';
     footer.style.display = 'block';
 
-    container.innerHTML = items.map(item => `
-      <div class="cart-item" data-product-id="${item.productId}" data-size="${item.size}" data-color="${item.color}">
-        <div class="cart-item-image">
-          <img src="${item.image || 'data:image/svg+xml,...'}" alt="${item.name}" onerror="this.src='data:image/svg+xml,...'">
-        </div>
-        <div class="cart-item-details">
-          <h4 class="cart-item-name">${item.name}</h4>
-          <p class="cart-item-variant">${item.size} / ${item.color}</p>
-          <p class="cart-item-price">€ ${item.price?.toFixed(2) || '0.00'}</p>
-          <div class="cart-item-quantity">
-            <button class="qty-btn minus" data-action="decrease">−</button>
-            <span class="qty-value">${item.quantity}</span>
-            <button class="qty-btn plus" data-action="increase">+</button>
+    container.innerHTML = items.map(item => {
+      const weightGrams = item.weight_grams || null;
+      const weightAttr = weightGrams ? `data-weight="${weightGrams}"` : '';
+      
+      // Show unit price for weight-based items
+      let priceDisplay = `€ ${item.price?.toFixed(2) || '0.00'}`;
+      if (weightGrams && item.unitPrice) {
+        priceDisplay += ` <span class="cart-item-unit-price">(€${item.unitPrice.toFixed(2)}/Kg)</span>`;
+      }
+      
+      return `
+        <div class="cart-item" data-product-id="${item.productId}" data-size="${item.size}" data-color="${item.color}" ${weightAttr}>
+          <div class="cart-item-image">
+            <img src="${item.image || 'data:image/svg+xml,...'}" alt="${item.name}" onerror="this.src='data:image/svg+xml,...'">
           </div>
+          <div class="cart-item-details">
+            <h4 class="cart-item-name">${item.name}</h4>
+            <p class="cart-item-variant">${item.size} / ${item.color}</p>
+            <p class="cart-item-price">${priceDisplay}</p>
+            <div class="cart-item-quantity">
+              <button class="qty-btn minus" data-action="decrease">−</button>
+              <span class="qty-value">${item.quantity}</span>
+              <button class="qty-btn plus" data-action="increase">+</button>
+            </div>
+          </div>
+          <button class="cart-item-remove" data-action="remove">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </button>
         </div>
-        <button class="cart-item-remove" data-action="remove">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-          </svg>
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Attach quantity handlers
     container.querySelectorAll('.cart-item').forEach(itemEl => {
       const productId = itemEl.dataset.productId;
       const size = itemEl.dataset.size;
       const color = itemEl.dataset.color;
+      const weightGrams = itemEl.dataset.weight ? parseInt(itemEl.dataset.weight) : null;
       const qtyValue = itemEl.querySelector('.qty-value');
 
       itemEl.querySelector('[data-action="decrease"]').addEventListener('click', async () => {
         const newQty = parseInt(qtyValue.textContent) - 1;
-        await cartService.updateQuantity(productId, size, color, newQty);
+        await cartService.updateQuantity(productId, size, color, newQty, weightGrams);
       });
 
       itemEl.querySelector('[data-action="increase"]').addEventListener('click', async () => {
         const newQty = parseInt(qtyValue.textContent) + 1;
-        await cartService.updateQuantity(productId, size, color, newQty);
+        await cartService.updateQuantity(productId, size, color, newQty, weightGrams);
       });
 
       itemEl.querySelector('[data-action="remove"]').addEventListener('click', async () => {
-        await cartService.removeItem(productId, size, color);
+        await cartService.removeItem(productId, size, color, weightGrams);
       });
     });
   }
@@ -462,6 +500,11 @@ class CartDrawer {
         .cart-item-price {
           font-size: 0.9rem;
           font-weight: 500;
+        }
+        .cart-item-unit-price {
+          font-size: 0.75rem;
+          color: #888;
+          font-weight: 400;
           margin: 0 0 0.5rem;
         }
         .cart-item-quantity {
@@ -608,6 +651,22 @@ class CartDrawer {
         }
         .cart-continue-btn:hover {
           border-color: var(--text-color);
+        }
+        .cart-clear-btn {
+          width: 100%;
+          padding: 0.6rem;
+          margin-top: 0.5rem;
+          background: transparent;
+          border: none;
+          font-size: 0.8rem;
+          color: #dc3545;
+          cursor: pointer;
+          transition: all 0.2s;
+          border-radius: 6px;
+        }
+        .cart-clear-btn:hover {
+          background: #fff5f5;
+          color: #c82333;
         }
         /* Referral Bonus Banner */
         .referral-bonus-banner {

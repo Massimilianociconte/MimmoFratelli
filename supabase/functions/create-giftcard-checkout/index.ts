@@ -78,8 +78,11 @@ Deno.serve(async (req: Request) => {
     }
 
     // Create Stripe checkout session for gift card
+    // Enable automatic payment methods based on dashboard settings
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      automatic_payment_methods: {
+        enabled: true,
+      },
       line_items: [
         {
           price_data: {

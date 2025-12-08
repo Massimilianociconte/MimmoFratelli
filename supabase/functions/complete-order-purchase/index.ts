@@ -26,9 +26,11 @@ interface OrderItem {
   productId: string;
   name: string;
   price: number;
+  unitPrice?: number;
   quantity: number;
   size?: string;
   color?: string;
+  weight_grams?: number | null;
 }
 
 function generateOrderNumber(): string {
@@ -214,6 +216,8 @@ Deno.serve(async (req: Request) => {
         quantity: item.quantity,
         size: item.size || "Standard",
         color: item.color || "Standard",
+        weight_grams: item.weight_grams || null,
+        unit_measure: item.weight_grams ? "kg" : "pz",
       }));
 
       const { error: itemsError } = await supabaseAdmin
@@ -303,9 +307,16 @@ Deno.serve(async (req: Request) => {
 
     // Send Telegram notification asynchronously (don't wait for it)
     const addr = shippingAddress as any;
-    const itemsList = orderItems.map(item => 
-      `• ${item.name} x${item.quantity} - €${(item.price * item.quantity).toFixed(2)}`
-    ).join('\n');
+    const itemsList = orderItems.map(item => {
+      let itemDesc = item.name;
+      if (item.weight_grams) {
+        const weightDisplay = item.weight_grams >= 1000 
+          ? `${(item.weight_grams / 1000).toFixed(item.weight_grams % 1000 === 0 ? 0 : 2)} Kg`
+          : `${item.weight_grams} g`;
+        itemDesc += ` (${weightDisplay})`;
+      }
+      return `• ${itemDesc} x${item.quantity} - €${(item.price * item.quantity).toFixed(2)}`;
+    }).join('\n');
     
     const telegramMessage = `🛒 <b>NUOVO ORDINE!</b>
 

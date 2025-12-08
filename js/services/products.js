@@ -242,7 +242,7 @@ class ProductService {
   }
 
   /**
-   * Search products by query
+   * Search products by query (enhanced with keywords)
    * 
    * @param {string} query - Search query
    * @param {Object} options - Additional options
@@ -258,6 +258,39 @@ class ProductService {
     }
 
     try {
+      // Try using the RPC function for enhanced search with keywords
+      const { data: rpcData, error: rpcError } = await supabase.rpc('search_products', {
+        search_query: query.trim()
+      });
+
+      if (!rpcError && rpcData) {
+        // Fetch category info for RPC results
+        const productIds = rpcData.map(p => p.id);
+        if (productIds.length > 0) {
+          let dbQuery = supabase
+            .from('products')
+            .select('*, categories(name, slug)')
+            .in('id', productIds);
+
+          // Type filter (frutta/verdura/altro)
+          if (options.gender) {
+            dbQuery = dbQuery.eq('gender', options.gender);
+          }
+
+          const { data: productsWithCategories } = await dbQuery;
+          
+          // Maintain search order from RPC
+          const orderedProducts = productIds
+            .map(id => productsWithCategories?.find(p => p.id === id))
+            .filter(Boolean)
+            .slice(0, options.limit || 20);
+
+          return { products: orderedProducts, error: null };
+        }
+        return { products: [], error: null };
+      }
+
+      // Fallback to basic search if RPC fails
       const searchTerm = `%${query.trim()}%`;
       
       let dbQuery = supabase

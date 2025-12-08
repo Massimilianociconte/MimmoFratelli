@@ -23,7 +23,7 @@
 
     <!-- Navigation -->
     <nav style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px);">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -97,15 +97,63 @@
                 Prodotto fresco selezionato con cura dai nostri fornitori di fiducia. 
                 Provenienza locale e qualità garantita per portare sulla tua tavola solo il meglio della natura.
             </div>
-            <div class="quantity-selector">
-                <label>Quantità (kg)</label>
+            <!-- Weight Selector -->
+            <div class="weight-selector" id="weightSelector">
+                <label>⚖️ Seleziona Peso</label>
+                <div class="weight-controls">
+                    <div class="weight-input-group">
+                        <select id="weightKg" class="weight-select" onchange="updateTotalWeight()">
+                            <option value="0">0</option>
+                            <option value="1" selected>1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                        <span class="weight-unit">Kg</span>
+                    </div>
+                    <span class="weight-separator">+</span>
+                    <div class="weight-input-group">
+                        <select id="weightG" class="weight-select" onchange="updateTotalWeight()">
+                            <option value="0" selected>0</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="250">250</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="750">750</option>
+                            <option value="800">800</option>
+                            <option value="900">900</option>
+                        </select>
+                        <span class="weight-unit">g</span>
+                    </div>
+                </div>
+                <div class="weight-summary">
+                    <span class="weight-total" id="weightTotal">Totale: 1 Kg</span>
+                    <span class="weight-price" id="weightPrice">€ 0.00</span>
+                </div>
+                <div class="weight-availability" id="weightAvailability"></div>
+            </div>
+            
+            <!-- Quantity selector for piece-based products -->
+            <div class="quantity-selector" id="quantitySelector" style="display: none;">
+                <label>Quantità (pezzi)</label>
                 <div class="quantity-controls">
-                    <button class="qty-btn" onclick="changeQty(-0.5)">−</button>
+                    <button class="qty-btn" onclick="changeQty(-1)">−</button>
                     <span class="qty-value" id="qtyValue">1</span>
-                    <button class="qty-btn" onclick="changeQty(0.5)">+</button>
+                    <button class="qty-btn" onclick="changeQty(1)">+</button>
                 </div>
             </div>
-            <button class="add-to-cart-btn">Aggiungi al Carrello</button>
+            
+            <button class="add-to-cart-btn" id="addToCartBtn">Aggiungi al Carrello</button>
         </div>
     </div>
 
@@ -120,19 +168,168 @@
         import { profileDrawer } from './js/components/profile-drawer.js';
         import { cartService } from './js/services/cart.js';
         import { cartDrawer } from './js/components/cart-drawer.js';
-        import { isSupabaseConfigured } from './js/supabase.js';
+        import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { inAppNotifications } from './js/services/in-app-notifications.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+        import { stockAlertService } from './js/services/stock-alerts.js';
 
         // Initialize in-app notifications
         inAppNotifications.init();
+        
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         let currentProduct = null;
         let currentQty = 1;
+        let currentWeightGrams = 1000; // Default 1kg
+        let weightInventory = [];
+        let currentUnitMeasure = 'kg'; // Track current unit measure
 
         window.changeQty = function(delta) {
-            currentQty = Math.max(0.5, currentQty + delta);
+            currentQty = Math.max(1, currentQty + delta);
             document.getElementById('qtyValue').textContent = currentQty;
         };
+        
+        // Get unit labels based on unit measure
+        function getUnitLabels(unitMeasure) {
+            switch (unitMeasure) {
+                case 'l':
+                case 'ml':
+                    return { major: 'L', minor: 'ml' };
+                case 'kg':
+                case 'g':
+                default:
+                    return { major: 'Kg', minor: 'g' };
+            }
+        }
+        
+        // Update weight selector labels based on product's unit measure
+        function updateWeightSelectorLabels(unitMeasure) {
+            currentUnitMeasure = unitMeasure;
+            const labels = getUnitLabels(unitMeasure);
+            
+            // Update the unit labels in the selector
+            const weightUnits = document.querySelectorAll('.weight-selector .weight-unit');
+            if (weightUnits.length >= 2) {
+                weightUnits[0].textContent = labels.major; // First one is Kg/L
+                weightUnits[1].textContent = labels.minor; // Second one is g/ml
+            }
+        }
+        
+        window.updateTotalWeight = function() {
+            const kg = parseInt(document.getElementById('weightKg').value) || 0;
+            const g = parseInt(document.getElementById('weightG').value) || 0;
+            currentWeightGrams = (kg * 1000) + g;
+            
+            // Get correct labels based on unit measure
+            const labels = getUnitLabels(currentUnitMeasure);
+            
+            // Update display with correct unit
+            const totalEl = document.getElementById('weightTotal');
+            if (currentWeightGrams >= 1000) {
+                const majorDisplay = currentWeightGrams / 1000;
+                totalEl.textContent = `Totale: ${majorDisplay % 1 === 0 ? majorDisplay : majorDisplay.toFixed(2)} ${labels.major}`;
+            } else {
+                totalEl.textContent = `Totale: ${currentWeightGrams} ${labels.minor}`;
+            }
+            
+            // Update price
+            if (currentProduct) {
+                const pricePerUnit = currentProduct.sale_price || currentProduct.price;
+                const totalPrice = (pricePerUnit * currentWeightGrams) / 1000;
+                document.getElementById('weightPrice').textContent = `€ ${totalPrice.toFixed(2)}`;
+            }
+            
+            // Check availability
+            checkWeightAvailability();
+        };
+        
+        function checkWeightAvailability() {
+            const availabilityEl = document.getElementById('weightAvailability');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            
+            if (currentWeightGrams === 0) {
+                availabilityEl.innerHTML = '<span class="availability-warning">⚠️ Seleziona un peso</span>';
+                addToCartBtn.disabled = true;
+                addToCartBtn.classList.add('btn-disabled');
+                return;
+            }
+            
+            // Check if this weight is available in inventory
+            if (weightInventory.length > 0) {
+                // Find exact match for this weight
+                const exactMatch = weightInventory.find(w => w.weight_grams === currentWeightGrams);
+                
+                if (exactMatch) {
+                    // Exact weight found in inventory
+                    if (exactMatch.quantity > 0) {
+                        availabilityEl.innerHTML = `<span class="availability-ok">✅ Disponibile (${exactMatch.quantity} pz)</span>`;
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.classList.remove('btn-disabled');
+                        addToCartBtn.textContent = 'Aggiungi al Carrello';
+                    } else {
+                        // Weight exists but out of stock
+                        const availableWeights = weightInventory.filter(w => w.quantity > 0);
+                        let suggestion = '';
+                        if (availableWeights.length > 0) {
+                            const labels = getUnitLabels(currentUnitMeasure);
+                            const suggestions = availableWeights.slice(0, 3).map(w => {
+                                return w.weight_grams >= 1000 
+                                    ? `${(w.weight_grams / 1000).toFixed(w.weight_grams % 1000 === 0 ? 0 : 1)} ${labels.major}`
+                                    : `${w.weight_grams} ${labels.minor}`;
+                            }).join(', ');
+                            suggestion = `<br><small>💡 Prova: ${suggestions}</small>`;
+                        }
+                        availabilityEl.innerHTML = `<span class="availability-error">❌ Esaurito per questo peso${suggestion}</span>`;
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.classList.add('btn-disabled');
+                        addToCartBtn.textContent = 'Non Disponibile - Cambia Peso';
+                    }
+                } else {
+                    // Weight not in predefined options - check if any inventory exists
+                    const totalAvailable = weightInventory.reduce((sum, w) => sum + w.quantity, 0);
+                    if (totalAvailable > 0) {
+                        // There's inventory but not for this exact weight - allow custom weights
+                        availabilityEl.innerHTML = '<span class="availability-ok">✅ Disponibile (peso personalizzato)</span>';
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.classList.remove('btn-disabled');
+                        addToCartBtn.textContent = 'Aggiungi al Carrello';
+                    } else {
+                        // No inventory at all
+                        availabilityEl.innerHTML = '<span class="availability-error">❌ Prodotto esaurito</span>';
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.classList.add('btn-disabled');
+                        addToCartBtn.textContent = 'Non Disponibile';
+                    }
+                }
+            } else {
+                // No inventory tracking - allow purchase
+                availabilityEl.innerHTML = '';
+                addToCartBtn.disabled = false;
+                addToCartBtn.classList.remove('btn-disabled');
+                addToCartBtn.textContent = 'Aggiungi al Carrello';
+            }
+        }
+        
+        async function loadWeightInventory(productId) {
+            try {
+                const { data, error } = await supabase
+                    .from('weight_inventory')
+                    .select('weight_grams, quantity')
+                    .eq('product_id', productId)
+                    .order('weight_grams');
+                
+                if (!error && data) {
+                    weightInventory = data;
+                }
+            } catch (err) {
+                console.log('Weight inventory not available:', err);
+            }
+        }
 
         // Menu toggle
         window.toggleMenu = function() {
@@ -223,18 +420,46 @@
                 updateWishlistBadge();
             });
 
-            document.querySelector('.add-to-cart-btn').addEventListener('click', async () => {
+            document.getElementById('addToCartBtn').addEventListener('click', async () => {
                 if (!currentProduct) return;
-
-                const item = {
-                    productId: currentProduct.id,
-                    name: currentProduct.name,
-                    price: currentProduct.sale_price || currentProduct.price,
-                    image: currentProduct.images?.[0] || '',
-                    size: `${currentQty} ${currentProduct.unit || 'kg'}`,
-                    color: 'Fresco',
-                    quantity: 1
-                };
+                
+                const unitMeasure = currentProduct.unit_measure || 'kg';
+                const isPieceBased = unitMeasure === 'pz';
+                
+                let item;
+                if (isPieceBased) {
+                    // Piece-based product
+                    item = {
+                        productId: currentProduct.id,
+                        name: currentProduct.name,
+                        price: currentProduct.sale_price || currentProduct.price,
+                        image: currentProduct.images?.[0] || '',
+                        size: `${currentQty} pz`,
+                        color: 'Fresco',
+                        quantity: currentQty,
+                        weight_grams: null
+                    };
+                } else {
+                    // Weight-based product
+                    const pricePerKg = currentProduct.sale_price || currentProduct.price;
+                    const totalPrice = (pricePerKg * currentWeightGrams) / 1000;
+                    const labels = getUnitLabels(currentUnitMeasure);
+                    const weightDisplay = currentWeightGrams >= 1000 
+                        ? `${(currentWeightGrams / 1000).toFixed(currentWeightGrams % 1000 === 0 ? 0 : 2)} ${labels.major}`
+                        : `${currentWeightGrams} ${labels.minor}`;
+                    
+                    item = {
+                        productId: currentProduct.id,
+                        name: currentProduct.name,
+                        price: totalPrice, // Total price for selected weight
+                        unitPrice: pricePerKg, // Price per kg for reference
+                        image: currentProduct.images?.[0] || '',
+                        size: weightDisplay,
+                        color: 'Fresco',
+                        quantity: 1,
+                        weight_grams: currentWeightGrams
+                    };
+                }
 
                 await cartService.addItem(item);
                 cartDrawer.show();
@@ -269,15 +494,64 @@
                 badge.style.display = count > 0 ? 'flex' : 'none';
             }
         }
+        
+        // Add stock alert button for unavailable products
+        async function addStockAlertButton(productId) {
+            const hasAlert = await stockAlertService.hasAlert(productId);
+            const container = document.querySelector('.product-details-col');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            
+            const alertBtn = document.createElement('button');
+            alertBtn.className = 'stock-alert-btn';
+            alertBtn.id = 'stockAlertBtn';
+            alertBtn.innerHTML = hasAlert 
+                ? '✅ Ti avviseremo quando disponibile'
+                : '🔔 Avvisami quando disponibile';
+            alertBtn.classList.toggle('subscribed', hasAlert);
+            
+            alertBtn.addEventListener('click', async () => {
+                const isAuth = await authService.isAuthenticated();
+                if (!isAuth) {
+                    authModal.show('login');
+                    return;
+                }
+                
+                alertBtn.disabled = true;
+                const currentlySubscribed = alertBtn.classList.contains('subscribed');
+                
+                if (currentlySubscribed) {
+                    const { success } = await stockAlertService.unsubscribe(productId);
+                    if (success) {
+                        alertBtn.innerHTML = '🔔 Avvisami quando disponibile';
+                        alertBtn.classList.remove('subscribed');
+                    }
+                } else {
+                    const { success } = await stockAlertService.subscribe(productId);
+                    if (success) {
+                        alertBtn.innerHTML = '✅ Ti avviseremo quando disponibile';
+                        alertBtn.classList.add('subscribed');
+                    }
+                }
+                alertBtn.disabled = false;
+            });
+            
+            // Insert after the add to cart button
+            addToCartBtn.parentNode.insertBefore(alertBtn, addToCartBtn.nextSibling);
+        }
 
-        function renderProduct(product) {
+        async function renderProduct(product) {
             const isUnavailable = !product.is_active && product.is_active !== undefined;
             const hasDiscount = product.sale_price && product.sale_price < product.price;
+            const unitMeasure = product.unit_measure || 'kg';
+            const isPieceBased = unitMeasure === 'pz';
+            
+            // Get unit display label
+            const unitLabels = { 'kg': 'Kg', 'g': 'g', 'l': 'L', 'ml': 'ml', 'pz': 'pz' };
+            const unit = unitLabels[unitMeasure] || 'Kg';
             
             document.getElementById('pdTitle').textContent = product.name;
             
             const priceEl = document.getElementById('pdPrice');
-            const unit = product.unit || 'kg';
             if (hasDiscount) {
                 const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
                 priceEl.innerHTML = `
@@ -295,10 +569,35 @@
             }
 
             document.title = `${product.name} | Mimmo Fratelli`;
+            
+            // Show appropriate selector based on unit measure
+            const weightSelector = document.getElementById('weightSelector');
+            const quantitySelector = document.getElementById('quantitySelector');
+            
+            if (isPieceBased) {
+                // Show quantity selector for piece-based products
+                weightSelector.style.display = 'none';
+                quantitySelector.style.display = 'block';
+            } else {
+                // Show weight selector for weight-based products
+                weightSelector.style.display = 'block';
+                quantitySelector.style.display = 'none';
+                
+                // Update weight selector labels based on unit measure
+                updateWeightSelectorLabels(unitMeasure);
+                
+                // Load weight inventory
+                if (product.id) {
+                    await loadWeightInventory(product.id);
+                }
+                
+                // Update weight display
+                updateTotalWeight();
+            }
 
             if (isUnavailable) {
                 document.querySelector('.product-container').classList.add('product-unavailable');
-                const addToCartBtn = document.querySelector('.add-to-cart-btn');
+                const addToCartBtn = document.getElementById('addToCartBtn');
                 addToCartBtn.textContent = 'Prodotto Non Disponibile';
                 addToCartBtn.disabled = true;
                 addToCartBtn.classList.add('disabled');
@@ -307,6 +606,9 @@
                 banner.className = 'unavailable-banner';
                 banner.innerHTML = '<span>⚠️ Questo prodotto non è attualmente disponibile</span>';
                 document.querySelector('.product-details-col').insertBefore(banner, document.querySelector('.pd-brand'));
+                
+                // Add "Notify me" button
+                await addStockAlertButton(product.id);
             }
 
             const images = product.images?.length > 0 ? product.images : [getPlaceholder()];

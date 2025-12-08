@@ -6,7 +6,7 @@
 class WhatsAppChannelButton {
     constructor() {
         // CONFIGURA QUI IL LINK DEL TUO CANALE WHATSAPP
-        this.channelUrl = 'https://whatsapp.com/channel/INSERISCI_IL_TUO_ID';
+        this.channelUrl = 'https://chat.whatsapp.com/KEN5fwhrESdCJF80haxw1X';
         this.isVisible = true;
     }
 

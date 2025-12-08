@@ -37,7 +37,8 @@ class CartService {
     const existingIndex = cart.findIndex(i => 
       i.productId === item.productId && 
       i.size === item.size && 
-      i.color === item.color
+      i.color === item.color &&
+      i.weight_grams === item.weight_grams
     );
 
     if (existingIndex > -1) {
@@ -47,10 +48,12 @@ class CartService {
         productId: item.productId,
         name: item.name,
         price: item.price,
+        unitPrice: item.unitPrice || item.price, // Price per unit (kg/pz)
         image: item.image,
         size: item.size,
         color: item.color,
-        quantity: item.quantity || 1
+        quantity: item.quantity || 1,
+        weight_grams: item.weight_grams || null
       });
     }
 
@@ -58,10 +61,13 @@ class CartService {
     return { success: true };
   }
 
-  updateLocalCartItem(productId, size, color, quantity) {
+  updateLocalCartItem(productId, size, color, quantity, weight_grams = null) {
     const cart = this.getLocalCart();
     const index = cart.findIndex(i => 
-      i.productId === productId && i.size === size && i.color === color
+      i.productId === productId && 
+      i.size === size && 
+      i.color === color &&
+      i.weight_grams === weight_grams
     );
 
     if (index > -1) {
@@ -75,10 +81,13 @@ class CartService {
     return { success: true };
   }
 
-  removeFromLocalCart(productId, size, color) {
+  removeFromLocalCart(productId, size, color, weight_grams = null) {
     const cart = this.getLocalCart();
     const filtered = cart.filter(i => 
-      !(i.productId === productId && i.size === size && i.color === color)
+      !(i.productId === productId && 
+        i.size === size && 
+        i.color === color &&
+        i.weight_grams === weight_grams)
     );
     this._saveLocalCart(filtered);
     return { success: true };
@@ -129,20 +138,82 @@ class CartService {
     }
 
     try {
-      const { error } = await supabase
+      const weightGrams = item.weight_grams || null;
+      const size = item.size || '';
+      const color = item.color || 'Fresco';
+      
+      // The DB constraint is on (user_id, product_id, size, color) - NOT weight_grams
+      // So we must check by these 4 fields first
+      const { data: existing, error: selectError } = await supabase
         .from('cart_items')
-        .upsert({
+        .select('id, quantity, weight_grams')
+        .eq('user_id', userId)
+        .eq('product_id', item.productId)
+        .eq('size', size)
+        .eq('color', color)
+        .maybeSingle();
+      
+      if (selectError) {
+        console.error('Select cart item error:', selectError);
+      }
+      
+      if (existing) {
+        // Item exists - update quantity and weight (replace with new weight if different)
+        const newQty = Math.min(10, existing.quantity + (item.quantity || 1));
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ 
+            quantity: newQty, 
+            weight_grams: weightGrams, // Update weight to latest
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', existing.id);
+        
+        if (error) {
+          console.error('Update cart item error:', error);
+          return { success: false, error: 'Errore nell\'aggiornamento del carrello' };
+        }
+      } else {
+        // Insert new item
+        const cartItem = {
           user_id: userId,
           product_id: item.productId,
-          size: item.size,
-          color: item.color,
-          quantity: item.quantity || 1
-        }, {
-          onConflict: 'user_id,product_id,size,color'
-        });
+          size: size,
+          color: color,
+          quantity: Math.min(10, item.quantity || 1),
+          weight_grams: weightGrams
+        };
+        
+        const { error } = await supabase
+          .from('cart_items')
+          .insert(cartItem);
 
-      if (error) {
-        return { success: false, error: 'Errore nell\'aggiunta al carrello' };
+        if (error) {
+          // If conflict (409), try to update instead (race condition)
+          if (error.code === '23505') {
+            console.log('Duplicate detected, attempting update...');
+            const { data: retryExisting } = await supabase
+              .from('cart_items')
+              .select('id, quantity')
+              .eq('user_id', userId)
+              .eq('product_id', item.productId)
+              .eq('size', size)
+              .eq('color', color)
+              .maybeSingle();
+              
+            if (retryExisting) {
+              const newQty = Math.min(10, retryExisting.quantity + (item.quantity || 1));
+              await supabase
+                .from('cart_items')
+                .update({ quantity: newQty, weight_grams: weightGrams, updated_at: new Date().toISOString() })
+                .eq('id', retryExisting.id);
+              this._notifyListeners();
+              return { success: true, error: null };
+            }
+          }
+          console.error('Add to cart DB error:', error);
+          return { success: false, error: 'Errore nell\'aggiunta al carrello' };
+        }
       }
 
       this._notifyListeners();
@@ -153,19 +224,27 @@ class CartService {
     }
   }
 
-  async removeFromCart(userId, productId, size, color) {
+  async removeFromCart(userId, productId, size, color, weight_grams = null) {
     if (!isSupabaseConfigured()) {
       return { success: false, error: 'Sistema non configurato' };
     }
 
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('cart_items')
         .delete()
         .eq('user_id', userId)
         .eq('product_id', productId)
         .eq('size', size)
         .eq('color', color);
+      
+      if (weight_grams !== null) {
+        query = query.eq('weight_grams', weight_grams);
+      } else {
+        query = query.is('weight_grams', null);
+      }
+
+      const { error } = await query;
 
       if (error) {
         return { success: false, error: 'Errore nella rimozione dal carrello' };
@@ -192,24 +271,68 @@ class CartService {
     }
   }
 
-  async removeItem(productId, size, color) {
+  async removeItem(productId, size, color, weight_grams = null) {
     const user = await getCurrentUser();
     if (user) {
-      return await this.removeFromCart(user.id, productId, size, color);
+      return await this.removeFromCart(user.id, productId, size, color, weight_grams);
     } else {
-      return this.removeFromLocalCart(productId, size, color);
+      return this.removeFromLocalCart(productId, size, color, weight_grams);
     }
   }
 
-  async updateQuantity(productId, size, color, quantity) {
+  async updateQuantity(productId, size, color, quantity, weight_grams = null) {
     const user = await getCurrentUser();
     if (user) {
       if (quantity <= 0) {
-        return await this.removeFromCart(user.id, productId, size, color);
+        return await this.removeFromCart(user.id, productId, size, color, weight_grams);
       }
-      return await this.addToCart(user.id, { productId, size, color, quantity });
+      return await this.setCartItemQuantity(user.id, productId, size, color, quantity, weight_grams);
     } else {
-      return this.updateLocalCartItem(productId, size, color, quantity);
+      return this.updateLocalCartItem(productId, size, color, quantity, weight_grams);
+    }
+  }
+  
+  async setCartItemQuantity(userId, productId, size, color, quantity, weight_grams = null) {
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Sistema non configurato' };
+    }
+
+    try {
+      // Build query to find existing item
+      let query = supabase
+        .from('cart_items')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('product_id', productId)
+        .eq('size', size)
+        .eq('color', color);
+      
+      // Handle NULL weight_grams properly
+      if (weight_grams === null) {
+        query = query.is('weight_grams', null);
+      } else {
+        query = query.eq('weight_grams', weight_grams);
+      }
+      
+      const { data: existing } = await query.maybeSingle();
+      
+      if (existing) {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity })
+          .eq('id', existing.id);
+        
+        if (error) {
+          console.error('Update cart quantity error:', error);
+          return { success: false, error: 'Errore nell\'aggiornamento' };
+        }
+      }
+
+      this._notifyListeners();
+      return { success: true, error: null };
+    } catch (err) {
+      console.error('Set cart quantity error:', err);
+      return { success: false, error: 'Errore nell\'aggiornamento' };
     }
   }
 
@@ -217,15 +340,24 @@ class CartService {
     const user = await getCurrentUser();
     if (user) {
       const { items } = await this.getCart(user.id);
-      return items.map(item => ({
-        productId: item.product_id,
-        name: item.products?.name || 'Prodotto',
-        price: item.products?.price || 0,
-        image: item.products?.images?.[0] || '',
-        size: item.size,
-        color: item.color,
-        quantity: item.quantity
-      }));
+      return items.map(item => {
+        // Calculate price based on weight if applicable
+        const basePrice = item.products?.sale_price || item.products?.price || 0;
+        const weightGrams = item.weight_grams;
+        const price = weightGrams ? (basePrice * weightGrams) / 1000 : basePrice;
+        
+        return {
+          productId: item.product_id,
+          name: item.products?.name || 'Prodotto',
+          price: price,
+          unitPrice: basePrice,
+          image: item.products?.images?.[0] || '',
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          weight_grams: weightGrams
+        };
+      });
     } else {
       return this.getLocalCart();
     }

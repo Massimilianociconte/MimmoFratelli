@@ -14,7 +14,7 @@
 </head>
 <body class="wishlist-page premium-layout">
     <nav class="nav-on-green" id="mainNav">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,6 +133,14 @@
         import { cartDrawer } from './js/components/cart-drawer.js';
         import { wishlistService } from './js/services/wishlist.js';
         import { productService } from './js/services/products.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');

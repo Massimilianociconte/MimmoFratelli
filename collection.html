@@ -30,7 +30,7 @@
 
     <!-- Navigation -->
     <nav class="nav-on-green" id="mainNav">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -271,7 +271,7 @@
         import { cartService } from './js/services/cart.js';
         import { cartDrawer } from './js/components/cart-drawer.js';
         import { productService } from './js/services/products.js';
-        import { isSupabaseConfigured } from './js/supabase.js';
+        import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { inAppNotifications } from './js/services/in-app-notifications.js';
         import { notificationPrompt } from './js/components/notification-prompt.js';
 
@@ -666,7 +666,10 @@
                 const img = product.images?.[0] || '';
                 const productUrl = `product.html?id=${product.id}&gender=${gender}`;
                 const isUnavailable = !product.is_active && product.is_active !== undefined;
-                const unit = product.unit || 'kg';
+                // Get unit from unit_measure field, with proper display labels
+                const unitMeasure = product.unit_measure || 'kg';
+                const unitLabels = { 'kg': 'Kg', 'g': 'g', 'l': 'L', 'ml': 'ml', 'pz': 'pz' };
+                const unit = unitLabels[unitMeasure] || 'Kg';
 
                 return `
                     <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${product.id}" style="animation-delay: ${i * 0.03}s">
@@ -757,14 +760,79 @@
             }
 
             try {
+                const unitMeasure = product.unit_measure || 'kg';
+                const isPieceBased = unitMeasure === 'pz';
+                const basePrice = product.sale_price && product.sale_price < product.price ? product.sale_price : product.price;
+                
+                // For weight-based products, default to 1kg (1000g)
+                // For piece-based products, no weight
+                const defaultWeightGrams = isPieceBased ? null : 1000;
+                
+                // Check inventory availability for weight-based products
+                if (!isPieceBased && isSupabaseConfigured()) {
+                    const { data: inventory } = await supabase
+                        .from('weight_inventory')
+                        .select('weight_grams, quantity')
+                        .eq('product_id', productId);
+                    
+                    if (inventory && inventory.length > 0) {
+                        // Check if 1kg is available
+                        const oneKgInventory = inventory.find(w => w.weight_grams === 1000);
+                        if (oneKgInventory && oneKgInventory.quantity === 0) {
+                            // 1kg not available, find first available weight
+                            const availableWeight = inventory.find(w => w.quantity > 0);
+                            if (!availableWeight) {
+                                // No weights available
+                                if (btn) {
+                                    btn.classList.remove('adding');
+                                    btn.classList.add('unavailable');
+                                    btn.title = 'Prodotto esaurito';
+                                    setTimeout(() => btn.classList.remove('unavailable'), 2000);
+                                }
+                                showQuickAddError(btn, 'Prodotto esaurito');
+                                return;
+                            }
+                            // Show message to go to product page
+                            if (btn) {
+                                btn.classList.remove('adding');
+                                btn.classList.add('unavailable');
+                                setTimeout(() => btn.classList.remove('unavailable'), 2000);
+                            }
+                            showQuickAddError(btn, '1 Kg esaurito - vedi altri pesi');
+                            // Redirect to product page
+                            setTimeout(() => {
+                                window.location.href = `product.html?id=${productId}&gender=${product.gender || 'frutta'}`;
+                            }, 1500);
+                            return;
+                        }
+                        
+                        // Check total inventory
+                        const totalQty = inventory.reduce((sum, w) => sum + w.quantity, 0);
+                        if (totalQty === 0) {
+                            if (btn) {
+                                btn.classList.remove('adding');
+                                btn.classList.add('unavailable');
+                                setTimeout(() => btn.classList.remove('unavailable'), 2000);
+                            }
+                            showQuickAddError(btn, 'Prodotto esaurito');
+                            return;
+                        }
+                    }
+                }
+                
+                const price = isPieceBased ? basePrice : basePrice; // Price per kg
+                const sizeDisplay = isPieceBased ? '1 pz' : '1 Kg';
+                
                 const item = {
                     productId: product.id,
                     name: product.name,
-                    price: product.sale_price && product.sale_price < product.price ? product.sale_price : product.price,
+                    price: price,
+                    unitPrice: basePrice,
                     image: product.images?.[0] || '',
-                    size: product.unit || 'kg',
-                    color: 'Standard',
-                    quantity: 1
+                    size: sizeDisplay,
+                    color: 'Fresco',
+                    quantity: 1,
+                    weight_grams: defaultWeightGrams
                 };
 
                 await cartService.addItem(item);
@@ -779,18 +847,63 @@
                 if (btn) btn.classList.remove('adding');
             }
         };
+        
+        // Show quick add error tooltip
+        function showQuickAddError(btn, message) {
+            if (!btn) return;
+            
+            // Find the product card container
+            const card = btn.closest('.product-card-small');
+            if (!card) return;
+            
+            // Remove any existing tooltip
+            card.querySelector('.quick-add-tooltip')?.remove();
+            
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'quick-add-tooltip';
+            tooltip.textContent = message;
+            tooltip.style.cssText = `
+                position: absolute;
+                bottom: 3.5rem;
+                right: 0.5rem;
+                background: #ef4444;
+                color: white;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+                animation: fadeInUp 0.3s ease;
+            `;
+            
+            // Add tooltip to card (which has position: relative)
+            card.style.position = 'relative';
+            card.appendChild(tooltip);
+            
+            setTimeout(() => tooltip.remove(), 2500);
+        }
     </script>
     
-    <!-- Notification Banner -->
+    <!-- Notification Banner & Global Search -->
     <script type="module">
         import { notificationBanner } from './js/components/notification-banner.js';
         import { initReferralLanding } from './js/utils/referral-landing.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
         
         // Initialize notification banner
         notificationBanner.init();
         
         // Check for referral code in URL and open registration modal
         initReferralLanding();
+        
+        // Initialize notification center in navbar
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
     </script>
 </body>
 </html>

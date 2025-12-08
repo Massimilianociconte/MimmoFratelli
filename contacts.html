@@ -14,7 +14,7 @@
 </head>
 <body>
     <nav class="nav-on-green" id="mainNav">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -46,6 +46,8 @@
                 <li><a href="index.html">🏠 Home</a></li>
                 <li><a href="collection.html?gender=frutta">🍎 Frutta</a></li>
                 <li><a href="collection.html?gender=verdura">🥬 Verdura</a></li>
+                <li><a href="collection.html?gender=gastronomia">🧀 Gastronomia</a></li>
+                <li><a href="collection.html?gender=preparati">🍲 I Nostri Preparati</a></li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
                 <li><a href="contacts.html">📞 Contatti</a></li>
@@ -74,9 +76,9 @@
                     </svg>
                 </div>
                 <h3>Vieni a Trovarci</h3>
-                <p class="card-text">Via del Mercato, 42<br>20100 Milano (MI)</p>
+                <p class="card-text">Via Marconi 38<br>20091 Bresso (MI)</p>
                 <p class="card-note">Parcheggio gratuito disponibile</p>
-                <a href="https://maps.google.com" target="_blank" class="card-link">Indicazioni →</a>
+                <a href="https://www.google.com/maps/search/Via+Marconi+38+Bresso+MI" target="_blank" class="card-link">Indicazioni →</a>
             </div>
 
             <div class="contact-card">
@@ -106,7 +108,7 @@
         </div>
 
         <!-- Hours Section -->
-        <section class="hours-section">
+        <section class="hours-section" id="orari">
             <h2 class="section-title">Orari di Apertura</h2>
             <div class="hours-columns">
                 <!-- Negozio Fisico -->
@@ -114,36 +116,36 @@
                     <div class="hours-column-header">
                         <span class="hours-column-icon">🏪</span>
                         <h3>Negozio Fisico</h3>
-                        <p class="hours-column-subtitle">Via del Mercato, 42 - Milano</p>
+                        <p class="hours-column-subtitle">Via Marconi 38 - Bresso (MI)</p>
                     </div>
                     <div class="hours-grid">
                         <div class="hour-row">
                             <span class="day-name">Lunedì</span>
-                            <span class="day-hours">7:00 - 13:00 / 16:00 - 19:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Martedì</span>
-                            <span class="day-hours">7:00 - 13:00 / 16:00 - 19:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Mercoledì</span>
-                            <span class="day-hours">7:00 - 13:00 / 16:00 - 19:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Giovedì</span>
-                            <span class="day-hours">7:00 - 13:00 / 16:00 - 19:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Venerdì</span>
-                            <span class="day-hours">7:00 - 13:00 / 16:00 - 19:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Sabato</span>
-                            <span class="day-hours">7:00 - 14:00</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
-                        <div class="hour-row closed">
+                        <div class="hour-row">
                             <span class="day-name">Domenica</span>
-                            <span class="day-hours">Chiuso</span>
+                            <span class="day-hours">8:00 - 20:00 <small>(orario continuato)</small></span>
                         </div>
                     </div>
                 </div>
@@ -153,28 +155,75 @@
                     <div class="hours-column-header">
                         <span class="hours-column-icon">🌳</span>
                         <h3>Mercati & All'Aperto</h3>
-                        <p class="hours-column-subtitle">Mercati rionali e fiere</p>
+                        <p class="hours-column-subtitle">Mercati rionali - 8:00 - 14:00</p>
                     </div>
                     <div class="hours-grid">
                         <div class="hour-row">
+                            <span class="day-name">Lunedì</span>
+                            <div class="hour-row-right">
+                                <span class="day-hours">8:00 - 14:00 <small>(Negozio al chiuso)</small></span>
+                                <a href="https://www.google.com/maps/search/Via+Marconi+38+Bresso+MI" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
+                        </div>
+                        <div class="hour-row">
                             <span class="day-name">Martedì</span>
-                            <span class="day-hours">6:30 - 14:00 <small>(Mercato Centrale)</small></span>
+                            <div class="hour-row-right">
+                                <span class="day-hours">8:00 - 14:00 <small>(Piazza Bonola - postazione 1)</small></span>
+                                <a href="https://www.google.com/maps/search/Piazza+Bonola+Milano" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
+                        </div>
+                        <div class="hour-row">
+                            <span class="day-name">Mercoledì</span>
+                            <div class="hour-row-right">
+                                <span class="day-hours">8:00 - 14:00 <small>(Via Val di Ledro)</small></span>
+                                <a href="https://www.google.com/maps/search/Via+Val+di+Ledro+Milano" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
                         </div>
                         <div class="hour-row">
                             <span class="day-name">Giovedì</span>
-                            <span class="day-hours">6:30 - 14:00 <small>(Piazza Duomo)</small></span>
+                            <div class="hour-row-right">
+                                <span class="day-hours">8:00 - 14:00 <small>(Via Macedonia Meloni - postazione 10)</small></span>
+                                <a href="https://www.google.com/maps/search/Via+Macedonia+Meloni+Milano" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
                         </div>
                         <div class="hour-row">
+                            <span class="day-name">Venerdì</span>
+                            <div class="hour-row-right">
+                                <span class="day-hours">8:00 - 14:00 <small>(Piazza Bonola - postazione 2)</small></span>
+                                <a href="https://www.google.com/maps/search/Piazza+Bonola+Milano" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
+                        </div>
+                        <div class="hour-row hour-row-multiline">
                             <span class="day-name">Sabato</span>
-                            <span class="day-hours">6:00 - 15:00 <small>(Mercato Rionale)</small></span>
-                        </div>
-                        <div class="hour-row">
-                            <span class="day-name">Domenica</span>
-                            <span class="day-hours">7:00 - 13:00 <small>(Fiera Bio)</small></span>
+                            <div class="hour-row-right">
+                                <div class="day-hours-block">
+                                    <span class="day-hours">8:00 - 14:00</span>
+                                    <small class="location-detail">Via Alex Visconti 22b<br>Mercato San Leonardo (post. 58)</small>
+                                </div>
+                                <a href="https://www.google.com/maps/search/Via+Alex+Visconti+22b+Milano" target="_blank" class="directions-btn" title="Raggiungici">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Raggiungici!
+                                </a>
+                            </div>
                         </div>
                         <div class="hour-row closed">
-                            <span class="day-name">Lun, Mer, Ven</span>
-                            <span class="day-hours">Non presenti</span>
+                            <span class="day-name">Domenica</span>
+                            <span class="day-hours">Chiuso</span>
                         </div>
                     </div>
                     <p class="hours-column-note">📍 Gli orari possono variare in base alle condizioni meteo</p>
@@ -287,6 +336,14 @@
         import { cartService } from './js/services/cart.js';
         import { cartDrawer } from './js/components/cart-drawer.js';
         import { wishlistService } from './js/services/wishlist.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');

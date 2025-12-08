@@ -13,7 +13,7 @@
 </head>
 <body class="orders-page premium-layout">
     <nav class="nav-on-green" id="mainNav">
-        <div class="logo"><a href="collection.html">Mimmo Fratelli</a></div>
+        <div class="logo"><a href="index.html#categorie">Mimmo Fratelli</a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account" style="cursor: pointer;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,6 +152,14 @@
         import { cartDrawer } from './js/components/cart-drawer.js';
         import { profileDrawer } from './js/components/profile-drawer.js';
         import { wishlistService } from './js/services/wishlist.js';
+        import { notificationCenter } from './js/components/notification-center.js';
+        import { globalSearch } from './js/components/global-search.js';
+
+        // Initialize notification center
+        notificationCenter.init();
+        
+        // Initialize global search
+        globalSearch.init();
 
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');
@@ -221,11 +229,14 @@
                         *,
                         order_items (
                             id,
+                            product_id,
                             product_name,
                             product_price,
+                            product_image,
                             quantity,
                             size,
-                            color
+                            color,
+                            weight_grams
                         )
                     `)
                     .eq('user_id', user.id)
@@ -291,9 +302,14 @@
                     
                     <div class="order-footer">
                         <span class="order-total">€${parseFloat(order.total).toFixed(2)}</span>
-                        <button class="btn-view-order" onclick="viewOrderDetail('${order.id}')">
-                            Dettagli →
-                        </button>
+                        <div class="order-actions">
+                            <button class="btn-reorder" onclick="reorderItems('${order.id}')" title="Aggiungi al carrello">
+                                🔄 Riordina
+                            </button>
+                            <button class="btn-view-order" onclick="viewOrderDetail('${order.id}')">
+                                Dettagli →
+                            </button>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -302,6 +318,37 @@
             // Store orders for detail view
             window._userOrders = orders;
         }
+        
+        // Reorder - add all items from an order to cart
+        window.reorderItems = async function(orderId) {
+            const order = window._userOrders?.find(o => o.id === orderId);
+            if (!order || !order.order_items?.length) return;
+            
+            let addedCount = 0;
+            
+            for (const item of order.order_items) {
+                try {
+                    const cartItem = {
+                        productId: item.product_id || item.id,
+                        name: item.product_name,
+                        price: item.product_price,
+                        image: item.product_image || '',
+                        size: item.size || '',
+                        color: item.color || 'Fresco',
+                        quantity: item.quantity,
+                        weight_grams: item.weight_grams || null
+                    };
+                    await cartService.addItem(cartItem);
+                    addedCount++;
+                } catch (err) {
+                    console.warn('Could not add item:', item.product_name, err);
+                }
+            }
+            
+            if (addedCount > 0) {
+                cartDrawer.show();
+            }
+        };
         
         window.viewOrderDetail = function(orderId) {
             const order = window._userOrders?.find(o => o.id === orderId);
@@ -491,8 +538,8 @@
             loadUserOrders();
             
             // Reload orders after login
-            authService.onAuthChange((user) => {
-                if (user) loadUserOrders();
+            authService.onAuthStateChange((event, session) => {
+                if (session?.user) loadUserOrders();
             });
         });
     </script>

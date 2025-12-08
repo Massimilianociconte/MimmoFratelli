@@ -100,14 +100,13 @@ function setupEventListeners() {
         document.getElementById('categorySlug').value = generateSlug(e.target.value);
     });
 
-    // Product search
-    document.getElementById('productSearch').addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        renderProducts(products.filter(p => 
-            p.name.toLowerCase().includes(query) || 
-            p.slug.toLowerCase().includes(query)
-        ));
-    });
+    // Product search and filters
+    document.getElementById('productSearch').addEventListener('input', applyProductFilters);
+    document.getElementById('filterCategory').addEventListener('change', applyProductFilters);
+    document.getElementById('filterType').addEventListener('change', applyProductFilters);
+    document.getElementById('filterStatus').addEventListener('change', applyProductFilters);
+    document.getElementById('filterStock').addEventListener('change', applyProductFilters);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetProductFilters);
 
     // Delete confirmation
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
@@ -190,10 +189,89 @@ async function showAdminPanel() {
     await loadDashboardData();
     await loadProducts();
     await loadCategories();
+    
+    // Restore last visited section from localStorage
+    const savedSection = localStorage.getItem('cms_current_section');
+    if (savedSection && document.getElementById(`${savedSection}Section`)) {
+        navigateToSection(savedSection);
+    }
+    
+    // Restore open modal state if any
+    restoreModalState();
+}
+
+// Save modal state to localStorage
+function saveModalState(modalType, itemId = null) {
+    const state = { modalType, itemId, timestamp: Date.now() };
+    localStorage.setItem('cms_modal_state', JSON.stringify(state));
+}
+
+// Clear modal state from localStorage
+function clearModalState() {
+    localStorage.removeItem('cms_modal_state');
+}
+
+// Restore modal state after refresh
+async function restoreModalState() {
+    try {
+        const stateStr = localStorage.getItem('cms_modal_state');
+        if (!stateStr) return;
+        
+        const state = JSON.parse(stateStr);
+        
+        // Only restore if state is less than 30 minutes old
+        if (Date.now() - state.timestamp > 30 * 60 * 1000) {
+            clearModalState();
+            return;
+        }
+        
+        if (state.modalType === 'product' && state.itemId) {
+            // Wait for products to load, then open modal
+            const product = products.find(p => p.id === state.itemId);
+            if (product) {
+                openProductModal(product);
+            } else {
+                clearModalState();
+            }
+        } else if (state.modalType === 'product' && !state.itemId) {
+            // New product modal
+            openProductModal();
+        } else if (state.modalType === 'category' && state.itemId) {
+            const category = categories.find(c => c.id === state.itemId);
+            if (category) {
+                openCategoryModal(category);
+            } else {
+                clearModalState();
+            }
+        } else if (state.modalType === 'category' && !state.itemId) {
+            openCategoryModal();
+        } else if (state.modalType === 'order' && state.itemId) {
+            // Navigate to orders section first, then load orders and open modal
+            navigateToSection('orders');
+            // Wait for orders to load
+            setTimeout(async () => {
+                if (orders.length === 0) {
+                    await loadOrders();
+                }
+                const order = orders.find(o => o.id === state.itemId);
+                if (order) {
+                    viewOrderDetails(state.itemId);
+                } else {
+                    clearModalState();
+                }
+            }, 500);
+        }
+    } catch (err) {
+        console.error('Error restoring modal state:', err);
+        clearModalState();
+    }
 }
 
 // Navigation
 function navigateToSection(section) {
+    // Save current section to localStorage for persistence on refresh
+    localStorage.setItem('cms_current_section', section);
+    
     // Update nav
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.section === section);
@@ -344,11 +422,94 @@ async function loadProducts() {
 
         if (error) throw error;
         products = data || [];
-        renderProducts(products);
+        
+        // Populate category filter dropdown
+        populateCategoryFilter();
+        
+        // Apply any existing filters
+        applyProductFilters();
     } catch (err) {
         console.error('Load products error:', err);
         showToast('Errore nel caricamento prodotti', 'error');
     }
+}
+
+// Populate category filter dropdown
+function populateCategoryFilter() {
+    const filterCategory = document.getElementById('filterCategory');
+    if (!filterCategory) return;
+    
+    filterCategory.innerHTML = '<option value="">Tutte le categorie</option>' +
+        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// Apply all product filters
+function applyProductFilters() {
+    const searchQuery = document.getElementById('productSearch').value.toLowerCase().trim();
+    const categoryFilter = document.getElementById('filterCategory').value;
+    const typeFilter = document.getElementById('filterType').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    const stockFilter = document.getElementById('filterStock').value;
+    
+    let filtered = products.filter(p => {
+        // Text search
+        if (searchQuery) {
+            const matchesSearch = 
+                p.name.toLowerCase().includes(searchQuery) || 
+                p.slug.toLowerCase().includes(searchQuery) ||
+                (p.description && p.description.toLowerCase().includes(searchQuery)) ||
+                (p.categories?.name && p.categories.name.toLowerCase().includes(searchQuery));
+            if (!matchesSearch) return false;
+        }
+        
+        // Category filter
+        if (categoryFilter && p.category_id !== categoryFilter) {
+            return false;
+        }
+        
+        // Type filter (gender)
+        if (typeFilter && p.gender !== typeFilter) {
+            return false;
+        }
+        
+        // Status filter
+        if (statusFilter === 'active' && !p.is_active) return false;
+        if (statusFilter === 'inactive' && p.is_active) return false;
+        
+        // Stock filter
+        if (stockFilter === 'in-stock' && p.inventory <= 0) return false;
+        if (stockFilter === 'low-stock' && (p.inventory <= 0 || p.inventory > 5)) return false;
+        if (stockFilter === 'out-of-stock' && p.inventory > 0) return false;
+        
+        return true;
+    });
+    
+    renderProducts(filtered);
+    updateFilterResultsCount(filtered.length, products.length);
+}
+
+// Update filter results count
+function updateFilterResultsCount(filtered, total) {
+    const countEl = document.getElementById('filterResultsCount');
+    if (!countEl) return;
+    
+    if (filtered === total) {
+        countEl.textContent = `${total} prodotti`;
+        countEl.classList.remove('filtered');
+    } else {
+        countEl.textContent = `${filtered} di ${total} prodotti`;
+        countEl.classList.add('filtered');
+    }
+}
+
+// Reset all product filters
+function resetProductFilters() {
+    document.getElementById('productSearch').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterStock').value = '';
+    applyProductFilters();
 }
 
 function renderProducts(productList) {
@@ -449,8 +610,11 @@ function openProductModal(product = null) {
         document.getElementById('productImages').value = (product.images || []).join('\n');
         document.getElementById('productColors').value = (product.colors || []).join(', ');
         
-        // Populate size inventory
-        populateSizeInventory(product.size_inventory || {}, product.sizes || []);
+        // Populate search keywords
+        populateKeywords(product.search_keywords || []);
+        
+        // Populate weight inventory fields
+        populateWeightInventory(product);
         
         // Show image preview
         updateImagePreview();
@@ -462,8 +626,11 @@ function openProductModal(product = null) {
         document.getElementById('productNew').checked = false;
         document.getElementById('productPageType').value = '';
         
-        // Reset size inventory to defaults
-        resetSizeInventory();
+        // Reset weight inventory to defaults
+        resetWeightInventory();
+        
+        // Reset keywords
+        clearKeywords();
         
         // Hide image preview
         document.getElementById('imagePreviewSection').style.display = 'none';
@@ -486,6 +653,9 @@ function openProductModal(product = null) {
     document.getElementById('productSeasonal').addEventListener('change', updateSeasonalNotificationPanel);
 
     modal.classList.add('active');
+    
+    // Save modal state for session persistence
+    saveModalState('product', product?.id || null);
 }
 
 // Update visibility of seasonal notification panel
@@ -495,65 +665,316 @@ function updateSeasonalNotificationPanel() {
     panel.style.display = isSeasonal ? 'block' : 'none';
 }
 
-// Size inventory functions
-function populateSizeInventory(sizeInventory, sizes) {
-    const grid = document.getElementById('sizeInventoryGrid');
+// Weight inventory functions
+function populateWeightInventory(product) {
+    const unitMeasure = product.unit_measure || 'kg';
+    
+    // Set unit measure
+    document.getElementById('productUnitMeasure').value = unitMeasure;
+    
+    // Load inventory variants from database (net/gross weight are now per-variant)
+    loadInventoryVariants(product.id);
+    
+    // Update labels after a short delay to ensure rows are loaded
+    setTimeout(() => {
+        if (typeof updateUnitMeasureLabels === 'function') {
+            updateUnitMeasureLabels();
+        }
+    }, 100);
+}
+
+async function loadInventoryVariants(productId) {
+    const grid = document.getElementById('inventoryVariantsGrid');
     grid.innerHTML = '';
     
-    // If we have size inventory data, use it
-    const entries = Object.entries(sizeInventory);
-    if (entries.length > 0) {
-        entries.forEach(([size, qty]) => {
-            addSizeRowWithData(size, qty);
-        });
-    } else if (sizes.length > 0) {
-        // Fallback to sizes array
-        sizes.forEach(size => {
-            addSizeRowWithData(size, 0);
-        });
-    } else {
-        // Default sizes
-        ['XS', 'S', 'M', 'L', 'XL'].forEach(size => {
-            addSizeRowWithData(size, 0);
-        });
+    if (!productId) {
+        // New product - add default variant
+        addInventoryVariantRow(1000, 0, null, null);
+        updateInventorySummary();
+        setTimeout(() => updateUnitMeasureLabels(), 50);
+        return;
     }
+    
+    try {
+        const { data, error } = await supabase
+            .from('weight_inventory')
+            .select('weight_grams, quantity, net_weight_grams, gross_weight_grams')
+            .eq('product_id', productId)
+            .order('weight_grams');
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            data.forEach(row => {
+                addInventoryVariantRow(row.weight_grams, row.quantity, row.net_weight_grams, row.gross_weight_grams);
+            });
+        } else {
+            // No inventory - add default variant
+            addInventoryVariantRow(1000, 0, null, null);
+        }
+    } catch (err) {
+        console.error('Error loading inventory variants:', err);
+        addInventoryVariantRow(1000, 0, null, null);
+    }
+    
+    updateInventorySummary();
+    setTimeout(() => updateUnitMeasureLabels(), 50);
 }
 
-function resetSizeInventory() {
-    const grid = document.getElementById('sizeInventoryGrid');
+function resetInventoryVariants() {
+    // Reset unit measure
+    document.getElementById('productUnitMeasure').value = 'kg';
+    
+    // Reset variants grid
+    const grid = document.getElementById('inventoryVariantsGrid');
     grid.innerHTML = '';
-    ['XS', 'S', 'M', 'L', 'XL'].forEach(size => {
-        addSizeRowWithData(size, 0);
+    
+    // Add default variants (0.5 Kg, 1 Kg, 2 Kg)
+    [500, 1000, 2000].forEach(grams => {
+        addInventoryVariantRow(grams, 0, null, null);
     });
+    
+    updateInventorySummary();
+    setTimeout(() => updateUnitMeasureLabels(), 50);
 }
 
-function addSizeRowWithData(size, qty) {
-    const grid = document.getElementById('sizeInventoryGrid');
+function addInventoryVariantRow(weightGrams, qty, netWeightGrams = null, grossWeightGrams = null) {
+    const grid = document.getElementById('inventoryVariantsGrid');
     const row = document.createElement('div');
-    row.className = 'size-inventory-row';
+    row.className = 'inventory-row';
+    
+    const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
+    const labels = getUnitLabels(unitMeasure);
+    const isPieces = unitMeasure === 'pz';
+    
+    // Convert grams to display value
+    let displayValue;
+    if (isPieces) {
+        displayValue = weightGrams;
+    } else {
+        displayValue = weightGrams / 1000; // Convert to Kg/L
+    }
+    
+    // Convert net/gross weights to display values
+    const netDisplay = netWeightGrams ? (isPieces ? netWeightGrams : netWeightGrams / 1000) : '';
+    const grossDisplay = grossWeightGrams ? (isPieces ? grossWeightGrams : grossWeightGrams / 1000) : '';
+    
+    const qtyClass = qty === 0 ? 'out-of-stock' : (qty <= 5 ? 'low-stock' : '');
+    
     row.innerHTML = `
-        <input type="text" class="size-input" placeholder="Taglia" value="${size}">
-        <input type="number" class="qty-input ${qty === 0 ? 'out-of-stock' : ''}" placeholder="Qtà" min="0" value="${qty}" onchange="checkStockLevel(this)">
-        <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+        <div class="weight-inputs">
+            <input type="number" class="weight-value" min="0" step="${isPieces ? '1' : '0.01'}" value="${displayValue}" onchange="updateInventoryRow(this)" placeholder="0">
+            <span class="unit-label">${labels.major}</span>
+        </div>
+        <input type="number" class="net-weight-input" min="0" step="${isPieces ? '1' : '0.01'}" value="${netDisplay}" placeholder="-">
+        <input type="number" class="gross-weight-input" min="0" step="${isPieces ? '1' : '0.01'}" value="${grossDisplay}" placeholder="-">
+        <input type="number" class="stock-input ${qtyClass}" min="0" value="${qty}" onchange="checkStockLevel(this)" placeholder="0">
+        <button type="button" class="btn-remove-row" onclick="removeInventoryRow(this)">×</button>
     `;
     grid.appendChild(row);
 }
 
-window.addSizeRow = function() {
-    addSizeRowWithData('', 0);
-};
+// Backward compatibility aliases
+async function loadWeightInventoryRows(productId) {
+    return loadInventoryVariants(productId);
+}
 
-window.removeSizeRow = function(btn) {
-    btn.closest('.size-inventory-row').remove();
-};
+function resetWeightInventory() {
+    return resetInventoryVariants();
+}
 
-window.checkStockLevel = function(input) {
-    if (parseInt(input.value) === 0) {
-        input.classList.add('out-of-stock');
-    } else {
-        input.classList.remove('out-of-stock');
+function addWeightRowWithData(weightGrams, qty) {
+    return addInventoryVariantRow(weightGrams, qty);
+}
+
+// Get unit labels based on unit measure
+function getUnitLabels(unitMeasure) {
+    switch (unitMeasure) {
+        case 'l':
+            return { major: 'L', minor: 'ml' };
+        case 'ml':
+            return { major: 'L', minor: 'ml' };
+        case 'kg':
+        case 'g':
+        default:
+            return { major: 'Kg', minor: 'g' };
     }
+}
+
+// Convert decimal input (Kg/L) to grams/ml for database storage
+function convertToGrams(value, unitMeasure) {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue === 0) return null;
+    
+    // If unit is already in minor units (g, ml) or pieces, store as-is
+    if (unitMeasure === 'g' || unitMeasure === 'ml' || unitMeasure === 'pz') {
+        return Math.round(numValue);
+    }
+    // Convert Kg/L to g/ml (multiply by 1000)
+    return Math.round(numValue * 1000);
+}
+
+// Convert grams/ml from database to decimal (Kg/L) for display
+function convertFromGrams(grams, unitMeasure) {
+    if (grams === null || grams === undefined) return '';
+    
+    // If unit is already in minor units (g, ml) or pieces, display as-is
+    if (unitMeasure === 'g' || unitMeasure === 'ml' || unitMeasure === 'pz') {
+        return grams;
+    }
+    // Convert g/ml to Kg/L (divide by 1000)
+    return grams / 1000;
+}
+
+// Format weight with correct unit
+function formatWeightWithUnit(grams, unitMeasure) {
+    const labels = getUnitLabels(unitMeasure);
+    if (grams >= 1000) {
+        const major = grams / 1000;
+        return major % 1 === 0 ? `${major} ${labels.major}` : `${major.toFixed(1)} ${labels.major}`;
+    }
+    return `${grams} ${labels.minor}`;
+}
+
+function formatWeight(grams) {
+    const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
+    return formatWeightWithUnit(grams, unitMeasure);
+}
+
+// Update all weight labels when unit measure changes
+window.updateUnitMeasureLabels = function() {
+    const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
+    const labels = getUnitLabels(unitMeasure);
+    const isPieces = unitMeasure === 'pz';
+    const isLiquid = unitMeasure === 'l' || unitMeasure === 'ml';
+    
+    // Update unit labels in inventory rows
+    document.querySelectorAll('.inventory-row .unit-label').forEach(el => {
+        el.textContent = labels.major;
+    });
+    
+    // Update header labels
+    const headerWeight = document.querySelector('.col-weight');
+    if (headerWeight) {
+        headerWeight.textContent = isPieces ? 'Quantità' : 'Peso/Volume';
+    }
+    
+    // Update net/gross column headers
+    let weightUnit = 'Kg';
+    if (isLiquid) weightUnit = 'L';
+    else if (isPieces) weightUnit = 'pz';
+    else if (unitMeasure === 'g') weightUnit = 'g';
+    
+    const colNetWeight = document.getElementById('colNetWeight');
+    const colGrossWeight = document.getElementById('colGrossWeight');
+    
+    if (colNetWeight) {
+        colNetWeight.textContent = `Netto (${weightUnit})`;
+    }
+    if (colGrossWeight) {
+        colGrossWeight.textContent = `Lordo (${weightUnit})`;
+    }
+    
+    // Update input step values based on unit
+    const step = isPieces ? '1' : '0.01';
+    document.querySelectorAll('.inventory-row .weight-value, .inventory-row .net-weight-input, .inventory-row .gross-weight-input').forEach(input => {
+        input.step = step;
+    });
 };
+
+// Add new inventory variant
+window.addInventoryVariant = function() {
+    addInventoryVariantRow(1000, 0); // Default 1 Kg
+    updateInventorySummary();
+};
+
+// Remove inventory row
+window.removeInventoryRow = function(btn) {
+    btn.closest('.inventory-row').remove();
+    updateInventorySummary();
+};
+
+// Update inventory row
+window.updateInventoryRow = function(input) {
+    updateInventorySummary();
+};
+
+// Check stock level
+window.checkStockLevel = function(input) {
+    const qty = parseInt(input.value) || 0;
+    input.classList.remove('out-of-stock', 'low-stock');
+    if (qty === 0) {
+        input.classList.add('out-of-stock');
+    } else if (qty <= 5) {
+        input.classList.add('low-stock');
+    }
+    updateInventorySummary();
+};
+
+// Legacy aliases
+window.addWeightRow = window.addInventoryVariant;
+window.removeWeightRow = window.removeInventoryRow;
+window.removeVariantRow = window.removeInventoryRow;
+
+function updateInventorySummary() {
+    const rows = document.querySelectorAll('.inventory-row');
+    let totalQty = 0;
+    
+    rows.forEach(row => {
+        const qtyInput = row.querySelector('.stock-input');
+        const qty = parseInt(qtyInput?.value) || 0;
+        totalQty += qty;
+    });
+    
+    const summaryEl = document.getElementById('totalInventoryCount');
+    if (summaryEl) {
+        summaryEl.textContent = `${totalQty} pz`;
+    }
+}
+
+function getWeightInventoryData() {
+    const rows = document.querySelectorAll('.inventory-row');
+    const weightInventory = [];
+    let totalQty = 0;
+    const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
+    const isPieces = unitMeasure === 'pz';
+    
+    rows.forEach(row => {
+        const weightInput = row.querySelector('.weight-value');
+        const qtyInput = row.querySelector('.stock-input');
+        const netInput = row.querySelector('.net-weight-input');
+        const grossInput = row.querySelector('.gross-weight-input');
+        
+        const displayValue = parseFloat(weightInput?.value) || 0;
+        const qty = parseInt(qtyInput?.value) || 0;
+        const netDisplay = parseFloat(netInput?.value) || null;
+        const grossDisplay = parseFloat(grossInput?.value) || null;
+        
+        // Convert display values to grams
+        let weightGrams, netGrams, grossGrams;
+        if (isPieces) {
+            weightGrams = Math.round(displayValue);
+            netGrams = netDisplay ? Math.round(netDisplay) : null;
+            grossGrams = grossDisplay ? Math.round(grossDisplay) : null;
+        } else {
+            weightGrams = Math.round(displayValue * 1000); // Kg/L to g/ml
+            netGrams = netDisplay ? Math.round(netDisplay * 1000) : null;
+            grossGrams = grossDisplay ? Math.round(grossDisplay * 1000) : null;
+        }
+        
+        if (weightGrams > 0 || qty > 0) {
+            weightInventory.push({ 
+                weight_grams: weightGrams, 
+                quantity: qty,
+                net_weight_grams: netGrams,
+                gross_weight_grams: grossGrams
+            });
+            totalQty += qty;
+        }
+    });
+    
+    return { weightInventory, totalQty };
+}
 
 // Image preview
 window.updateImagePreview = function() {
@@ -594,6 +1015,7 @@ function getSizeInventoryData() {
 
 window.closeProductModal = function() {
     document.getElementById('productModal').classList.remove('active');
+    clearModalState();
 };
 
 window.editProduct = function(id) {
@@ -616,9 +1038,10 @@ async function handleProductSubmit(e) {
     const sendNotification = document.getElementById('sendPushNotification').checked;
     const isSeasonal = document.getElementById('productSeasonal').checked;
     
-    // Get size inventory data
-    const { sizeInventory, sizes } = getSizeInventoryData();
-    const totalInventory = Object.values(sizeInventory).reduce((sum, qty) => sum + qty, 0);
+    // Get inventory variants data
+    const { weightInventory, totalQty } = getWeightInventoryData();
+    
+    const unitMeasure = document.getElementById('productUnitMeasure').value || 'kg';
     
     const productData = {
         name: document.getElementById('productName').value.trim(),
@@ -629,15 +1052,18 @@ async function handleProductSubmit(e) {
         gender: document.getElementById('productGender').value || null,
         page_type: document.getElementById('productPageType').value || null,
         category_id: document.getElementById('productCategory').value || null,
-        inventory: totalInventory,
-        size_inventory: sizeInventory,
-        sizes: sizes,
+        inventory: totalQty,
         is_active: document.getElementById('productActive').checked,
         is_featured: document.getElementById('productFeatured').checked,
         is_seasonal: isSeasonal,
         is_new: document.getElementById('productNew').checked,
         images: document.getElementById('productImages').value.split('\n').map(s => s.trim()).filter(Boolean),
-        colors: document.getElementById('productColors').value.split(',').map(s => s.trim()).filter(Boolean)
+        colors: document.getElementById('productColors').value.split(',').map(s => s.trim()).filter(Boolean),
+        search_keywords: getKeywordsArray(),
+        unit_measure: unitMeasure,
+        // net_weight_grams and gross_weight_grams are now per-variant in weight_inventory table
+        net_weight_grams: null,
+        gross_weight_grams: null
     };
 
     try {
@@ -661,26 +1087,21 @@ async function handleProductSubmit(e) {
             console.error('Supabase error:', result.error);
             if (result.error.code === '23505') {
                 errorEl.textContent = 'Slug già esistente. Usa un nome diverso.';
-            } else if (result.error.message.includes('size_inventory') || result.error.message.includes('is_seasonal') || result.error.message.includes('is_new')) {
-                // Some columns might not exist yet - save without them
-                delete productData.size_inventory;
-                delete productData.is_seasonal;
-                delete productData.is_new;
-                const retryResult = id 
-                    ? await supabase.from('products').update(productData).eq('id', id).select()
-                    : await supabase.from('products').insert(productData).select();
-                
-                if (retryResult.error) {
-                    errorEl.textContent = retryResult.error.message;
-                    return;
-                }
-                if (retryResult.data && retryResult.data[0]) {
-                    savedProductId = retryResult.data[0].id;
-                }
+                return;
             } else {
                 errorEl.textContent = result.error.message;
                 return;
             }
+        }
+        
+        // Get the saved product ID
+        if (result.data && result.data[0]) {
+            savedProductId = result.data[0].id;
+        }
+        
+        // Save weight inventory
+        if (savedProductId && weightInventory.length > 0) {
+            await saveWeightInventory(savedProductId, weightInventory);
         }
 
         // Send push notification if requested
@@ -695,6 +1116,38 @@ async function handleProductSubmit(e) {
     } catch (err) {
         console.error('Save product error:', err);
         errorEl.textContent = 'Errore nel salvataggio: ' + err.message;
+    }
+}
+
+// Save weight inventory to database
+async function saveWeightInventory(productId, weightInventory) {
+    try {
+        // Delete existing weight inventory for this product
+        await supabase
+            .from('weight_inventory')
+            .delete()
+            .eq('product_id', productId);
+        
+        // Insert new weight inventory rows
+        if (weightInventory.length > 0) {
+            const rows = weightInventory.map(item => ({
+                product_id: productId,
+                weight_grams: item.weight_grams,
+                quantity: item.quantity,
+                net_weight_grams: item.net_weight_grams || null,
+                gross_weight_grams: item.gross_weight_grams || null
+            }));
+            
+            const { error } = await supabase
+                .from('weight_inventory')
+                .insert(rows);
+            
+            if (error) {
+                console.error('Error saving weight inventory:', error);
+            }
+        }
+    } catch (err) {
+        console.error('Save weight inventory error:', err);
     }
 }
 
@@ -894,10 +1347,14 @@ function openCategoryModal(category = null) {
     }
 
     modal.classList.add('active');
+    
+    // Save modal state for session persistence
+    saveModalState('category', category?.id || null);
 }
 
 window.closeCategoryModal = function() {
     document.getElementById('categoryModal').classList.remove('active');
+    clearModalState();
 };
 
 window.editCategory = function(id) {
@@ -1131,7 +1588,7 @@ async function searchGiftCards() {
             return `
                 <div class="gc-result-item" onclick="showGcDetail('${gc.id}')">
                     <div class="gc-result-preview ${style}">
-                        <div class="gc-logo">Avenue M.</div>
+                        <div class="gc-logo">Mimmo Fratelli</div>
                         <div class="gc-amount">€${gc.amount}</div>
                         <div class="gc-code">${gc.code}</div>
                     </div>
@@ -1191,7 +1648,7 @@ async function showGcDetail(gcId) {
                 <div class="gc-detail-preview ${style}">
                     <div class="gc-pattern"></div>
                     <div class="gc-header">
-                        <div class="gc-logo">Avenue M.</div>
+                        <div class="gc-logo">Mimmo Fratelli</div>
                         <div class="gc-badge">GIFT CARD</div>
                     </div>
                     <div class="gc-amount" style="${style === 'elegant' ? 'color:#e6c347' : style === 'minimal' ? 'color:#a83f39' : ''}">€${gc.amount}</div>
@@ -2330,6 +2787,9 @@ window.viewOrderDetails = function(orderId) {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
     
+    // Save modal state for session persistence
+    saveModalState('order', orderId);
+    
     const addr = order.shipping_address || {};
     const items = order.order_items || [];
     const isGiftCard = addr.type === 'digital';
@@ -2475,6 +2935,16 @@ window.viewOrderDetails = function(orderId) {
     modal.querySelector('.order-detail-close').onclick = () => {
         modal.remove();
         document.body.style.overflow = '';
+        clearModalState();
+    };
+    
+    // Also clear state when clicking outside
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+            clearModalState();
+        }
     };
     modal.onclick = (e) => {
         if (e.target === modal) {
@@ -2490,5 +2960,485 @@ navigateToSection = function(section) {
     originalNavigateToSection(section);
     if (section === 'orders') {
         loadOrders();
+    }
+};
+
+
+// ============================================
+// NOTIFICATION CENTER - PRODUCT UPDATES
+// ============================================
+
+const NOTIFICATION_STORAGE_KEY = 'admin_notifications';
+const NOTIFICATION_MAX_AGE_DAYS = 3;
+
+// Initialize notification center
+function initNotificationCenter() {
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationPanel = document.getElementById('notificationPanel');
+    const notificationOverlay = document.getElementById('notificationOverlay');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    
+    if (!notificationBtn) return;
+    
+    // Toggle panel
+    notificationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = notificationPanel.classList.toggle('active');
+        notificationOverlay.classList.toggle('active', isActive);
+    });
+    
+    // Close on overlay click
+    notificationOverlay?.addEventListener('click', () => {
+        notificationPanel.classList.remove('active');
+        notificationOverlay.classList.remove('active');
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
+            notificationPanel.classList.remove('active');
+            notificationOverlay?.classList.remove('active');
+        }
+    });
+    
+    // Mark all as read
+    markAllReadBtn?.addEventListener('click', () => {
+        markAllNotificationsRead();
+    });
+    
+    // Clean old notifications and render
+    cleanOldNotifications();
+    renderNotifications();
+    
+    // Subscribe to real-time product changes
+    subscribeToProductChanges();
+}
+
+// Get notifications from localStorage
+function getNotifications() {
+    try {
+        const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch {
+        return [];
+    }
+}
+
+// Save notifications to localStorage
+function saveNotifications(notifications) {
+    try {
+        localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(notifications));
+    } catch (e) {
+        console.error('Error saving notifications:', e);
+    }
+}
+
+// Add a new notification
+function addNotification(notification) {
+    const notifications = getNotifications();
+    const newNotification = {
+        id: Date.now().toString(),
+        ...notification,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    notifications.unshift(newNotification);
+    saveNotifications(notifications);
+    renderNotifications();
+    showToast(`📬 ${notification.title}`, 'success');
+}
+
+// Mark notification as read
+function markNotificationRead(notificationId) {
+    const notifications = getNotifications();
+    const notification = notifications.find(n => n.id === notificationId);
+    if (notification) {
+        notification.read = true;
+        saveNotifications(notifications);
+        renderNotifications();
+    }
+}
+
+// Mark all notifications as read
+function markAllNotificationsRead() {
+    const notifications = getNotifications();
+    notifications.forEach(n => n.read = true);
+    saveNotifications(notifications);
+    renderNotifications();
+}
+
+// Clean notifications older than 3 days
+function cleanOldNotifications() {
+    const notifications = getNotifications();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - NOTIFICATION_MAX_AGE_DAYS);
+    
+    const filtered = notifications.filter(n => {
+        const notifDate = new Date(n.timestamp);
+        return notifDate >= cutoffDate;
+    });
+    
+    if (filtered.length !== notifications.length) {
+        saveNotifications(filtered);
+    }
+}
+
+// Format relative time
+function formatNotificationTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Adesso';
+    if (diffMins < 60) return `${diffMins} min fa`;
+    if (diffHours < 24) return `${diffHours} ore fa`;
+    if (diffDays === 1) return 'Ieri';
+    return `${diffDays} giorni fa`;
+}
+
+// Format date for separator
+function formatDateSeparator(timestamp) {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) return 'Oggi';
+    if (date.toDateString() === yesterday.toDateString()) return 'Ieri';
+    return date.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// Render notifications
+function renderNotifications() {
+    const notificationList = document.getElementById('notificationList');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationCount = document.getElementById('notificationCount');
+    
+    if (!notificationList) return;
+    
+    const notifications = getNotifications();
+    const unreadCount = notifications.filter(n => !n.read).length;
+    
+    // Update badge
+    if (notificationBadge) {
+        notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+        notificationBadge.dataset.count = unreadCount;
+    }
+    
+    // Update count in header
+    if (notificationCount) {
+        notificationCount.textContent = unreadCount > 0 ? unreadCount : '';
+    }
+    
+    // Empty state
+    if (notifications.length === 0) {
+        notificationList.innerHTML = `
+            <div class="notification-empty">
+                <div class="notification-empty-icon">📭</div>
+                <p>Nessuna notifica</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group by date
+    let html = '';
+    let currentDate = '';
+    
+    notifications.forEach(notification => {
+        const notifDate = formatDateSeparator(notification.timestamp);
+        
+        // Add date separator if new date
+        if (notifDate !== currentDate) {
+            currentDate = notifDate;
+            html += `<div class="notification-date-separator">${notifDate}</div>`;
+        }
+        
+        const iconClass = notification.type === 'new_product' ? 'new-product' : 
+                         notification.type === 'updated_product' ? 'updated-product' : 'low-stock';
+        const icon = notification.type === 'new_product' ? '🆕' : 
+                    notification.type === 'updated_product' ? '✏️' : '⚠️';
+        
+        const time = new Date(notification.timestamp).toLocaleTimeString('it-IT', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        html += `
+            <div class="notification-item ${notification.read ? '' : 'unread'}" 
+                 onclick="handleNotificationClick('${notification.id}', '${notification.productId || ''}', '${notification.productSlug || ''}')">
+                <div class="notification-icon ${iconClass}">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">🕐 ${time} · ${formatNotificationTime(notification.timestamp)}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    notificationList.innerHTML = html;
+}
+
+// Handle notification click - navigate to product
+window.handleNotificationClick = function(notificationId, productId, productSlug) {
+    markNotificationRead(notificationId);
+    
+    // Close panel
+    document.getElementById('notificationPanel')?.classList.remove('active');
+    document.getElementById('notificationOverlay')?.classList.remove('active');
+    
+    if (productId) {
+        // Navigate to products section and open edit modal
+        navigateToSection('products');
+        
+        // Wait for products to load then open modal
+        setTimeout(() => {
+            const product = products.find(p => p.id === productId || p.slug === productSlug);
+            if (product) {
+                openProductModal(product);
+            } else {
+                // Try to find by slug in case ID changed
+                const productBySlug = products.find(p => p.slug === productSlug);
+                if (productBySlug) {
+                    openProductModal(productBySlug);
+                } else {
+                    showToast('Prodotto non trovato', 'error');
+                }
+            }
+        }, 500);
+    }
+};
+
+// Subscribe to real-time product changes
+function subscribeToProductChanges() {
+    if (!supabase) return;
+    
+    // Subscribe to INSERT events
+    supabase
+        .channel('product-inserts')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'products'
+        }, (payload) => {
+            const product = payload.new;
+            addNotification({
+                type: 'new_product',
+                title: 'Nuovo prodotto aggiunto',
+                message: `"${product.name}" è stato aggiunto al catalogo`,
+                productId: product.id,
+                productSlug: product.slug
+            });
+            // Reload products list
+            loadProducts();
+        })
+        .subscribe();
+    
+    // Subscribe to UPDATE events
+    supabase
+        .channel('product-updates')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'products'
+        }, (payload) => {
+            const product = payload.new;
+            const oldProduct = payload.old;
+            
+            // Only notify for significant changes
+            const significantChange = 
+                product.name !== oldProduct.name ||
+                product.price !== oldProduct.price ||
+                product.sale_price !== oldProduct.sale_price ||
+                product.is_active !== oldProduct.is_active ||
+                product.inventory !== oldProduct.inventory;
+            
+            if (significantChange) {
+                let changeDetails = [];
+                if (product.price !== oldProduct.price) changeDetails.push(`prezzo: €${product.price}`);
+                if (product.sale_price !== oldProduct.sale_price) changeDetails.push(`sconto: €${product.sale_price || 'rimosso'}`);
+                if (product.is_active !== oldProduct.is_active) changeDetails.push(product.is_active ? 'attivato' : 'disattivato');
+                if (product.inventory !== oldProduct.inventory) changeDetails.push(`stock: ${product.inventory}`);
+                
+                addNotification({
+                    type: 'updated_product',
+                    title: 'Prodotto aggiornato',
+                    message: `"${product.name}" - ${changeDetails.join(', ') || 'modifiche varie'}`,
+                    productId: product.id,
+                    productSlug: product.slug
+                });
+                // Reload products list
+                loadProducts();
+            }
+        })
+        .subscribe();
+}
+
+// Initialize notification center when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initNotificationCenter, 200);
+});
+
+
+// ============================================
+// SEARCH KEYWORDS MANAGEMENT
+// ============================================
+
+let currentKeywords = [];
+
+/**
+ * Populate keywords tags from array
+ */
+function populateKeywords(keywords) {
+    currentKeywords = Array.isArray(keywords) ? [...keywords] : [];
+    renderKeywordTags();
+}
+
+/**
+ * Clear all keywords
+ */
+function clearKeywords() {
+    currentKeywords = [];
+    renderKeywordTags();
+    const input = document.getElementById('keywordInput');
+    if (input) input.value = '';
+}
+
+/**
+ * Get keywords array for saving
+ */
+function getKeywordsArray() {
+    return currentKeywords;
+}
+
+/**
+ * Add a keyword from input
+ */
+window.addKeyword = function() {
+    const input = document.getElementById('keywordInput');
+    if (!input) return;
+    
+    const keyword = input.value.trim().toLowerCase();
+    
+    if (keyword && !currentKeywords.includes(keyword)) {
+        currentKeywords.push(keyword);
+        renderKeywordTags();
+        input.value = '';
+        input.focus();
+    }
+};
+
+/**
+ * Remove a keyword by index
+ */
+window.removeKeyword = function(index) {
+    currentKeywords.splice(index, 1);
+    renderKeywordTags();
+};
+
+/**
+ * Render keyword tags in the container
+ */
+function renderKeywordTags() {
+    const container = document.getElementById('keywordsTags');
+    if (!container) return;
+    
+    if (currentKeywords.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = currentKeywords.map((keyword, index) => `
+        <span class="keyword-tag">
+            ${escapeHtml(keyword)}
+            <button type="button" class="remove-keyword" onclick="removeKeyword(${index})" aria-label="Rimuovi">×</button>
+        </span>
+    `).join('');
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Handle Enter key in keyword input
+document.addEventListener('DOMContentLoaded', () => {
+    const keywordInput = document.getElementById('keywordInput');
+    if (keywordInput) {
+        keywordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addKeyword();
+            }
+        });
+    }
+});
+
+/**
+ * Suggest keywords based on product name and type
+ */
+window.suggestKeywords = function() {
+    const name = document.getElementById('productName').value.trim().toLowerCase();
+    const gender = document.getElementById('productGender').value;
+    
+    if (!name) {
+        showToast('Inserisci prima il nome del prodotto', 'warning');
+        return;
+    }
+    
+    const suggestions = new Set();
+    
+    // Add words from product name
+    const nameWords = name.split(/\s+/).filter(w => w.length > 2);
+    nameWords.forEach(word => suggestions.add(word));
+    
+    // Add singular/plural variations
+    nameWords.forEach(word => {
+        if (word.endsWith('e')) {
+            suggestions.add(word.slice(0, -1) + 'a'); // mele -> mela
+        } else if (word.endsWith('i')) {
+            suggestions.add(word.slice(0, -1) + 'o'); // pomodori -> pomodoro
+        } else if (word.endsWith('a')) {
+            suggestions.add(word.slice(0, -1) + 'e'); // mela -> mele
+        } else if (word.endsWith('o')) {
+            suggestions.add(word.slice(0, -1) + 'i'); // pomodoro -> pomodori
+        }
+    });
+    
+    // Add type-based keywords
+    const typeKeywords = {
+        'frutta': ['frutta', 'frutto', 'dolce', 'fresco', 'naturale', 'vitamine'],
+        'verdura': ['verdura', 'ortaggio', 'verde', 'fresco', 'naturale', 'salute'],
+        'gastronomia': ['gastronomia', 'formaggio', 'salume', 'tipico', 'locale'],
+        'preparati': ['preparato', 'pronto', 'cucinare', 'facile', 'veloce']
+    };
+    
+    if (gender && typeKeywords[gender]) {
+        typeKeywords[gender].forEach(kw => suggestions.add(kw));
+    }
+    
+    // Add suggested keywords that aren't already present
+    let addedCount = 0;
+    suggestions.forEach(suggestion => {
+        if (!currentKeywords.includes(suggestion)) {
+            currentKeywords.push(suggestion);
+            addedCount++;
+        }
+    });
+    
+    renderKeywordTags();
+    
+    if (addedCount > 0) {
+        showToast(`Aggiunte ${addedCount} parole chiave suggerite`, 'success');
+    } else {
+        showToast('Nessuna nuova parola chiave da suggerire', 'info');
     }
 };

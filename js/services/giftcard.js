@@ -11,6 +11,26 @@ class GiftCardService {
     }
 
     /**
+     * Get the correct URL for a page, handling both localhost and GitHub Pages
+     * @param {string} page - The page filename (e.g., 'checkout-success.html')
+     * @returns {string} The full URL to the page
+     */
+    _getPageUrl(page) {
+        const { origin, pathname } = window.location;
+        
+        // Check if we're on GitHub Pages (pathname contains repo name)
+        if (origin.includes('github.io')) {
+            const pathParts = pathname.split('/').filter(Boolean);
+            if (pathParts.length > 0) {
+                const repoName = pathParts[0];
+                return `${origin}/${repoName}/${page}`;
+            }
+        }
+        
+        return `${origin}/${page}`;
+    }
+
+    /**
      * Create a new gift card with Stripe payment
      * Gift card is created by the webhook after successful payment
      */
@@ -51,8 +71,8 @@ class GiftCardService {
                 senderName: senderName.trim(),
                 message: message || '',
                 template: style,
-                successUrl: `${window.location.origin}/checkout-success.html?type=giftcard`,
-                cancelUrl: `${window.location.origin}/settings.html?tab=giftcards&cancelled=true`
+                successUrl: this._getPageUrl('checkout-success.html?type=giftcard'),
+                cancelUrl: this._getPageUrl('settings.html?tab=giftcards&cancelled=true')
             };
             
             console.log('[GiftCard] Creating checkout with:', requestBody);
@@ -379,7 +399,7 @@ class GiftCardService {
      * Generate QR code URL for a gift card
      */
     getQRCodeUrl(qrToken, size = 200) {
-        const redeemUrl = `${window.location.origin}/redeem.html?token=${qrToken}`;
+        const redeemUrl = this._getPageUrl(`redeem.html?token=${qrToken}`);
         // Using QR Server API (free, no API key needed)
         return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(redeemUrl)}&format=png&margin=10`;
     }

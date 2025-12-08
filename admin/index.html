@@ -110,6 +110,25 @@
             <header class="content-header">
                 <h1 id="pageTitle">Dashboard</h1>
                 <div class="header-actions">
+                    <!-- Notification Center -->
+                    <div class="notification-icon-wrapper">
+                        <button class="notification-icon-btn" id="notificationBtn" aria-label="Notifiche">
+                            ✉️
+                            <span class="notification-badge" id="notificationBadge" data-count="0"></span>
+                        </button>
+                        <div class="notification-panel" id="notificationPanel">
+                            <div class="notification-panel-header">
+                                <h3>🔔 Notifiche <span class="count" id="notificationCount">0</span></h3>
+                                <button class="btn-mark-all-read" id="markAllReadBtn">Segna tutte lette</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-empty">
+                                    <div class="notification-empty-icon">📭</div>
+                                    <p>Nessuna notifica</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <a href="../index.html" target="_blank" class="btn-secondary">Vedi Sito</a>
                 </div>
             </header>
@@ -186,6 +205,48 @@
                     </div>
                     <button class="btn-primary" id="addProductBtn">+ Nuovo Prodotto</button>
                 </div>
+                
+                <!-- Filtri Avanzati -->
+                <div class="product-filters">
+                    <div class="filter-group">
+                        <label for="filterCategory">Categoria</label>
+                        <select id="filterCategory">
+                            <option value="">Tutte le categorie</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterType">Tipo</label>
+                        <select id="filterType">
+                            <option value="">Tutti i tipi</option>
+                            <option value="frutta">🍎 Frutta</option>
+                            <option value="verdura">🥬 Verdura</option>
+                            <option value="gastronomia">🧀 Gastronomia</option>
+                            <option value="preparati">🍲 Preparati</option>
+                            <option value="altro">🧺 Altro</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStatus">Stato</label>
+                        <select id="filterStatus">
+                            <option value="">Tutti</option>
+                            <option value="active">Attivi</option>
+                            <option value="inactive">Inattivi</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStock">Inventario</label>
+                        <select id="filterStock">
+                            <option value="">Tutti</option>
+                            <option value="in-stock">Disponibili</option>
+                            <option value="low-stock">Scorte basse (≤5)</option>
+                            <option value="out-of-stock">Esauriti</option>
+                        </select>
+                    </div>
+                    <button class="btn-reset-filters" id="resetFiltersBtn" title="Resetta filtri">✕ Reset</button>
+                </div>
+                
+                <!-- Contatore risultati -->
+                <div class="filter-results-count" id="filterResultsCount"></div>
 
                 <!-- Mobile view toggle -->
                 <button class="view-toggle-btn" id="viewToggleBtn">📱 Vista Card</button>
@@ -431,7 +492,7 @@
                             </select>
                         </div>
                         
-                        <div class="filter-group" id="customDateRange" style="display:none;">
+                        <div class="filter-group" id="customDateRange">
                             <label>Da</label>
                             <input type="date" id="orderDateFrom" class="filter-input">
                             <label>A</label>
@@ -755,39 +816,74 @@
                     <input type="text" id="productColors" placeholder="Nero, Bianco, Blu">
                 </div>
 
-                <!-- Size Inventory Section -->
-                <div class="form-group">
-                    <label>Taglie e Disponibilità</label>
-                    <p class="form-hint">Inserisci le taglie e la quantità disponibile per ciascuna</p>
-                    <div class="size-inventory-grid" id="sizeInventoryGrid">
-                        <div class="size-inventory-row">
-                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="XS">
-                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
-                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
-                        </div>
-                        <div class="size-inventory-row">
-                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="S">
-                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
-                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
-                        </div>
-                        <div class="size-inventory-row">
-                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="M">
-                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
-                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
-                        </div>
-                        <div class="size-inventory-row">
-                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="L">
-                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
-                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
-                        </div>
-                        <div class="size-inventory-row">
-                            <input type="text" class="size-input" placeholder="Taglia (es. M)" value="XL">
-                            <input type="number" class="qty-input" placeholder="Qtà" min="0" value="0">
-                            <button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">×</button>
+                <!-- Search Keywords Section -->
+                <div class="form-group keywords-section">
+                    <label for="productKeywords">
+                        🔍 Parole Chiave per Ricerca
+                        <span class="label-hint">(aiutano i clienti a trovare il prodotto)</span>
+                    </label>
+                    <div class="keywords-input-wrapper">
+                        <input type="text" id="keywordInput" placeholder="Aggiungi parola chiave e premi Invio">
+                        <button type="button" class="btn-add-keyword" onclick="addKeyword()">+</button>
+                    </div>
+                    <div class="keywords-tags" id="keywordsTags">
+                        <!-- Tags will be rendered here -->
+                    </div>
+                    <input type="hidden" id="productKeywords">
+                    <div class="keywords-actions">
+                        <button type="button" class="btn-suggest-keywords" onclick="suggestKeywords()">
+                            ✨ Suggerisci Parole Chiave
+                        </button>
+                    </div>
+                    <p class="keywords-hint">
+                        💡 Suggerimento: aggiungi sinonimi, nomi dialettali, varianti ortografiche (es. per "Pomodoro": pomodori, tomato, pummarola, pachino)
+                    </p>
+                </div>
+
+                <!-- Unified Inventory Section -->
+                <div class="form-group inventory-section">
+                    <div class="inventory-header">
+                        <label>📦 Inventario</label>
+                        <div class="inventory-unit-select">
+                            <span>Unità:</span>
+                            <select id="productUnitMeasure" onchange="updateUnitMeasureLabels()">
+                                <option value="kg">Kg</option>
+                                <option value="g">g</option>
+                                <option value="l">L</option>
+                                <option value="ml">ml</option>
+                                <option value="pz">pz</option>
+                            </select>
                         </div>
                     </div>
-                    <button type="button" class="btn-add-size" onclick="addSizeRow()">+ Aggiungi Taglia</button>
+                    
+                    <div class="inventory-table">
+                        <div class="inventory-table-header">
+                            <span class="col-weight">Peso/Quantità</span>
+                            <span class="col-net" id="colNetWeight">Netto</span>
+                            <span class="col-gross" id="colGrossWeight">Lordo</span>
+                            <span class="col-stock">Pezzi</span>
+                            <span class="col-actions"></span>
+                        </div>
+                        <div class="inventory-table-body" id="inventoryVariantsGrid">
+                            <!-- Rows added dynamically -->
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn-add-variant" onclick="addInventoryVariant()">+ Aggiungi Variante</button>
+                    
+                    <div class="inventory-summary">
+                        <span>Totale in magazzino:</span>
+                        <strong id="totalInventoryCount">0 pz</strong>
+                    </div>
                 </div>
+                
+                <!-- Hidden fields for backward compatibility -->
+                <input type="hidden" id="productUnitWeight" value="1000">
+                <input type="hidden" id="productWeightStep" value="1000">
+                <input type="hidden" id="productNumItems" value="0">
+                <input type="hidden" id="productNumCrates" value="">
+                <input type="hidden" id="productNetWeight" value="">
+                <input type="hidden" id="productGrossWeight" value="">
 
                 <div class="form-error" id="productError"></div>
 
@@ -852,6 +948,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Notification Overlay (for mobile) -->
+    <div class="notification-overlay" id="notificationOverlay"></div>
 
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
