@@ -343,23 +343,18 @@
         window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
 
         // Menu toggle
-        let menuScrollPosition = 0;
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');
             const menuBtn = document.querySelector('.menu-btn');
             const isOpen = menuOverlay.classList.contains('active');
             
             if (isOpen) {
-                document.body.style.top = '';
-                window.scrollTo(0, menuScrollPosition);
                 menuOverlay.classList.remove('active');
                 document.body.classList.remove('menu-open');
                 menuBtn.textContent = 'Menu';
                 menuBtn.style.color = '';
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
             } else {
-                menuScrollPosition = window.scrollY;
-                document.body.style.top = `-${menuScrollPosition}px`;
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
                 menuBtn.textContent = 'Close';

@@ -291,9 +291,8 @@ nav.scrolled {
 /* Prevent body scroll when menu is open */
 body.menu-open {
     overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
+    /* Use touch-action instead of position:fixed to prevent scroll without layout shift */
+    touch-action: none;
 }
 
 .menu-content {
@@ -964,6 +963,7 @@ body.menu-open {
     padding: 0.5rem 1rem;
     border: 1px solid var(--line-color);
     background: transparent;
+    color: var(--text-color);
     font-size: 0.7rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -1002,6 +1002,7 @@ body.menu-open {
     padding: 0.4rem 0.5rem;
     border: 1px solid var(--line-color);
     background: transparent;
+    color: var(--text-color);
     border-radius: 4px;
     font-size: 0.9rem;
     transition: all 0.2s var(--ease);
@@ -1053,6 +1054,7 @@ body.menu-open {
     border-radius: 6px;
     font-size: 0.8rem;
     background: var(--card-bg);
+    color: var(--text-color);
     transition: border-color 0.2s var(--ease);
 }
 
@@ -1239,6 +1241,7 @@ body.menu-open {
     aspect-ratio: 1;
     overflow: hidden;
     background: var(--bg-warm);
+    position: relative;
 }
 
 .card-image-small img {

@@ -149,21 +149,10 @@
         setVH();
         window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
 
-        let menuScrollPosition = 0;
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');
             const menuBtn = document.querySelector('.menu-btn');
             const isOpen = menuOverlay.classList.contains('active');
-            
-            if (!isOpen) {
-                // Opening menu - save scroll position
-                menuScrollPosition = window.scrollY;
-                document.body.style.top = `-${menuScrollPosition}px`;
-            } else {
-                // Closing menu - restore scroll position
-                document.body.style.top = '';
-                window.scrollTo(0, menuScrollPosition);
-            }
             
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
