@@ -1003,6 +1003,11 @@ nav.scrolled {
     color: #fff;
 }
 
+/* Mobile Filters Toggle - Hidden on desktop */
+.mobile-filters-toggle {
+    display: none;
+}
+
 /* Advanced Filters */
 .advanced-filters {
     background: var(--bg-warm);
@@ -1569,11 +1574,77 @@ nav.scrolled {
         flex-shrink: 0;
     }
 
-    /* Advanced Filters - Fix overlap */
+    /* Mobile Filters Toggle Button */
+    .mobile-filters-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: calc(100% - 2rem);
+        margin: 0 1rem 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--line-color);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.2s var(--ease);
+    }
+    
+    .mobile-filters-toggle:hover {
+        border-color: var(--primary);
+        background: var(--primary-soft);
+    }
+    
+    .mobile-filters-toggle.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .mobile-filters-toggle svg {
+        flex-shrink: 0;
+    }
+    
+    .mobile-filters-toggle .filters-badge {
+        background: var(--primary);
+        color: white;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+    }
+    
+    .mobile-filters-toggle.active .filters-badge {
+        background: white;
+        color: var(--primary);
+    }
+
+    /* Advanced Filters - Hidden by default on mobile */
     .advanced-filters {
+        display: none;
         padding: 1rem;
         position: relative;
         z-index: 40;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .advanced-filters.show {
+        display: block;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .filters-row {
@@ -8856,5 +8927,136 @@ body.search-open {
     .nav-actions .nav-search-btn,
     .nav-on-green .nav-search-btn {
         display: none !important;
+    }
+}
+
+
+/* ===== CATEGORY SEARCH RESULT ===== */
+.search-category-result {
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.category-result-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--primary-soft) 0%, #f0f9f0 100%);
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s var(--ease);
+    margin-bottom: 12px;
+}
+
+.category-result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 124, 78, 0.2);
+}
+
+.category-result-icon {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.category-result-info {
+    flex: 1;
+    text-align: left;
+}
+
+.category-result-info h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.category-result-info p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.category-result-arrow {
+    color: var(--primary);
+}
+
+.category-result-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ===== SEASONAL BADGES FOR PRODUCT CARDS ===== */
+.seasonal-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.seasonal-badge.in-season {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.seasonal-badge.out-of-season {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.seasonal-badge .badge-icon {
+    font-size: 12px;
+}
+
+/* Adjust other badges when seasonal badge is present */
+.product-card-small .seasonal-badge + .sale-badge,
+.product-card-small .seasonal-badge ~ .fresh-badge {
+    top: 36px;
+}
+
+/* ===== SEASONAL FILTER IN COLLECTION ===== */
+.filter-btn.seasonal-filter {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+}
+
+.filter-btn.seasonal-filter:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.filter-btn.seasonal-filter.active {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .category-result-card {
+        padding: 16px 20px;
+    }
+    
+    .category-result-icon {
+        font-size: 32px;
+    }
+    
+    .category-result-info h4 {
+        font-size: 16px;
+    }
+    
+    .seasonal-badge {
+        font-size: 9px;
+        padding: 3px 8px;
     }
 }

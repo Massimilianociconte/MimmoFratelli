@@ -285,18 +285,47 @@ class GlobalSearch {
         }
 
         try {
+            const lowerQuery = query.toLowerCase();
+            
+            // Check if searching for a category/section - redirect to collection page
+            const categoryRedirects = {
+                'frutta': 'collection.html?gender=frutta',
+                'verdura': 'collection.html?gender=verdura',
+                'conserve': 'collection.html?gender=conserve',
+                'secchi': 'collection.html?gender=secchi-estratti',
+                'estratti': 'collection.html?gender=secchi-estratti',
+                'frutta secca': 'collection.html?gender=frutta&category=frutta-secca',
+                'frutta disidratata': 'collection.html?gender=frutta&category=frutta-disidratata',
+                'biologico': 'collection.html?gender=frutta&category=frutta-biologica',
+                'bio': 'collection.html?gender=frutta&category=frutta-biologica',
+                'stagione': 'collection.html?gender=frutta&seasonal=true',
+                'di stagione': 'collection.html?gender=frutta&seasonal=true',
+                'olio': 'collection.html?gender=secchi-estratti&category=oli',
+                'oli': 'collection.html?gender=secchi-estratti&category=oli',
+                'succhi': 'collection.html?gender=secchi-estratti&category=succhi-spremute',
+                'marmellate': 'collection.html?gender=conserve&category=marmellate-confetture',
+                'sottoli': 'collection.html?gender=conserve&category=sottoli',
+                'sottaceti': 'collection.html?gender=conserve&category=sottaceti'
+            };
+            
+            // Check for exact category match
+            if (categoryRedirects[lowerQuery]) {
+                this.showCategoryResult(query, categoryRedirects[lowerQuery]);
+                return;
+            }
+            
             // Use the RPC function for enhanced search
             const { data, error } = await supabase.rpc('search_products', {
                 search_query: query
             });
 
             if (error) {
-                // Fallback to basic search if RPC fails
+                // Fallback to basic search if RPC fails - include gender and category search
                 const { data: fallbackData, error: fallbackError } = await supabase
                     .from('products')
                     .select('*, categories(name, slug)')
                     .eq('is_active', true)
-                    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+                    .or(`name.ilike.%${query}%,description.ilike.%${query}%,gender.ilike.%${query}%`)
                     .limit(10);
 
                 if (fallbackError) throw fallbackError;
@@ -325,6 +354,51 @@ class GlobalSearch {
             console.error('Search error:', err);
             this.showError('Errore nella ricerca');
         }
+    }
+    
+    /**
+     * Show category result with link to collection page
+     */
+    showCategoryResult(query, url) {
+        const categoryNames = {
+            'frutta': { name: 'Frutta', emoji: '🍎', desc: 'Frutta fresca di stagione' },
+            'verdura': { name: 'Verdura', emoji: '🥬', desc: 'Verdura fresca selezionata' },
+            'conserve': { name: 'Conserve e Preparati', emoji: '🫙', desc: 'Sott\'oli, marmellate e salse' },
+            'secchi': { name: 'Prodotti Secchi e Estratti', emoji: '🫒', desc: 'Oli, succhi e frutta secca' },
+            'estratti': { name: 'Prodotti Secchi e Estratti', emoji: '🫒', desc: 'Oli, succhi e frutta secca' },
+            'frutta secca': { name: 'Frutta Secca', emoji: '🥜', desc: 'Noci, mandorle e nocciole' },
+            'frutta disidratata': { name: 'Frutta Disidratata', emoji: '🍇', desc: 'Frutta essiccata naturale' },
+            'biologico': { name: 'Prodotti Biologici', emoji: '🌱', desc: 'Certificati biologici' },
+            'bio': { name: 'Prodotti Biologici', emoji: '🌱', desc: 'Certificati biologici' },
+            'stagione': { name: 'Prodotti di Stagione', emoji: '🍅', desc: 'Freschi e al miglior prezzo' },
+            'di stagione': { name: 'Prodotti di Stagione', emoji: '🍅', desc: 'Freschi e al miglior prezzo' },
+            'olio': { name: 'Oli', emoji: '🫒', desc: 'Oli extravergine e aromatizzati' },
+            'oli': { name: 'Oli', emoji: '🫒', desc: 'Oli extravergine e aromatizzati' },
+            'succhi': { name: 'Succhi e Spremute', emoji: '🧃', desc: 'Succhi di frutta freschi' },
+            'marmellate': { name: 'Marmellate e Confetture', emoji: '🍯', desc: 'Artigianali e genuine' },
+            'sottoli': { name: 'Sott\'oli', emoji: '🫙', desc: 'Conserve sott\'olio' },
+            'sottaceti': { name: 'Sott\'aceti', emoji: '🥒', desc: 'Conserve sott\'aceto' }
+        };
+        
+        const cat = categoryNames[query.toLowerCase()] || { name: query, emoji: '📦', desc: 'Esplora la categoria' };
+        
+        this.resultsContainer.innerHTML = `
+            <div class="search-category-result">
+                <div class="category-result-card" onclick="window.location.href='${url}'">
+                    <div class="category-result-icon">${cat.emoji}</div>
+                    <div class="category-result-info">
+                        <h4>${cat.name}</h4>
+                        <p>${cat.desc}</p>
+                    </div>
+                    <div class="category-result-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="category-result-hint">Clicca per esplorare tutti i prodotti</p>
+            </div>
+        `;
     }
 
     /**
@@ -419,8 +493,8 @@ class GlobalSearch {
         const emojis = {
             'frutta': '🍎',
             'verdura': '🥬',
-            'gastronomia': '🧀',
-            'preparati': '🍲',
+            'conserve': '🫙',
+            'secchi-estratti': '🫒',
             'altro': '🧺'
         };
         return emojis[gender] || '';
@@ -454,10 +528,18 @@ class GlobalSearch {
                 <div class="search-empty-icon">🔍</div>
                 <p>Inizia a digitare per cercare prodotti</p>
                 <div class="search-suggestions">
-                    <span class="suggestion-label">Suggerimenti:</span>
+                    <span class="suggestion-label">Categorie:</span>
                     <button class="suggestion-chip" data-query="frutta">🍎 Frutta</button>
                     <button class="suggestion-chip" data-query="verdura">🥬 Verdura</button>
+                    <button class="suggestion-chip" data-query="conserve">🫙 Conserve</button>
+                    <button class="suggestion-chip" data-query="secchi">🫒 Secchi e Estratti</button>
+                </div>
+                <div class="search-suggestions" style="margin-top: 0.75rem;">
+                    <span class="suggestion-label">Sottocategorie:</span>
+                    <button class="suggestion-chip" data-query="frutta secca">🥜 Frutta Secca</button>
                     <button class="suggestion-chip" data-query="biologico">🌱 Biologico</button>
+                    <button class="suggestion-chip" data-query="stagione">🍅 Di Stagione</button>
+                    <button class="suggestion-chip" data-query="olio">🫒 Oli</button>
                 </div>
             </div>
         `;

@@ -381,8 +381,8 @@ function getProductTypeLabel(gender, withEmoji = false) {
     const types = {
         'frutta': withEmoji ? '🍎 Frutta' : 'Frutta',
         'verdura': withEmoji ? '🥬 Verdura' : 'Verdura',
-        'gastronomia': withEmoji ? '🧀 Gastronomia' : 'Gastronomia',
-        'preparati': withEmoji ? '🍲 Preparati' : 'Preparati',
+        'conserve': withEmoji ? '🫙 Conserve e Preparati' : 'Conserve e Preparati',
+        'secchi-estratti': withEmoji ? '🫒 Prodotti Secchi e Estratti' : 'Prodotti Secchi e Estratti',
         'altro': withEmoji ? '🧺 Altro' : 'Altro'
     };
     return types[gender] || '-';
@@ -3415,10 +3415,10 @@ window.suggestKeywords = function() {
     
     // Add type-based keywords
     const typeKeywords = {
-        'frutta': ['frutta', 'frutto', 'dolce', 'fresco', 'naturale', 'vitamine'],
-        'verdura': ['verdura', 'ortaggio', 'verde', 'fresco', 'naturale', 'salute'],
-        'gastronomia': ['gastronomia', 'formaggio', 'salume', 'tipico', 'locale'],
-        'preparati': ['preparato', 'pronto', 'cucinare', 'facile', 'veloce']
+        'frutta': ['frutta', 'frutto', 'dolce', 'fresco', 'naturale', 'vitamine', 'frutta secca', 'frutta disidratata'],
+        'verdura': ['verdura', 'ortaggio', 'verde', 'fresco', 'naturale', 'salute', 'biologico'],
+        'conserve': ['conserva', 'sott\'olio', 'sott\'aceto', 'marmellata', 'confettura', 'salsa', 'sugo', 'artigianale'],
+        'secchi-estratti': ['olio', 'succo', 'spremuta', 'estratto', 'secco', 'legumi', 'spezie', 'farina']
     };
     
     if (gender && typeKeywords[gender]) {

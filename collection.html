@@ -64,21 +64,24 @@
                 <li class="menu-category">
                     <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
                     <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=frutta&category=stagione">Di Stagione</a></li>
-                        <li><a href="collection.html?gender=frutta&category=esotica">Esotica</a></li>
-                        <li><a href="collection.html?gender=frutta&category=biologica">Biologica</a></li>
+                        <li><a href="collection.html?gender=frutta&seasonal=true">🍅 Di Stagione</a></li>
+                        <li><a href="collection.html?gender=frutta&category=frutta-secca">🥜 Frutta Secca</a></li>
+                        <li><a href="collection.html?gender=frutta&category=frutta-disidratata">🍇 Disidratata</a></li>
+                        <li><a href="collection.html?gender=frutta&category=frutta-esotica">🥭 Esotica</a></li>
+                        <li><a href="collection.html?gender=frutta&category=frutta-biologica">🌱 Biologica</a></li>
                     </ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
                     <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=verdura&category=ortaggi">Ortaggi</a></li>
-                        <li><a href="collection.html?gender=verdura&category=insalate">Insalate</a></li>
-                        <li><a href="collection.html?gender=verdura&category=biologica">Biologica</a></li>
+                        <li><a href="collection.html?gender=verdura&seasonal=true">🍅 Di Stagione</a></li>
+                        <li><a href="collection.html?gender=verdura&category=ortaggi">🥕 Ortaggi</a></li>
+                        <li><a href="collection.html?gender=verdura&category=insalate">🥗 Insalate</a></li>
+                        <li><a href="collection.html?gender=verdura&category=verdura-biologica">🌱 Biologica</a></li>
                     </ul>
                 </li>
-                <li><a href="collection.html?gender=gastronomia">🧀 Gastronomia</a></li>
-                <li><a href="collection.html?gender=preparati">🍲 I Nostri Preparati</a></li>
+                <li><a href="collection.html?gender=conserve">🫙 Conserve e Preparati</a></li>
+                <li><a href="collection.html?gender=secchi-estratti">🫒 Prodotti Secchi e Estratti</a></li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
                 <li><a href="contacts.html">📞 Contatti</a></li>
@@ -113,6 +116,7 @@
     <div class="filter-bar">
         <div class="filter-container" id="filterContainer">
             <button class="filter-btn active" data-filter="all">Tutti</button>
+            <button class="filter-btn seasonal-filter" data-filter="seasonal">🍅 Di Stagione</button>
             <button class="filter-btn" data-filter="new">Novità</button>
             <button class="filter-btn" data-filter="sale">In Offerta</button>
             <button class="filter-btn favorites-filter" data-filter="favorites" id="favoritesBtn">
@@ -130,6 +134,23 @@
             <button class="view-btn" data-view="list">☰</button>
         </div>
     </div>
+
+    <!-- Mobile Filters Toggle Button -->
+    <button class="mobile-filters-toggle" id="mobileFiltersToggle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        <span>Filtri</span>
+        <span class="filters-badge" id="filtersBadge" style="display:none;">0</span>
+    </button>
 
     <!-- Advanced Filters -->
     <div class="advanced-filters" id="advancedFilters">
@@ -335,8 +356,8 @@
             const titleMap = { 
                 'frutta': 'Frutta', 
                 'verdura': 'Verdura',
-                'gastronomia': 'Gastronomia',
-                'preparati': 'I Nostri Preparati',
+                'conserve': 'Conserve e Preparati',
+                'secchi-estratti': 'Prodotti Secchi e Estratti',
                 'altro': 'Altri Prodotti'
             };
             document.getElementById('pageTitle').textContent = titleMap[gender] || 'Prodotti';
@@ -400,6 +421,8 @@
                     
                     if (filter === 'all') {
                         await renderProducts();
+                    } else if (filter === 'seasonal') {
+                        await renderFilteredProducts(products.filter(p => p.is_seasonal));
                     } else if (filter === 'new') {
                         await renderFilteredProducts(products.filter(p => p.is_new));
                     } else if (filter === 'sale') {
@@ -407,6 +430,15 @@
                     }
                 });
             });
+            
+            // Check URL for seasonal filter
+            const seasonalParam = params.get('seasonal');
+            if (seasonalParam === 'true') {
+                document.querySelector('.filter-btn[data-filter="seasonal"]')?.click();
+            }
+            
+            // Mobile filters toggle
+            setupMobileFiltersToggle();
             
             // View toggle
             document.querySelectorAll('.view-btn').forEach(btn => {
@@ -441,6 +473,40 @@
             await loadCategories();
             setupAdvancedFilters();
         });
+
+        // Mobile filters toggle
+        function setupMobileFiltersToggle() {
+            const toggleBtn = document.getElementById('mobileFiltersToggle');
+            const advancedFilters = document.getElementById('advancedFilters');
+            const filtersBadge = document.getElementById('filtersBadge');
+            
+            if (!toggleBtn || !advancedFilters) return;
+            
+            toggleBtn.addEventListener('click', () => {
+                const isOpen = advancedFilters.classList.contains('show');
+                advancedFilters.classList.toggle('show', !isOpen);
+                toggleBtn.classList.toggle('active', !isOpen);
+                
+                // Update button text
+                toggleBtn.querySelector('span:not(.filters-badge)').textContent = isOpen ? 'Filtri' : 'Chiudi Filtri';
+            });
+            
+            // Update badge when filters change
+            window.updateFiltersBadge = function() {
+                let activeCount = 0;
+                if (currentFilters.category_id) activeCount++;
+                if (currentFilters.price_min || currentFilters.price_max) activeCount++;
+                if (currentFilters.min_discount) activeCount++;
+                if (currentFilters.sort_by !== 'newest') activeCount++;
+                
+                if (activeCount > 0) {
+                    filtersBadge.textContent = activeCount;
+                    filtersBadge.style.display = 'inline-block';
+                } else {
+                    filtersBadge.style.display = 'none';
+                }
+            };
+        }
 
         // Filter scroll arrow functionality
         function setupFilterScrollArrow() {
@@ -495,12 +561,14 @@
                 currentFilters.category_id = e.target.value || null;
                 e.target.classList.toggle('has-value', !!e.target.value);
                 await applyFilters();
+                if (window.updateFiltersBadge) window.updateFiltersBadge();
             });
 
             discountSelect.addEventListener('change', async (e) => {
                 currentFilters.min_discount = e.target.value ? parseInt(e.target.value) : null;
                 e.target.classList.toggle('has-value', !!e.target.value);
                 await applyFiltersClientSide();
+                if (window.updateFiltersBadge) window.updateFiltersBadge();
             });
 
             let priceTimeout;
@@ -512,6 +580,7 @@
                     priceMin.classList.toggle('has-value', !!priceMin.value);
                     priceMax.classList.toggle('has-value', !!priceMax.value);
                     await applyFilters();
+                    if (window.updateFiltersBadge) window.updateFiltersBadge();
                 }, 500);
             };
             priceMin.addEventListener('input', handlePriceChange);
@@ -520,6 +589,7 @@
             sortSelect.addEventListener('change', async (e) => {
                 currentFilters.sort_by = e.target.value;
                 await applyFilters();
+                if (window.updateFiltersBadge) window.updateFiltersBadge();
             });
 
             clearBtn.addEventListener('click', async () => {
@@ -536,6 +606,7 @@
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
                 await loadProducts();
+                if (window.updateFiltersBadge) window.updateFiltersBadge();
             });
         }
 
@@ -671,10 +742,19 @@
                 const unitLabels = { 'kg': 'Kg', 'g': 'g', 'l': 'L', 'ml': 'ml', 'pz': 'pz' };
                 const unit = unitLabels[unitMeasure] || 'Kg';
 
+                // Determine seasonal status
+                const isSeasonal = product.is_seasonal;
+                const seasonalBadge = isSeasonal 
+                    ? '<span class="seasonal-badge in-season"><span class="badge-icon">🍅</span> Di Stagione</span>'
+                    : (gender === 'frutta' || gender === 'verdura') 
+                        ? '<span class="seasonal-badge out-of-season"><span class="badge-icon">📦</span> Fuori Stagione</span>' 
+                        : '';
+
                 return `
                     <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${product.id}" style="animation-delay: ${i * 0.03}s">
                         <a href="${productUrl}" class="card-image-small">
                             <img src="${img}" alt="${product.name}" loading="lazy" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
+                            ${seasonalBadge}
                             ${hasDiscount && !isUnavailable ? '<span class="sale-badge">Offerta</span>' : ''}
                             ${product.is_new ? '<span class="fresh-badge">Novità</span>' : ''}
                         </a>
