@@ -58,6 +58,7 @@ class NotificationCenter {
         // Find nav container - try multiple selectors for different page layouts
         const navContainer = document.querySelector('.nav-right') || 
                             document.querySelector('.nav-actions') ||
+                            document.querySelector('.nav-icons') ||
                             document.querySelector('nav .menu-btn')?.parentElement;
         
         console.log('[NotificationCenter] navContainer found:', !!navContainer);
