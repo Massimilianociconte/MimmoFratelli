@@ -4633,6 +4633,52 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     background: linear-gradient(135deg, #c45a1a 0%, #e8722a 50%, #f59d5e 100%);
 }
 
+/* Promos page navbar - better contrast on orange background */
+.promos-page nav.nav-on-green .logo a,
+.promos-page nav.nav-on-green .menu-btn {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.promos-page nav.nav-on-green .nav-icon-btn {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.promos-page nav.nav-on-green .nav-icon-btn:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.promos-page nav.nav-on-green .nav-icon-btn svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.promos-page nav.nav-on-green .nav-icon-btn .badge {
+    background: #fff;
+    color: var(--accent-dark);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrolled state - reset to default */
+.promos-page nav.nav-on-green.scrolled .nav-icon-btn {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.promos-page nav.nav-on-green.scrolled .nav-icon-btn svg {
+    filter: none;
+}
+
+.promos-page nav.nav-on-green.scrolled .nav-icon-btn .badge {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: none;
+}
+
 /* Premium Orders Page */
 .orders-page.premium-layout {
     padding: 0;
