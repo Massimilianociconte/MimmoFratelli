@@ -8274,9 +8274,12 @@ img {
         max-height: 70vh;
         border-radius: 20px 20px 0 0;
         transform: translateY(100%);
+        display: none;
+        opacity: 1;
     }
     
     .notif-center-panel.active {
+        display: flex;
         transform: translateY(0);
     }
     
