@@ -8196,65 +8196,8 @@ img {
     opacity: 1;
 }
 
-/* Mobile Notification FAB */
-.notif-mobile-fab {
-    display: none;
-    position: fixed;
-    bottom: 90px; /* Above WhatsApp button which is at bottom: 24px */
-    left: 24px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    border: none;
-    cursor: pointer;
-    z-index: 999;
-    box-shadow: 0 4px 15px rgba(61, 124, 71, 0.4);
-    transition: all 0.3s var(--ease);
-    align-items: center;
-    justify-content: center;
-}
-
-.notif-mobile-fab:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(61, 124, 71, 0.5);
-}
-
-.notif-fab-icon {
-    font-size: 1.25rem;
-}
-
-.notif-fab-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    background: var(--accent);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    border-radius: 10px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    /* Hide notification center in navbar on mobile - too crowded */
-    .nav-right .notif-center-wrapper,
-    .nav-home .notif-center-wrapper {
-        display: none !important;
-    }
-    
-    /* Show mobile FAB */
-    .notif-mobile-fab {
-        display: flex;
-    }
-    
     .notif-center-btn {
         width: 36px;
         height: 36px;

@@ -108,26 +108,8 @@ class NotificationCenter {
             document.body.appendChild(overlay);
         }
 
-        // Create mobile FAB for notifications (only if not exists)
-        this.createMobileFab();
-
         this.container = wrapper;
     }
-
-    /**
-     * Create floating action button for mobile notifications
-     */
-    createMobileFab() {
-        if (document.getElementById('notifMobileFab')) return;
-
-        const fab = document.createElement('button');
-        fab.className = 'notif-mobile-fab';
-        fab.id = 'notifMobileFab';
-        fab.setAttribute('aria-label', 'Centro Notifiche');
-        fab.innerHTML = `
-            <span class="notif-fab-icon">✉️</span>
-            <span class="notif-fab-badge" id="notifFabBadge"></span>
-        `;
         
         document.body.appendChild(fab);
         
@@ -383,13 +365,6 @@ class NotificationCenter {
         if (badge) {
             badge.textContent = unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : '';
             badge.style.display = unreadCount > 0 ? 'flex' : 'none';
-        }
-        
-        // Update mobile FAB badge
-        const fabBadge = document.getElementById('notifFabBadge');
-        if (fabBadge) {
-            fabBadge.textContent = unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : '';
-            fabBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
 
         // Empty state
