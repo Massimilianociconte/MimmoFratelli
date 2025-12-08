@@ -354,7 +354,10 @@
                 menuBtn.textContent = 'Menu';
                 menuBtn.style.color = '';
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+                document.documentElement.style.setProperty('--scrollbar-width', '0px');
             } else {
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
                 menuBtn.textContent = 'Close';

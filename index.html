@@ -385,6 +385,10 @@
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
             if (isMenuOpen) {
+                // Calculate scrollbar width to prevent layout shift
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+                
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
                 menuBtn.classList.add('active');
@@ -395,6 +399,9 @@
                 menuBtn.classList.remove('active');
                 if (menuText) menuText.textContent = 'Menu';
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+                
+                // Reset scrollbar compensation
+                document.documentElement.style.setProperty('--scrollbar-width', '0px');
             }
         }
 
