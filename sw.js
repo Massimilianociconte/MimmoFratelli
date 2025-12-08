@@ -3,22 +3,39 @@
  * Handles push notifications and offline caching
  */
 
-const CACHE_NAME = 'mimmo-fratelli-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/collection.html',
-  '/css/style.css',
-  '/js/config.js'
-];
+const CACHE_NAME = 'mimmo-fratelli-v2';
+
+// Get base path dynamically (handles GitHub Pages)
+const getBasePath = () => {
+  const scope = self.registration?.scope || self.location.href;
+  const url = new URL(scope);
+  // Remove trailing slash and return path
+  return url.pathname.replace(/\/$/, '') || '';
+};
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker...');
+  
+  const basePath = getBasePath();
+  const STATIC_ASSETS = [
+    `${basePath}/`,
+    `${basePath}/index.html`,
+    `${basePath}/collection.html`,
+    `${basePath}/css/style.css`
+  ];
+  
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
+      console.log('[SW] Caching static assets with basePath:', basePath);
+      // Use addAll with catch to handle individual failures gracefully
+      return Promise.all(
+        STATIC_ASSETS.map(url => 
+          cache.add(url).catch(err => {
+            console.warn('[SW] Failed to cache:', url, err.message);
+          })
+        )
+      );
     })
   );
   // Activate immediately
