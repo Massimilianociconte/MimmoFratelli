@@ -274,9 +274,8 @@ nav.scrolled {
     background: linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);
     color: #fff;
     z-index: 90;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    /* Remove flexbox to prevent layout recalculation */
+    display: block;
     padding-top: 80px;
     clip-path: circle(0% at calc(100% - 40px) 35px);
     transition: clip-path 0.5s var(--ease);
@@ -300,6 +299,7 @@ body.menu-open {
 .menu-content {
     width: 100%;
     max-width: 500px;
+    margin: 0 auto;
     padding: 0.5rem 1.5rem;
     text-align: center;
 }
@@ -1155,16 +1155,16 @@ body.menu-open {
     }
     
     .collection-grid-modern.list-view .card-quick-add {
-        top: 50%;
+        top: 0.75rem;
         bottom: auto;
-        transform: translateY(-130%);
+        transform: none;
         opacity: 1;
     }
     
     .collection-grid-modern.list-view .card-favorite-small {
-        top: 50%;
-        bottom: auto;
-        transform: translateY(30%);
+        top: auto;
+        bottom: 0.75rem;
+        transform: none;
     }
 }
 
@@ -6054,28 +6054,16 @@ img {
     color: var(--text-muted);
 }
 
-/* Beautiful Apple Spinner - Overlay style to prevent layout shift */
+/* Beautiful Apple Spinner - Centered in grid */
 .loading-spinner {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    padding: 2rem;
-    /* Make it an overlay to prevent layout shift */
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    min-height: 300px;
-    background: var(--bg-color, #fafcf8);
-    z-index: 10;
-}
-
-/* Ensure parent grid has relative positioning for overlay */
-.collection-grid-modern {
-    position: relative;
-    min-height: 300px;
+    padding: 3rem 2rem;
+    grid-column: 1 / -1;
+    min-height: 250px;
 }
 
 .loading-spinner::before {
@@ -6854,15 +6842,15 @@ img {
 @media (max-width: 768px) {
     .menu-overlay {
         padding-top: 70px;
+        /* Let the overlay handle scrolling, not the content */
+        padding-bottom: 2rem;
     }
     
     .menu-content {
         padding: 0.25rem 1rem;
-        /* Use dvh for stable height on mobile browsers */
-        max-height: calc(100dvh - 70px);
-        max-height: calc(var(--vh, 1vh) * 100 - 70px);
-        overflow-y: auto;
-        /* Prevent content from being centered - use fixed positioning */
+        /* Remove max-height to prevent layout recalculation */
+        max-height: none;
+        overflow: visible;
         margin-top: 0;
     }
     
