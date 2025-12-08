@@ -1471,6 +1471,14 @@ function setupMobileViewToggle() {
     const toggleBtn = document.getElementById('viewToggleBtn');
     const productsSection = document.getElementById('productsSection');
     
+    // Set card view as default on mobile
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && productsSection && toggleBtn) {
+        productsSection.classList.add('show-cards-mobile');
+        toggleBtn.classList.add('active');
+        toggleBtn.innerHTML = '📋 Vista Tabella';
+    }
+    
     toggleBtn?.addEventListener('click', () => {
         productsSection?.classList.toggle('show-cards-mobile');
         toggleBtn.classList.toggle('active');

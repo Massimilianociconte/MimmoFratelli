@@ -363,6 +363,18 @@
     </script>
 
     <script>
+        // --- STABLE VIEWPORT HEIGHT FOR MOBILE ---
+        // Fix for mobile browser address bar resize issue
+        function setVH() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setVH();
+        // Only update on orientation change, not on scroll (to prevent jitter)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(setVH, 100);
+        });
+
         // --- MENU TOGGLE ---
         const menuOverlay = document.getElementById('menuOverlay');
         const menuBtn = document.querySelector('.menu-btn');
