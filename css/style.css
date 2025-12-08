@@ -1147,6 +1147,27 @@ body.menu-open {
     right: 0.75rem;
 }
 
+/* Mobile list view - align quick-add and favorite buttons vertically */
+@media (max-width: 768px) {
+    .collection-grid-modern.list-view .card-quick-add,
+    .collection-grid-modern.list-view .card-favorite-small {
+        right: 0.75rem;
+    }
+    
+    .collection-grid-modern.list-view .card-quick-add {
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-130%);
+        opacity: 1;
+    }
+    
+    .collection-grid-modern.list-view .card-favorite-small {
+        top: 50%;
+        bottom: auto;
+        transform: translateY(30%);
+    }
+}
+
 /* Product Card - Premium Compact */
 .product-card-small {
     position: relative;
