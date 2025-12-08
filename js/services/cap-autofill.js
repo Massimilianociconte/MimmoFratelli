@@ -14,13 +14,29 @@ class CapAutofillService {
     }
 
     /**
+     * Get the base path for the site (handles GitHub Pages)
+     * @private
+     */
+    _getBasePath() {
+        const { origin, pathname } = window.location;
+        if (origin.includes('github.io')) {
+            const pathParts = pathname.split('/').filter(Boolean);
+            if (pathParts.length > 0) {
+                return `/${pathParts[0]}`;
+            }
+        }
+        return '';
+    }
+
+    /**
      * Load the CAP database
      */
     async load() {
         if (this.loaded) return;
         
         try {
-            const response = await fetch('/autofill-cap/gi_comuni_cap.json');
+            const basePath = this._getBasePath();
+            const response = await fetch(`${basePath}/autofill-cap/gi_comuni_cap.json`);
             if (!response.ok) throw new Error('Failed to load CAP data');
             
             this.data = await response.json();
