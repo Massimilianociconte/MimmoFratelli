@@ -110,14 +110,6 @@ class NotificationCenter {
 
         this.container = wrapper;
     }
-        
-        document.body.appendChild(fab);
-        
-        fab.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggle();
-        });
-    }
 
     /**
      * Setup event listeners
