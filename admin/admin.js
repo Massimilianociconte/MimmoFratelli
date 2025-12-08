@@ -399,6 +399,47 @@ function getPageTypeLabel(pageType) {
     return types[pageType] || '-';
 }
 
+// Helper to get category icon based on slug
+function getCategoryIcon(slug) {
+    const icons = {
+        // Frutta
+        'frutta-fresca': '🍎',
+        'agrumi': '🍊',
+        'frutta-secca': '🥜',
+        'frutta-disidratata': '🍇',
+        'frutta-esotica': '🥭',
+        'frutta-biologica': '🌱',
+        // Verdura
+        'verdura-fresca': '🥬',
+        'ortaggi': '🥕',
+        'insalate': '🥗',
+        'insalate-pronte': '🥗',
+        'verdura-biologica': '🌿',
+        'legumi-freschi': '🫛',
+        'erbe-aromatiche': '🌿',
+        // Conserve e Preparati
+        'sottoli': '🫙',
+        'olive-sottoli': '🫒',
+        'sottaceti': '🥒',
+        'marmellate-confetture': '🍯',
+        'salse-sughi': '🍝',
+        'conserve-pomodoro': '🍅',
+        'piatti-pronti': '🍲',
+        'contorni': '🥘',
+        // Prodotti Secchi e Estratti
+        'oli': '🫒',
+        'succhi-spremute': '🧃',
+        'legumi-secchi': '🫘',
+        'spezie-aromi': '🧂',
+        'farine-cereali': '🌾',
+        // Altri
+        'cassette-miste': '📦',
+        'formaggi': '🧀',
+        'salumi': '🥓'
+    };
+    return icons[slug] || '📦';
+}
+
 // Helper to fix image paths (add ../ for relative paths)
 function getImagePath(imagePath) {
     if (!imagePath) return '';
@@ -640,10 +681,10 @@ function openProductModal(product = null) {
     document.getElementById('sendPushNotification').checked = false;
     updateSeasonalNotificationPanel();
 
-    // Populate categories dropdown
+    // Populate categories dropdown with icons
     const categorySelect = document.getElementById('productCategory');
-    categorySelect.innerHTML = '<option value="">Nessuna categoria</option>' +
-        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    categorySelect.innerHTML = '<option value="">📦 Nessuna categoria</option>' +
+        categories.map(c => `<option value="${c.id}">${getCategoryIcon(c.slug)} ${c.name}</option>`).join('');
     
     if (product?.category_id) {
         categorySelect.value = product.category_id;
@@ -1281,10 +1322,12 @@ function renderCategories(categoryList) {
     }
 
     // Desktop table view
-    tbody.innerHTML = categoryList.map(c => `
+    tbody.innerHTML = categoryList.map(c => {
+        const icon = getCategoryIcon(c.slug);
+        return `
         <tr>
-            <td><strong>${c.name}</strong></td>
-            <td>${c.slug}</td>
+            <td><span class="category-icon">${icon}</span> <strong>${c.name}</strong></td>
+            <td><code>${c.slug}</code></td>
             <td>${products.filter(p => p.category_id === c.id).length}</td>
             <td><span class="status-badge ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'Attiva' : 'Inattiva'}</span></td>
             <td class="action-btns">
@@ -1292,24 +1335,25 @@ function renderCategories(categoryList) {
                 <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${c.name}')">Elimina</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 
     // Mobile cards view
     if (mobileCardsContainer) {
         mobileCardsContainer.innerHTML = categoryList.map(c => {
             const productCount = products.filter(p => p.category_id === c.id).length;
+            const icon = getCategoryIcon(c.slug);
             return `
             <div class="mobile-product-card">
                 <div class="mobile-card-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0.5rem;">
                     <div class="mobile-card-title" style="flex: 1;">
-                        <h4>📁 ${c.name}</h4>
+                        <h4><span class="category-icon-large">${icon}</span> ${c.name}</h4>
                         <span class="status-badge mobile-card-status ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'Attiva' : 'Inattiva'}</span>
                     </div>
                 </div>
                 <div class="mobile-card-grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="mobile-card-field">
                         <span class="mobile-card-label">Slug</span>
-                        <span class="mobile-card-value">${c.slug}</span>
+                        <span class="mobile-card-value"><code>${c.slug}</code></span>
                     </div>
                     <div class="mobile-card-field">
                         <span class="mobile-card-label">Prodotti</span>
