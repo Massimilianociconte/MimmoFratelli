@@ -263,10 +263,20 @@
         globalSearch.init();
 
         // Menu toggle
+        let menuScrollPosition = 0;
         window.toggleMenu = function() {
             const menuOverlay = document.getElementById('menuOverlay');
             const menuBtn = document.querySelector('.menu-btn');
             const isOpen = menuOverlay.classList.contains('active');
+            
+            if (!isOpen) {
+                menuScrollPosition = window.scrollY;
+                document.body.style.top = `-${menuScrollPosition}px`;
+            } else {
+                document.body.style.top = '';
+                window.scrollTo(0, menuScrollPosition);
+            }
+            
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
             menuBtn.textContent = isOpen ? 'Menu' : 'Close';

@@ -369,15 +369,20 @@
         const menuText = document.querySelector('.menu-text');
         const mainNav = document.getElementById('mainNav');
         let isMenuOpen = false;
+        let menuScrollPosition = 0;
 
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
             if (isMenuOpen) {
+                menuScrollPosition = window.scrollY;
+                document.body.style.top = `-${menuScrollPosition}px`;
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
                 menuBtn.classList.add('active');
                 if (menuText) menuText.textContent = 'Chiudi';
             } else {
+                document.body.style.top = '';
+                window.scrollTo(0, menuScrollPosition);
                 menuOverlay.classList.remove('active');
                 document.body.classList.remove('menu-open');
                 menuBtn.classList.remove('active');
