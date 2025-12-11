@@ -13,7 +13,8 @@ window.AVENUE_CONFIG = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9udnVmd3F5YnJpYW9hZHNkanlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MzU1NjUsImV4cCI6MjA4MDExMTU2NX0._IfTakzx5GVgxCEsdo1IASkKuEjeYsxyxfNWDZDMEJw',
   
   // Stripe Configuration (publishable key only - safe for client)
-  STRIPE_PUBLISHABLE_KEY: 'pk_test_51SZTISFNqazzxXHEwgx2nCmMaJfslgZ17H1QMeeWlj8Zjk7hzHystoCKkp8u2UpytNBRpNKAVceXYogK4htalZ2K00lT2LyoxB',
+  // PRODUZIONE - Chiave Live attiva
+  STRIPE_PUBLISHABLE_KEY: 'pk_live_51SZTISFNqazzxXHEsRRpY4SnbEBZKp5Wh5QIWE8wuVR5fUAXYe7OjmGaUiroh1uS5O5sIdm8mnCppgU8lzh6MET900BLn8m3iN',
   
   // PayPal Configuration
   PAYPAL_CLIENT_ID: '',

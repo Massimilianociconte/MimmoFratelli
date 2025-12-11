@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
       return createErrorResponse("Gift card non trovata", req, 404);
     }
 
-    const baseUrl = Deno.env.get("SITE_URL") || "https://mimmofratelli.it";
+    const baseUrl = Deno.env.get("SITE_URL") || "https://www.mimmofratelli.com";
     const redeemUrl = `${baseUrl}/redeem.html?token=${giftCard.qr_code_token}`;
 
     if (walletType === "google") {
@@ -104,7 +104,7 @@ async function createSignedJwt(payload: object): Promise<string> {
     aud: "google",
     iat: now,
     typ: "savetowallet",
-    origins: [Deno.env.get("SITE_URL") || "https://mimmofratelli.it"],
+    origins: [Deno.env.get("SITE_URL") || "https://www.mimmofratelli.com"],
     payload: payload
   };
 
@@ -394,7 +394,7 @@ function generateAppleWalletData(giftCard: any, redeemUrl: string, baseUrl: stri
         {
           key: "terms",
           label: "Termini e Condizioni",
-          value: "Questa gift card è valida per 12 mesi dalla data di acquisto. Non è rimborsabile e non può essere convertita in denaro. Utilizzabile su mimmofratelli.it"
+          value: "Questa gift card è valida per 12 mesi dalla data di acquisto. Non è rimborsabile e non può essere convertita in denaro. Utilizzabile su mimmofratelli.com"
         },
         {
           key: "support",

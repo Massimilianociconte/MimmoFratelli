@@ -43,7 +43,7 @@ Aggiungi queste variabili ai secrets di Supabase:
 GOOGLE_WALLET_ISSUER_ID=<il-tuo-issuer-id>
 GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL=<email-service-account>@<project>.iam.gserviceaccount.com
 GOOGLE_WALLET_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
-SITE_URL=https://mimmofratelli.it
+SITE_URL=https://www.mimmofratelli.com
 ```
 
 **Nota sulla Private Key**: Copia la chiave dal file JSON scaricato, campo `private_key`. Mantieni i `\n` come sono.

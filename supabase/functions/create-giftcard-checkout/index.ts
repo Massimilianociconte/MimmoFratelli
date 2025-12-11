@@ -90,7 +90,7 @@ Deno.serve(async (req: Request) => {
             product_data: {
               name: `Gift Card Mimmo Fratelli - €${amount}`,
               description: `Regalo per ${recipientName}`,
-              images: ["https://mimmofratelli.it/Images/giftcard-preview.png"],
+              images: ["https://www.mimmofratelli.com/Images/giftcard-preview.png"],
               metadata: {
                 type: "gift_card",
               },

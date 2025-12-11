@@ -178,7 +178,7 @@ describe('Referral System Property Tests', () => {
    */
   describe('Property 6: Referral Link Format', () => {
     it('share links should contain ?ref= parameter with exact code', async () => {
-      const generateShareLink = (code, baseUrl = 'https://mimmofratelli.it') => {
+      const generateShareLink = (code, baseUrl = 'https://www.mimmofratelli.com') => {
         return `${baseUrl}?ref=${code}`;
       };
 

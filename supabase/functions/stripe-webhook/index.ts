@@ -221,23 +221,57 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // Parse items from metadata
+      // Parse items from metadata (compressed format or legacy full format)
       let orderItems: OrderItem[] = [];
       try {
-        if (session.metadata?.itemsJson) {
+        if (session.metadata?.itemsCompact) {
+          // New compressed format: {p: productId(8chars), q: quantity, pr: price, w: weight}
+          const compactItems = JSON.parse(session.metadata.itemsCompact);
+          // Get full product IDs from line_items or expand from compact
+          const lineItems = session.line_items?.data || [];
+          orderItems = compactItems.map((item: {p: string, q: number, pr: number, w: number}, index: number) => {
+            const lineItem = lineItems[index];
+            const productData = lineItem?.price?.product as {name?: string, metadata?: {productId?: string, size?: string, color?: string}} | undefined;
+            return {
+              productId: productData?.metadata?.productId || item.p,
+              name: lineItem?.description || productData?.name || "Prodotto",
+              price: item.pr,
+              quantity: item.q,
+              size: productData?.metadata?.size || "Standard",
+              color: productData?.metadata?.color || "Standard",
+              weight_grams: item.w || null
+            };
+          });
+        } else if (session.metadata?.itemsJson) {
+          // Legacy full format (for backward compatibility)
           orderItems = JSON.parse(session.metadata.itemsJson);
         }
       } catch (e) {
         console.error("Failed to parse items from metadata:", e);
       }
 
-      // Parse shipping address from metadata
-      let shippingAddress = {};
+      // Parse shipping address from metadata (new compressed or legacy format)
+      let shippingAddress: Record<string, string> = {};
       try {
-        if (session.metadata?.shippingAddress) {
+        if (session.metadata?.shipTo) {
+          // New compressed format: {n: name, a: address, c: city, p: postalCode, pr: province, ph: phone}
+          const ship = JSON.parse(session.metadata.shipTo);
+          const nameParts = (ship.n || "").split(" ");
+          shippingAddress = {
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+            address: ship.a || "",
+            city: ship.c || "",
+            postalCode: ship.p || "",
+            province: ship.pr || "",
+            phone: ship.ph || "",
+            country: "IT"
+          };
+        } else if (session.metadata?.shippingAddress) {
+          // Legacy full format
           shippingAddress = JSON.parse(session.metadata.shippingAddress);
         } else if (session.shipping_details?.address) {
-          shippingAddress = session.shipping_details.address;
+          shippingAddress = session.shipping_details.address as Record<string, string>;
         }
       } catch (e) {
         console.error("Failed to parse shipping address:", e);

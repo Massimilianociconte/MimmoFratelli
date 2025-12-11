@@ -18,7 +18,7 @@ Deno.serve(async (req: Request) => {
     const issuerId = Deno.env.get("GOOGLE_WALLET_ISSUER_ID");
     const serviceAccountEmail = Deno.env.get("GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL");
     const privateKeyPem = Deno.env.get("GOOGLE_WALLET_PRIVATE_KEY");
-    const baseUrl = Deno.env.get("SITE_URL") || "https://mimmofratelli.it";
+    const baseUrl = Deno.env.get("SITE_URL") || "https://www.mimmofratelli.com";
 
     if (!issuerId || !serviceAccountEmail || !privateKeyPem) {
       return createErrorResponse("Google Wallet credentials not configured", req, 500);

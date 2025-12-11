@@ -251,17 +251,24 @@ Deno.serve(async (req: Request) => {
         promotionCode: promotionCode || "",
         discountAmount: discountAmount.toString(),
         userCreditAmount: userCreditAmount.toString(),
-        shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : "",
-        itemsJson: JSON.stringify(items.map(i => ({
-          productId: i.productId,
-          name: i.name,
-          price: i.price,
-          unitPrice: i.unitPrice || i.price,
-          quantity: i.quantity,
-          size: i.size,
-          color: i.color,
-          weight_grams: i.weight_grams || null
+        // Compressed shipping: only essential fields, abbreviated keys
+        shipTo: shippingAddress ? JSON.stringify({
+          n: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+          a: shippingAddress.address,
+          c: shippingAddress.city,
+          p: shippingAddress.postalCode,
+          pr: shippingAddress.province,
+          ph: shippingAddress.phone
+        }) : "",
+        // Compressed items: only productId, quantity, price, weight - max 500 chars
+        itemsCompact: JSON.stringify(items.map(i => ({
+          p: i.productId.slice(0, 8), // Short product ID (first 8 chars)
+          q: i.quantity,
+          pr: i.price,
+          w: i.weight_grams || 0
         }))),
+        // Store full item count for reference
+        itemCount: items.length.toString(),
       },
     };
 
