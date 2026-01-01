@@ -465,15 +465,20 @@
                 
                 <div class="order-payment-info">
                     ✅ Pagamento completato via ${order.payment_provider?.toUpperCase() || 'N/D'}
+                    ${parseFloat(order.gift_card_amount) > 0 && parseFloat(order.total) === 0 ? '<br><small>💳 Pagato interamente con Gift Card</small>' : ''}
                 </div>
                 
-                ${order.payment_provider === 'stripe' && order.payment_status === 'completed' ? `
+                ${order.payment_provider === 'stripe' && order.payment_status === 'completed' && order.payment_id ? `
                 <div class="order-receipt-section">
                     <button class="btn-download-receipt" onclick="downloadReceipt('${order.id}')" id="receiptBtn-${order.id}">
                         🧾 Scarica Ricevuta
                     </button>
                 </div>
-                ` : ''}
+                ` : (order.payment_status === 'completed' && !order.payment_id ? `
+                <div class="order-receipt-section">
+                    <small style="color: var(--text-muted);">📝 Ricevuta non disponibile per ordini pagati con Gift Card</small>
+                </div>
+                ` : '')}
             `;
             
             modal.classList.add('active');

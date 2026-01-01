@@ -10,22 +10,42 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2023-10-16",
-});
+// Initialize Stripe with error handling
+let stripe: Stripe | null = null;
+const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+if (stripeKey) {
+  stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+  console.log("[get-stripe-receipt] Stripe initialized successfully");
+} else {
+  console.error("[get-stripe-receipt] STRIPE_SECRET_KEY not found!");
+}
 
 Deno.serve(async (req: Request) => {
+  console.log("[get-stripe-receipt] Request received, method:", req.method);
+  console.log("[get-stripe-receipt] Origin:", req.headers.get('origin'));
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
+    console.log("[get-stripe-receipt] Handling OPTIONS preflight");
     return handleCorsPreflightRequest(req);
   }
   
   const corsHeaders = getCorsHeaders(req);
 
   try {
+    // Check if Stripe is initialized
+    if (!stripe) {
+      console.error("[get-stripe-receipt] Stripe not initialized");
+      return new Response(JSON.stringify({ error: "Servizio pagamenti non configurato" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("[get-stripe-receipt] No auth header");
       return new Response(JSON.stringify({ error: "Non autorizzato" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -46,22 +66,38 @@ Deno.serve(async (req: Request) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.log("[get-stripe-receipt] User not authenticated:", userError?.message);
       return new Response(JSON.stringify({ error: "Utente non autenticato" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("[get-stripe-receipt] User authenticated:", user.id);
+
     // Parse request body
-    const { orderId } = await req.json();
+    let orderId: string;
+    try {
+      const body = await req.json();
+      orderId = body.orderId;
+      console.log("[get-stripe-receipt] Parsed orderId:", orderId);
+    } catch (parseError) {
+      console.error("[get-stripe-receipt] Failed to parse body:", parseError);
+      return new Response(JSON.stringify({ error: "Richiesta non valida" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!orderId) {
+      console.log("[get-stripe-receipt] Missing orderId");
       return new Response(JSON.stringify({ error: "ID ordine mancante" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("[get-stripe-receipt] Looking up order:", orderId);
 
     // Get order from database - verify it belongs to the user
     const { data: order, error: orderError } = await supabaseClient
@@ -71,14 +107,18 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (orderError || !order) {
+      console.log("[get-stripe-receipt] Order not found:", orderError?.message);
       return new Response(JSON.stringify({ error: "Ordine non trovato" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("[get-stripe-receipt] Order found - payment_id:", order.payment_id, "status:", order.payment_status);
+
     // Verify order belongs to user
     if (order.user_id !== user.id) {
+      console.log("[get-stripe-receipt] Order doesn't belong to user");
       return new Response(JSON.stringify({ error: "Non autorizzato" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
