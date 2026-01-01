@@ -5,12 +5,11 @@
 
 const CACHE_NAME = 'mimmo-fratelli-v2';
 
-// Get base path dynamically (handles GitHub Pages)
+// Get base path dynamically
 const getBasePath = () => {
-  const scope = self.registration?.scope || self.location.href;
-  const url = new URL(scope);
-  // Remove trailing slash and return path
-  return url.pathname.replace(/\/$/, '') || '';
+  // For www.mimmofratelli.com, base path is empty
+  // This function is kept for compatibility with local development
+  return '';
 };
 
 // Install event - cache static assets

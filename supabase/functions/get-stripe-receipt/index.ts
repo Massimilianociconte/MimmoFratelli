@@ -1,13 +1,20 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+/**
+ * Get Stripe Receipt Edge Function
+ * Mimmo Fratelli E-commerce Platform
+ * 
+ * Retrieves the Stripe receipt URL for a completed order
+ */
+
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return handleCorsPreflightRequest(req);
@@ -137,8 +144,11 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error getting receipt:", error);
+    const errorMessage = error instanceof Error ? error.message : "Errore sconosciuto";
+    console.error("Error details:", errorMessage);
+    
     return new Response(
-      JSON.stringify({ error: "Errore nel recupero della ricevuta" }),
+      JSON.stringify({ error: "Errore nel recupero della ricevuta", details: errorMessage }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

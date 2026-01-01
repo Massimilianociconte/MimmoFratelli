@@ -15,30 +15,20 @@ class PaymentService {
   }
 
   /**
-   * Get the correct URL for a page, handling both localhost and GitHub Pages
+   * Get the correct URL for a page
    * @param {string} page - The page filename (e.g., 'checkout-success.html')
    * @returns {string} The full URL to the page
    */
   _getPageUrl(page) {
-    const { origin, pathname } = window.location;
+    // Use the official domain for production
+    const baseUrl = 'https://www.mimmofratelli.com';
     
-    // Check if we're on GitHub Pages (pathname contains repo name)
-    // GitHub Pages URLs look like: https://username.github.io/RepoName/page.html
-    // Local URLs look like: http://localhost:5500/page.html
-    
-    // Get the base path by finding the directory of the current page
-    const pathParts = pathname.split('/').filter(Boolean);
-    
-    // If on GitHub Pages, the first part is usually the repo name
-    // We need to preserve it in the URL
-    if (origin.includes('github.io') && pathParts.length > 0) {
-      // Keep the repo name (first path segment)
-      const repoName = pathParts[0];
-      return `${origin}/${repoName}/${page}`;
+    // If running locally, use origin
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `${window.location.origin}/${page}`;
     }
     
-    // For local development or custom domains, just use origin
-    return `${origin}/${page}`;
+    return `${baseUrl}/${page}`;
   }
 
   /**

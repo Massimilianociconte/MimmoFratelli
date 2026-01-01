@@ -2967,6 +2967,13 @@ body.menu-open {
     color: var(--primary);
 }
 
+.card-text-contact-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
 .card-note {
     font-size: 0.85rem;
     color: var(--text-muted);

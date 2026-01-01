@@ -14,17 +14,12 @@ class CapAutofillService {
     }
 
     /**
-     * Get the base path for the site (handles GitHub Pages)
+     * Get the base path for the site
      * @private
      */
     _getBasePath() {
-        const { origin, pathname } = window.location;
-        if (origin.includes('github.io')) {
-            const pathParts = pathname.split('/').filter(Boolean);
-            if (pathParts.length > 0) {
-                return `/${pathParts[0]}`;
-            }
-        }
+        // For local development, return empty path
+        // For production (www.mimmofratelli.com), return empty path
         return '';
     }
 

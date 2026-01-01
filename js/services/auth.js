@@ -27,22 +27,20 @@ class AuthService {
   }
 
   /**
-   * Get the correct URL for a page, handling both localhost and GitHub Pages
+   * Get the correct URL for a page
    * @param {string} page - The page filename
    * @returns {string} The full URL to the page
    */
   _getPageUrl(page) {
-    const { origin, pathname } = window.location;
+    // Use the official domain for production
+    const baseUrl = 'https://www.mimmofratelli.com';
     
-    if (origin.includes('github.io')) {
-      const pathParts = pathname.split('/').filter(Boolean);
-      if (pathParts.length > 0) {
-        const repoName = pathParts[0];
-        return `${origin}/${repoName}/${page}`;
-      }
+    // If running locally, use origin
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `${window.location.origin}/${page}`;
     }
     
-    return `${origin}/${page}`;
+    return `${baseUrl}/${page}`;
   }
 
   /**

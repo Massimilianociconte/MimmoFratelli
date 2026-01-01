@@ -58,6 +58,8 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    console.log("Starting checkout session creation...");
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -66,12 +68,17 @@ Deno.serve(async (req: Request) => {
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
+      console.log("User not authenticated");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    console.log("User authenticated:", user.id);
 
+    const body = await req.json();
+    console.log("Request body received, items count:", body.items?.length);
+    
     const { 
       items, 
       successUrl, 
@@ -81,7 +88,7 @@ Deno.serve(async (req: Request) => {
       promotionCode,
       shippingAddress,
       userCredit 
-    }: CheckoutRequest = await req.json();
+    }: CheckoutRequest = body;
 
     if (!items || items.length === 0) {
       return new Response(JSON.stringify({ error: "Carrello vuoto" }), {
@@ -218,8 +225,8 @@ Deno.serve(async (req: Request) => {
     });
 
     // Build session config
-    // Note: Removing payment_method_types to let Stripe automatically show all enabled methods
-    // from the dashboard (card, klarna, paypal, google_pay, apple_pay, etc.)
+    // Payment methods enabled in Stripe Dashboard
+    // Note: Apple Pay and Google Pay are automatically shown with "card" if device supports them
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       line_items: lineItems,
       mode: "payment",
@@ -227,10 +234,16 @@ Deno.serve(async (req: Request) => {
       cancel_url: cancelUrl,
       customer_email: customerEmail,
       locale: "it",
-      // Enable automatic payment methods based on dashboard settings
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      // Payment methods: card (includes Apple/Google Pay), klarna, link, satispay, bancontact, eps, revolut_pay
+      payment_method_types: [
+        "card",           // Carte + Apple Pay + Google Pay (automatic)
+        "klarna",         // Pagamento a rate
+        "link",           // Stripe Link (checkout veloce)
+        "satispay",       // Italia
+        "bancontact",     // Belgio
+        "eps",            // Austria
+        "revolut_pay",    // Europa
+      ],
       shipping_options: [
         {
           shipping_rate_data: {
@@ -272,6 +285,10 @@ Deno.serve(async (req: Request) => {
       },
     };
 
+    // Log metadata sizes for debugging
+    const metadataSizes = Object.entries(sessionConfig.metadata || {}).map(([k, v]) => `${k}: ${String(v).length}`);
+    console.log("Metadata sizes:", metadataSizes);
+
     // Apply discounts using Stripe coupons (created on-the-fly)
     // Note: Coupon only applies to products, shipping reduction is handled above
     const couponDiscount = discountAmount + giftCardAmount + creditForProducts;
@@ -283,6 +300,7 @@ Deno.serve(async (req: Request) => {
       if (creditForProducts > 0) discountParts.push("Credito");
       
       // Create a one-time coupon for the product discount
+      console.log("Creating coupon with amount:", couponDiscount);
       const coupon = await stripe.coupons.create({
         amount_off: couponDiscount,
         currency: "eur",
@@ -294,7 +312,9 @@ Deno.serve(async (req: Request) => {
     }
 
     // Create the checkout session
+    console.log("Creating Stripe session...");
     const session = await stripe.checkout.sessions.create(sessionConfig);
+    console.log("Session created:", session.id);
 
     return new Response(JSON.stringify({ 
       sessionId: session.id, 
@@ -304,6 +324,10 @@ Deno.serve(async (req: Request) => {
     });
   } catch (error) {
     console.error("Checkout session error:", error);
+    // Log more details about the error
+    if (error && typeof error === 'object' && 'raw' in error) {
+      console.error("Stripe error details:", JSON.stringify((error as any).raw, null, 2));
+    }
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : "Errore interno del server" 
     }), {

@@ -78,11 +78,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // Create Stripe checkout session for gift card
-    // Enable automatic payment methods based on dashboard settings
+    // Payment methods: card (includes Apple/Google Pay), klarna, link, satispay
     const session = await stripe.checkout.sessions.create({
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      payment_method_types: [
+        "card",           // Carte + Apple Pay + Google Pay
+        "klarna",         // Pagamento a rate
+        "link",           // Stripe Link
+        "satispay",       // Italia
+      ],
       line_items: [
         {
           price_data: {

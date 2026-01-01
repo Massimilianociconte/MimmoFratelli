@@ -253,7 +253,18 @@ class ReferralService {
    * @returns {string} Full share URL
    */
   generateShareLink(code, baseUrl = null) {
-    const base = baseUrl || window.location.origin;
+    // Use the official domain for production
+    const officialDomain = 'https://www.mimmofratelli.com';
+    
+    // If running locally, use origin; otherwise use official domain
+    let base = baseUrl;
+    if (!base) {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        base = window.location.origin;
+      } else {
+        base = officialDomain;
+      }
+    }
     return `${base}?ref=${code}`;
   }
 
