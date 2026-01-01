@@ -2967,6 +2967,17 @@ body.menu-open {
     color: var(--primary);
 }
 
+.landline-coming-soon {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.landline-coming-soon small {
+    font-size: 0.8em;
+    color: var(--primary);
+    font-weight: 500;
+}
+
 .card-text-contact-name {
     font-size: 1.1rem;
     font-weight: 600;

@@ -24,19 +24,22 @@ class CollectionPage {
       price_min: null,
       price_max: null,
       min_discount: null,
+      is_promotion: null,
       sort_by: 'newest'
     };
     this.currentView = 'grid';
     this.isLoading = false;
+    this.categorySlugFromUrl = null;
   }
 
   /**
    * Initialize the collection page
    */
   async init() {
-    // Get gender from URL params
+    // Get gender and category from URL params
     const params = new URLSearchParams(window.location.search);
     this.filters.gender = params.get('gender') || null;
+    this.categorySlugFromUrl = params.get('category') || null;
     
     // Update page title
     this._updatePageTitle();
@@ -47,7 +50,7 @@ class CollectionPage {
     // Load products
     await this.loadProducts();
     
-    // Load categories for filter
+    // Load categories for filter (will also apply category filter from URL)
     await this._loadCategories();
   }
 
@@ -114,6 +117,7 @@ class CollectionPage {
       price_min: null,
       price_max: null,
       min_discount: null,
+      is_promotion: null,
       sort_by: 'newest'
     };
     
@@ -144,6 +148,8 @@ class CollectionPage {
       const titleMap = {
         'frutta': { title: 'Frutta', pageTitle: 'Frutta | Mimmo Fratelli' },
         'verdura': { title: 'Verdura', pageTitle: 'Verdura | Mimmo Fratelli' },
+        'conserve': { title: 'Conserve e Preparati', pageTitle: 'Conserve e Preparati | Mimmo Fratelli' },
+        'secchi-estratti': { title: 'Prodotti Secchi e Estratti', pageTitle: 'Prodotti Secchi e Estratti | Mimmo Fratelli' },
         'altro': { title: 'Altri Prodotti', pageTitle: 'Altri Prodotti | Mimmo Fratelli' }
       };
       const config = titleMap[this.filters.gender] || { title: 'Prodotti', pageTitle: 'Prodotti | Mimmo Fratelli' };
@@ -198,7 +204,13 @@ class CollectionPage {
     const discountSelect = document.getElementById('discountSelect');
     if (discountSelect) {
       discountSelect.addEventListener('change', (e) => {
-        this.applyFilter('min_discount', e.target.value ? parseInt(e.target.value) : null);
+        const value = e.target.value ? parseInt(e.target.value) : null;
+        // Reset is_promotion filter when changing discount filter
+        this.filters.is_promotion = null;
+        // Update filter buttons UI
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
+        this.applyFilter('min_discount', value);
       });
     }
 
@@ -221,14 +233,22 @@ class CollectionPage {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
 
+    // Reset discount select when using quick filter buttons
+    const discountSelect = document.getElementById('discountSelect');
+    if (discountSelect && filter !== 'favorites') {
+      discountSelect.value = '';
+    }
+
     switch (filter) {
       case 'all':
         this.clearFilters();
         break;
       case 'new':
+        this.filters.is_promotion = null;
         this.applyFilter('sort_by', 'newest');
         break;
       case 'sale':
+        this.filters.min_discount = null;
         this.applyFilter('is_promotion', true);
         break;
       case 'favorites':
@@ -240,8 +260,51 @@ class CollectionPage {
   async _loadCategories() {
     if (!isSupabaseConfigured()) return;
     
-    const { categories } = await productService.getCategories();
-    // Could populate a category dropdown here
+    const categorySelect = document.getElementById('categorySelect');
+    if (!categorySelect) return;
+
+    try {
+      // Fetch categories that have products in the current gender
+      const { products } = await productService.getProducts({ gender: this.filters.gender });
+      
+      // Extract unique categories from products
+      const categoryMap = new Map();
+      products.forEach(p => {
+        if (p.categories && p.categories.name) {
+          categoryMap.set(p.category_id, {
+            id: p.category_id,
+            name: p.categories.name,
+            slug: p.categories.slug
+          });
+        }
+      });
+
+      const categories = Array.from(categoryMap.values());
+      
+      // Clear and populate dropdown
+      categorySelect.innerHTML = '<option value="">Tutte le categorie</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name;
+        option.dataset.slug = cat.slug;
+        categorySelect.appendChild(option);
+      });
+
+      // Store categories for reference
+      this.availableCategories = categories;
+
+      // Apply category filter from URL if present
+      if (this.categorySlugFromUrl) {
+        const matchingCat = categories.find(c => c.slug === this.categorySlugFromUrl);
+        if (matchingCat) {
+          categorySelect.value = matchingCat.id;
+          await this.applyFilter('category_id', matchingCat.id);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
   }
 
   _renderProducts() {

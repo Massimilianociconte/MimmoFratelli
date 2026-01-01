@@ -44,10 +44,35 @@
         <div class="menu-content">
             <ul class="menu-links">
                 <li><a href="index.html">🏠 Home</a></li>
-                <li><a href="collection.html?gender=frutta">🍎 Frutta</a></li>
-                <li><a href="collection.html?gender=verdura">🥬 Verdura</a></li>
-                <li><a href="collection.html?gender=conserve">🫙 Conserve e Preparati</a></li>
-                <li><a href="collection.html?gender=secchi-estratti">🫒 Prodotti Secchi e Estratti</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=frutta&category=frutta-fresca">🍎 Frutta Fresca</a></li>
+                        <li><a href="collection.html?gender=frutta&category=agrumi">🍊 Agrumi</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=verdura&category=verdura-fresca">🥬 Verdura Fresca</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=conserve&category=formaggi">🧀 Formaggi</a></li>
+                        <li><a href="collection.html?gender=conserve&category=salumi">🥓 Salumi</a></li>
+                        <li><a href="collection.html?gender=conserve&category=olive-sottoli">🫒 Olive e Sottoli</a></li>
+                    </ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e Estratti</a>
+                    <ul class="menu-subcategories">
+                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate Pronte</a></li>
+                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a></li>
+                        <li><a href="collection.html?gender=secchi-estratti&category=contorni">🥕 Contorni</a></li>
+                    </ul>
+                </li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
                 <li><a href="contacts.html">📞 Contatti</a></li>
@@ -92,7 +117,7 @@
                 <p class="card-text">
                     <a href="tel:+393208867172">320 886 7172</a><br>
                     <a href="tel:+393806830026">380 683 0026</a><br>
-                    <a href="tel:+390212345678">02 1234 5678</a>
+                    <span class="landline-coming-soon">02 1234 5678 <small>(presto disponibile)</small></span>
                 </p>
                 <p class="card-note">Lun-Sab: 7:00 - 19:00</p>
                 <a href="tel:+393208867172" class="card-link">Chiama ora →</a>

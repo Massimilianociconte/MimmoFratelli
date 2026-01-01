@@ -290,22 +290,22 @@ class GlobalSearch {
             // Check if searching for a category/section - redirect to collection page
             const categoryRedirects = {
                 'frutta': 'collection.html?gender=frutta',
+                'frutta fresca': 'collection.html?gender=frutta&category=frutta-fresca',
+                'agrumi': 'collection.html?gender=frutta&category=agrumi',
+                'arance': 'collection.html?gender=frutta&category=agrumi',
+                'limoni': 'collection.html?gender=frutta&category=agrumi',
                 'verdura': 'collection.html?gender=verdura',
+                'verdura fresca': 'collection.html?gender=verdura&category=verdura-fresca',
                 'conserve': 'collection.html?gender=conserve',
+                'formaggi': 'collection.html?gender=conserve&category=formaggi',
+                'salumi': 'collection.html?gender=conserve&category=salumi',
+                'olive': 'collection.html?gender=conserve&category=olive-sottoli',
+                'sottoli': 'collection.html?gender=conserve&category=olive-sottoli',
                 'secchi': 'collection.html?gender=secchi-estratti',
                 'estratti': 'collection.html?gender=secchi-estratti',
-                'frutta secca': 'collection.html?gender=frutta&category=frutta-secca',
-                'frutta disidratata': 'collection.html?gender=frutta&category=frutta-disidratata',
-                'biologico': 'collection.html?gender=frutta&category=frutta-biologica',
-                'bio': 'collection.html?gender=frutta&category=frutta-biologica',
-                'stagione': 'collection.html?gender=frutta&seasonal=true',
-                'di stagione': 'collection.html?gender=frutta&seasonal=true',
-                'olio': 'collection.html?gender=secchi-estratti&category=oli',
-                'oli': 'collection.html?gender=secchi-estratti&category=oli',
-                'succhi': 'collection.html?gender=secchi-estratti&category=succhi-spremute',
-                'marmellate': 'collection.html?gender=conserve&category=marmellate-confetture',
-                'sottoli': 'collection.html?gender=conserve&category=sottoli',
-                'sottaceti': 'collection.html?gender=conserve&category=sottaceti'
+                'insalate pronte': 'collection.html?gender=secchi-estratti&category=insalate-pronte',
+                'piatti pronti': 'collection.html?gender=secchi-estratti&category=piatti-pronti',
+                'contorni': 'collection.html?gender=secchi-estratti&category=contorni'
             };
             
             // Check for exact category match

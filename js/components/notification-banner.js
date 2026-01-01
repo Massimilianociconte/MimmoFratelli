@@ -347,6 +347,21 @@ const styles = `
     flex: 1;
     justify-content: center;
   }
+
+  .notification-banner-close {
+    display: flex !important;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .notification-banner-content {
+    position: relative;
+    padding-right: 44px;
+  }
 }
 
 /* Dark mode support */
