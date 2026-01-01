@@ -657,6 +657,9 @@ function openProductModal(product = null) {
         // Populate weight inventory fields
         populateWeightInventory(product);
         
+        // Load images from textarea for editing
+        loadImagesFromTextarea();
+        
         // Show image preview
         updateImagePreview();
     } else {
@@ -673,9 +676,15 @@ function openProductModal(product = null) {
         // Reset keywords
         clearKeywords();
         
+        // Reset uploaded images
+        resetUploadedImages();
+        
         // Hide image preview
         document.getElementById('imagePreviewSection').style.display = 'none';
     }
+    
+    // Initialize image upload zone
+    initImageUploadZone();
     
     // Reset notification checkbox
     document.getElementById('sendPushNotification').checked = false;
@@ -730,7 +739,7 @@ async function loadInventoryVariants(productId) {
     
     if (!productId) {
         // New product - add default variant
-        addInventoryVariantRow(1000, 0, null, null);
+        addInventoryVariantRow(1000, 0, null, null, '');
         updateInventorySummary();
         setTimeout(() => updateUnitMeasureLabels(), 50);
         return;
@@ -739,7 +748,7 @@ async function loadInventoryVariants(productId) {
     try {
         const { data, error } = await supabase
             .from('weight_inventory')
-            .select('weight_grams, quantity, net_weight_grams, gross_weight_grams')
+            .select('weight_grams, quantity, net_weight_grams, gross_weight_grams, variant_name')
             .eq('product_id', productId)
             .order('weight_grams');
         
@@ -747,15 +756,15 @@ async function loadInventoryVariants(productId) {
         
         if (data && data.length > 0) {
             data.forEach(row => {
-                addInventoryVariantRow(row.weight_grams, row.quantity, row.net_weight_grams, row.gross_weight_grams);
+                addInventoryVariantRow(row.weight_grams, row.quantity, row.net_weight_grams, row.gross_weight_grams, row.variant_name || '');
             });
         } else {
             // No inventory - add default variant
-            addInventoryVariantRow(1000, 0, null, null);
+            addInventoryVariantRow(1000, 0, null, null, '');
         }
     } catch (err) {
         console.error('Error loading inventory variants:', err);
-        addInventoryVariantRow(1000, 0, null, null);
+        addInventoryVariantRow(1000, 0, null, null, '');
     }
     
     updateInventorySummary();
@@ -772,14 +781,14 @@ function resetInventoryVariants() {
     
     // Add default variants (0.5 Kg, 1 Kg, 2 Kg)
     [500, 1000, 2000].forEach(grams => {
-        addInventoryVariantRow(grams, 0, null, null);
+        addInventoryVariantRow(grams, 0, null, null, '');
     });
     
     updateInventorySummary();
     setTimeout(() => updateUnitMeasureLabels(), 50);
 }
 
-function addInventoryVariantRow(weightGrams, qty, netWeightGrams = null, grossWeightGrams = null) {
+function addInventoryVariantRow(weightGrams, qty, netWeightGrams = null, grossWeightGrams = null, variantName = '') {
     const grid = document.getElementById('inventoryVariantsGrid');
     const row = document.createElement('div');
     row.className = 'inventory-row';
@@ -803,6 +812,7 @@ function addInventoryVariantRow(weightGrams, qty, netWeightGrams = null, grossWe
     const qtyClass = qty === 0 ? 'out-of-stock' : (qty <= 5 ? 'low-stock' : '');
     
     row.innerHTML = `
+        <input type="text" class="variant-name-input" value="${variantName || ''}" placeholder="es. Cassetta 250g">
         <div class="weight-inputs">
             <input type="number" class="weight-value" min="0" step="${isPieces ? '1' : '0.01'}" value="${displayValue}" onchange="updateInventoryRow(this)" placeholder="0">
             <span class="unit-label">${labels.major}</span>
@@ -925,7 +935,7 @@ window.updateUnitMeasureLabels = function() {
 
 // Add new inventory variant
 window.addInventoryVariant = function() {
-    addInventoryVariantRow(1000, 0); // Default 1 Kg
+    addInventoryVariantRow(1000, 0, null, null, ''); // Default 1 Kg
     updateInventorySummary();
 };
 
@@ -981,11 +991,13 @@ function getWeightInventoryData() {
     const isPieces = unitMeasure === 'pz';
     
     rows.forEach(row => {
+        const variantNameInput = row.querySelector('.variant-name-input');
         const weightInput = row.querySelector('.weight-value');
         const qtyInput = row.querySelector('.stock-input');
         const netInput = row.querySelector('.net-weight-input');
         const grossInput = row.querySelector('.gross-weight-input');
         
+        const variantName = variantNameInput?.value?.trim() || '';
         const displayValue = parseFloat(weightInput?.value) || 0;
         const qty = parseInt(qtyInput?.value) || 0;
         const netDisplay = parseFloat(netInput?.value) || null;
@@ -1008,7 +1020,8 @@ function getWeightInventoryData() {
                 weight_grams: weightGrams, 
                 quantity: qty,
                 net_weight_grams: netGrams,
-                gross_weight_grams: grossGrams
+                gross_weight_grams: grossGrams,
+                variant_name: variantName || null
             });
             totalQty += qty;
         }
@@ -1017,7 +1030,261 @@ function getWeightInventoryData() {
     return { weightInventory, totalQty };
 }
 
-// Image preview
+// ============================================
+// IMAGE UPLOAD SYSTEM
+// ============================================
+
+// State for uploaded images
+let uploadedImages = [];
+
+// Initialize image upload zone with drag & drop
+function initImageUploadZone() {
+    const uploadZone = document.getElementById('imageUploadZone');
+    if (!uploadZone) return;
+    
+    // Drag & drop events
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleImageUpload(files);
+        }
+    });
+}
+
+// Handle image file upload
+window.handleImageUpload = async function(files) {
+    const progressEl = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    
+    if (!files || files.length === 0) return;
+    
+    // Show progress
+    progressEl.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Preparazione...';
+    
+    const totalFiles = files.length;
+    let uploadedCount = 0;
+    let errors = [];
+    
+    for (const file of files) {
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            errors.push(`${file.name}: tipo non supportato`);
+            continue;
+        }
+        
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            errors.push(`${file.name}: troppo grande (max 5MB)`);
+            continue;
+        }
+        
+        try {
+            progressText.textContent = `Caricamento ${uploadedCount + 1}/${totalFiles}...`;
+            
+            // Generate unique filename
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substring(2, 8);
+            const ext = file.name.split('.').pop().toLowerCase();
+            const fileName = `product_${timestamp}_${randomStr}.${ext}`;
+            
+            // Upload to Supabase Storage
+            const { data, error } = await supabase.storage
+                .from('product-images')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            
+            if (error) {
+                console.error('Upload error:', error);
+                errors.push(`${file.name}: ${error.message}`);
+                continue;
+            }
+            
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+            
+            if (urlData?.publicUrl) {
+                uploadedImages.push({
+                    url: urlData.publicUrl,
+                    fileName: fileName
+                });
+            }
+            
+            uploadedCount++;
+            const progress = Math.round((uploadedCount / totalFiles) * 100);
+            progressFill.style.width = `${progress}%`;
+            
+        } catch (err) {
+            console.error('Upload exception:', err);
+            errors.push(`${file.name}: errore di upload`);
+        }
+    }
+    
+    // Hide progress after a delay
+    setTimeout(() => {
+        progressEl.style.display = 'none';
+    }, 1000);
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        showToast(`Errori: ${errors.join(', ')}`, 'error');
+    }
+    
+    // Update UI
+    renderUploadedImages();
+    syncImagesToTextarea();
+    
+    if (uploadedCount > 0) {
+        showToast(`${uploadedCount} immagine/i caricate!`, 'success');
+    }
+};
+
+// Render uploaded images grid
+function renderUploadedImages() {
+    const grid = document.getElementById('uploadedImagesGrid');
+    if (!grid) return;
+    
+    if (uploadedImages.length === 0) {
+        grid.innerHTML = '';
+        return;
+    }
+    
+    grid.innerHTML = uploadedImages.map((img, index) => `
+        <div class="uploaded-image-item" draggable="true" data-index="${index}">
+            <img src="${img.url}" alt="Immagine ${index + 1}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❌</text></svg>'">
+            <button type="button" class="remove-btn" onclick="removeUploadedImage(${index})">×</button>
+            <span class="image-order">${index + 1}</span>
+        </div>
+    `).join('');
+    
+    // Add drag & drop reordering
+    setupImageReordering();
+}
+
+// Remove uploaded image
+window.removeUploadedImage = async function(index) {
+    const img = uploadedImages[index];
+    if (!img) return;
+    
+    // Optional: delete from storage
+    if (img.fileName) {
+        try {
+            await supabase.storage
+                .from('product-images')
+                .remove([img.fileName]);
+        } catch (err) {
+            console.warn('Could not delete from storage:', err);
+        }
+    }
+    
+    uploadedImages.splice(index, 1);
+    renderUploadedImages();
+    syncImagesToTextarea();
+};
+
+// Setup drag & drop reordering for images
+function setupImageReordering() {
+    const grid = document.getElementById('uploadedImagesGrid');
+    const items = grid.querySelectorAll('.uploaded-image-item');
+    
+    items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', item.dataset.index);
+            item.classList.add('dragging');
+        });
+        
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+        });
+        
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIndex = parseInt(item.dataset.index);
+            
+            if (fromIndex !== toIndex) {
+                // Reorder array
+                const [moved] = uploadedImages.splice(fromIndex, 1);
+                uploadedImages.splice(toIndex, 0, moved);
+                renderUploadedImages();
+                syncImagesToTextarea();
+            }
+        });
+    });
+}
+
+// Sync uploaded images to textarea (for saving)
+function syncImagesToTextarea() {
+    const textarea = document.getElementById('productImages');
+    if (!textarea) return;
+    
+    // Combine uploaded images with any manually entered URLs
+    const manualUrls = textarea.value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s && !uploadedImages.some(img => img.url === s));
+    
+    const allUrls = uploadedImages.map(img => img.url).concat(manualUrls);
+    textarea.value = allUrls.join('\n');
+    
+    // Update preview
+    updateImagePreview();
+}
+
+// Load images from textarea (for editing existing product)
+function loadImagesFromTextarea() {
+    const textarea = document.getElementById('productImages');
+    if (!textarea) return;
+    
+    // Clear current uploaded images
+    uploadedImages = [];
+    
+    // Parse URLs from textarea
+    const urls = textarea.value.split('\n').map(s => s.trim()).filter(Boolean);
+    
+    urls.forEach(url => {
+        // Check if it's a Supabase storage URL (our uploaded images)
+        if (url.includes('supabase.co/storage')) {
+            const fileName = url.split('/').pop();
+            uploadedImages.push({ url, fileName });
+        } else {
+            // External URL or local path
+            uploadedImages.push({ url, fileName: null });
+        }
+    });
+    
+    renderUploadedImages();
+}
+
+// Reset uploaded images
+function resetUploadedImages() {
+    uploadedImages = [];
+    renderUploadedImages();
+}
+
+// Image preview (updated to work with upload system)
 window.updateImagePreview = function() {
     const imagesText = document.getElementById('productImages').value;
     const images = imagesText.split('\n').map(s => s.trim()).filter(Boolean);
@@ -1176,7 +1443,8 @@ async function saveWeightInventory(productId, weightInventory) {
                 weight_grams: item.weight_grams,
                 quantity: item.quantity,
                 net_weight_grams: item.net_weight_grams || null,
-                gross_weight_grams: item.gross_weight_grams || null
+                gross_weight_grams: item.gross_weight_grams || null,
+                variant_name: item.variant_name || null
             }));
             
             const { error } = await supabase

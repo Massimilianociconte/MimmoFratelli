@@ -814,9 +814,34 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="productImages">URL Immagini (una per riga)</label>
-                    <textarea id="productImages" rows="3" placeholder="Images/Women/prod_woman1/A (front).png&#10;https://esempio.com/immagine2.jpg" oninput="updateImagePreview()"></textarea>
+                <!-- Image Upload Section -->
+                <div class="form-group image-upload-section">
+                    <label>📷 Immagini Prodotto</label>
+                    
+                    <!-- Upload Zone -->
+                    <div class="image-upload-zone" id="imageUploadZone">
+                        <input type="file" id="imageFileInput" multiple accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleImageUpload(this.files)">
+                        <div class="upload-zone-content" onclick="document.getElementById('imageFileInput').click()">
+                            <span class="upload-icon">📤</span>
+                            <span class="upload-text">Clicca o trascina le immagini qui</span>
+                            <span class="upload-hint">JPEG, PNG, WebP, GIF - Max 5MB per immagine</span>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress" style="display:none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="uploadProgressFill"></div>
+                            </div>
+                            <span class="progress-text" id="uploadProgressText">Caricamento...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Uploaded Images Grid -->
+                    <div class="uploaded-images-grid" id="uploadedImagesGrid"></div>
+                    
+                    <!-- URL Fallback -->
+                    <details class="url-fallback-section">
+                        <summary>📎 Oppure inserisci URL manualmente</summary>
+                        <textarea id="productImages" rows="3" placeholder="https://esempio.com/immagine1.jpg&#10;https://esempio.com/immagine2.jpg" oninput="updateImagePreview()"></textarea>
+                    </details>
                 </div>
 
                 <div class="form-group">
@@ -866,9 +891,10 @@
                     
                     <div class="inventory-table">
                         <div class="inventory-table-header">
-                            <span class="col-weight">Peso/Quantità</span>
-                            <span class="col-net" id="colNetWeight">Netto</span>
-                            <span class="col-gross" id="colGrossWeight">Lordo</span>
+                            <span class="col-name">Nome Variante</span>
+                            <span class="col-weight">Peso/Volume</span>
+                            <span class="col-net" id="colNetWeight">Netto (Kg)</span>
+                            <span class="col-gross" id="colGrossWeight">Lordo (Kg)</span>
                             <span class="col-stock">Pezzi</span>
                             <span class="col-actions"></span>
                         </div>
