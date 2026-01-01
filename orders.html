@@ -488,14 +488,27 @@
             }
             
             try {
-                const { data, error } = await supabase.functions.invoke('get-stripe-receipt', {
+                const response = await supabase.functions.invoke('get-stripe-receipt', {
                     body: { orderId }
                 });
                 
+                const { data, error } = response;
+                
                 if (error) {
-                    // Try to parse error message from response
+                    // Try to get error context from the response
                     let errorMessage = 'Errore nel recupero della ricevuta';
-                    if (error.message) {
+                    
+                    // Check if there's context in the error (contains response body)
+                    if (error.context?.body) {
+                        try {
+                            const errorBody = JSON.parse(error.context.body);
+                            if (errorBody.error) {
+                                errorMessage = errorBody.error;
+                            }
+                        } catch (e) {
+                            // Parsing failed, use default message
+                        }
+                    } else if (error.message) {
                         errorMessage = error.message;
                     }
                     throw new Error(errorMessage);
