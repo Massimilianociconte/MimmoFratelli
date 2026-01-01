@@ -492,9 +492,20 @@
                     body: { orderId }
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    // Try to parse error message from response
+                    let errorMessage = 'Errore nel recupero della ricevuta';
+                    if (error.message) {
+                        errorMessage = error.message;
+                    }
+                    throw new Error(errorMessage);
+                }
                 
-                if (data.receiptUrl) {
+                if (data?.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (data?.receiptUrl) {
                     // Open receipt in new tab
                     window.open(data.receiptUrl, '_blank');
                     if (btn) {
@@ -502,11 +513,12 @@
                         btn.disabled = false;
                     }
                 } else {
-                    throw new Error('Ricevuta non disponibile');
+                    throw new Error('Ricevuta non disponibile per questo ordine');
                 }
             } catch (err) {
                 console.error('Error downloading receipt:', err);
-                alert('Impossibile scaricare la ricevuta. Riprova più tardi.');
+                const message = err.message || 'Impossibile scaricare la ricevuta. Riprova più tardi.';
+                alert(message);
                 if (btn) {
                     btn.innerHTML = '🧾 Scarica Ricevuta';
                     btn.disabled = false;

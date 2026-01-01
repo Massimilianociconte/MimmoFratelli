@@ -109,8 +109,9 @@ Deno.serve(async (req: Request) => {
 
     // Get Stripe payment intent ID
     if (!order.payment_id) {
+      console.error("No payment_id found for order:", orderId);
       return new Response(
-        JSON.stringify({ error: "ID pagamento Stripe non trovato" }),
+        JSON.stringify({ error: "ID pagamento Stripe non trovato. La ricevuta non è disponibile per questo ordine." }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -118,11 +119,25 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    console.log("Retrieving payment intent:", order.payment_id);
+
     // Retrieve payment intent from Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(
-      order.payment_id,
-      { expand: ["latest_charge"] }
-    );
+    let paymentIntent;
+    try {
+      paymentIntent = await stripe.paymentIntents.retrieve(
+        order.payment_id,
+        { expand: ["latest_charge"] }
+      );
+    } catch (stripeError) {
+      console.error("Stripe API error:", stripeError);
+      return new Response(
+        JSON.stringify({ error: "Errore nel recupero dei dati da Stripe" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Get receipt URL from the charge
     const charge = paymentIntent.latest_charge as Stripe.Charge;
