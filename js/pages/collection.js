@@ -97,8 +97,11 @@ class CollectionPage {
     this.filters[filterName] = value;
     
     // Client-side only filters - just re-render without reloading from server
+    // BUT: if value is null/empty (reset to "All"), always reload from server
     const clientSideFilters = ['min_discount', 'sort_by'];
-    if (clientSideFilters.includes(filterName) && this.products.length > 0) {
+    const isResetToAll = value === null || value === '' || value === undefined;
+    
+    if (clientSideFilters.includes(filterName) && this.products.length > 0 && !isResetToAll) {
       this._renderProducts();
     } else {
       await this.loadProducts();
