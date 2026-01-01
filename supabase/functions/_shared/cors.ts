@@ -7,12 +7,42 @@
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
+  // Local development
   'http://localhost:3000',
   'http://localhost:5173',
+  'http://localhost:5500',
   'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5500',
+  // Production - all variants of mimmofratelli.com
+  'http://mimmofratelli.com',
   'https://mimmofratelli.com',
+  'http://www.mimmofratelli.com',
   'https://www.mimmofratelli.com'
 ];
+
+/**
+ * Check if origin is from mimmofratelli.com domain
+ */
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+  
+  // Check exact match first
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  
+  // Check if it's a mimmofratelli.com domain (any protocol/subdomain)
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
+    if (hostname === 'mimmofratelli.com' || hostname.endsWith('.mimmofratelli.com')) {
+      return true;
+    }
+  } catch {
+    // Invalid URL, not allowed
+  }
+  
+  return false;
+}
 
 /**
  * Get CORS headers based on request origin
@@ -20,8 +50,8 @@ const ALLOWED_ORIGINS = [
 export function getCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') || '';
   
-  // Check if origin is allowed
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  // Check if origin is allowed - if so, echo it back; otherwise use default
+  const allowedOrigin = isAllowedOrigin(origin) ? origin : 'https://www.mimmofratelli.com';
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
