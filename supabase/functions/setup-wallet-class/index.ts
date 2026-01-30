@@ -28,10 +28,17 @@ Deno.serve(async (req: Request) => {
 
     // Get access token
     const accessToken = await getGoogleAccessToken(serviceAccountEmail, privateKeyPem);
+    
+    // Check if this is a force recreate request
+    const url = new URL(req.url);
+    const forceRecreate = url.searchParams.get("recreate") === "true";
 
     // Define the Generic Class for gift cards
+    // reviewStatus: "UNDER_REVIEW" allows passes to be saved by any user once issuer is approved
     const genericClass = {
       id: classId,
+      // Required for production: allows all users to save passes (not just test accounts)
+      reviewStatus: "UNDER_REVIEW",
       classTemplateInfo: {
         cardTemplateOverride: {
           cardRowTemplateInfos: [
@@ -102,6 +109,8 @@ Deno.serve(async (req: Request) => {
 
     // Try to create the class (or update if exists)
     console.log("Checking if class exists:", classId);
+    console.log("Force recreate:", forceRecreate);
+    
     let response = await fetch(
       `https://walletobjects.googleapis.com/walletobjects/v1/genericClass/${classId}`,
       {
@@ -113,6 +122,13 @@ Deno.serve(async (req: Request) => {
     );
 
     console.log("GET class response status:", response.status);
+    
+    // If force recreate and class exists, delete it first
+    if (forceRecreate && response.ok) {
+      console.log("Force recreate requested, deleting existing class...");
+      // Note: Google Wallet API doesn't support DELETE for classes
+      // We need to update it instead with new settings
+    }
 
     if (response.status === 404) {
       // Class doesn't exist, create it

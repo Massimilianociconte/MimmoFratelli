@@ -349,7 +349,7 @@ class ProfileDrawer {
           
           <div class="gc-modal-body">
             <div class="gc-form-section">
-              <h2>🎁 Crea una Gift Card</h2>
+              <h2><img src="/Images/google-wallet/icona-regalo.png" alt="Regalo" class="gc-title-icon"> Crea una Gift Card</h2>
               <p class="gc-subtitle">Regala un'esperienza di freschezza Mimmo Fratelli.</p>
               
               <form id="userGiftCardForm">
@@ -380,32 +380,10 @@ class ProfileDrawer {
                   <textarea id="gcUserMessage" rows="2" placeholder="Scrivi un messaggio speciale..." maxlength="150"></textarea>
                 </div>
 
-                <div class="gc-form-group">
-                  <label>Stile</label>
-                  <div class="gc-style-btns">
-                    <button type="button" class="gc-style-btn active" data-style="elegant">
-                      <span class="gc-style-preview elegant"></span>
-                      <span>Elegante</span>
-                    </button>
-                    <button type="button" class="gc-style-btn" data-style="avenue">
-                      <span class="gc-style-preview avenue"></span>
-                      <span>Nature</span>
-                    </button>
-                    <button type="button" class="gc-style-btn" data-style="minimal">
-                      <span class="gc-style-preview minimal"></span>
-                      <span>Minimal</span>
-                    </button>
-                    <button type="button" class="gc-style-btn" data-style="festive">
-                      <span class="gc-style-preview festive"></span>
-                      <span>Festivo</span>
-                    </button>
-                  </div>
-                </div>
-
                 <div class="gc-form-error" id="gcUserError"></div>
 
                 <button type="submit" class="gc-submit-btn">
-                  🎁 Crea Gift Card
+                  <img src="/Images/google-wallet/icona-regalo.png" alt="" class="gc-btn-icon"> Crea Gift Card
                 </button>
               </form>
             </div>
@@ -415,36 +393,30 @@ class ProfileDrawer {
               <div class="gc-preview-wrapper gc-3d-scene" id="gc3dScene">
                 <div class="gc-card-3d" id="gcCard3d">
                   <div class="gc-card-face gc-card-front">
-                    <div class="gc-preview elegant" id="gcUserPreview">
-                      <div class="gc-pattern"></div>
-                      <div class="gc-header">
-                        <div class="gc-logo">Mimmo Fratelli</div>
-                        <div class="gc-badge">GIFT CARD</div>
-                      </div>
-                      <div class="gc-amount">€<span id="gcPreviewAmount">100</span></div>
-                      <div class="gc-recipient">
-                        <span class="gc-label">Per</span>
-                        <span class="gc-name" id="gcPreviewRecipient">Nome Destinatario</span>
-                      </div>
-                      <div class="gc-message" id="gcPreviewMessage"></div>
-                      <div class="gc-footer">
-                        <div class="gc-from">
-                          <span class="gc-label">Da</span>
-                          <span id="gcPreviewSender">Te</span>
+                    <div class="gc-preview" id="gcUserPreview">
+                      <div class="gc-content-right">
+                        <div class="gc-header-right">
+                          <div class="gc-logo">Mimmo Fratelli</div>
+                          <div class="gc-badge">GIFT CARD</div>
                         </div>
-                        <div class="gc-code">XXXX-XXXX-XXXX</div>
+                        <div class="gc-amount">€<span id="gcPreviewAmount">100</span></div>
+                        <div class="gc-recipient">
+                          <span class="gc-label">Per</span>
+                          <span class="gc-name" id="gcPreviewRecipient">Nome Destinatario</span>
+                        </div>
+                        <div class="gc-qr-front" id="gcQrFront"></div>
+                        <div class="gc-footer-right">
+                          <div class="gc-from">
+                            <span class="gc-label">Da</span>
+                            <span id="gcPreviewSender">Te</span>
+                          </div>
+                          <div class="gc-code">XXXX-XXXX-XXXX</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div class="gc-card-face gc-card-back">
-                    <div class="gc-back-content elegant" id="gcBackContent">
-                      <div class="gc-back-logo">Mimmo Fratelli</div>
-                      <div class="gc-back-stripe"></div>
-                      <div class="gc-back-info">
-                        <p>Gift Card Mimmo Fratelli</p>
-                        <p class="gc-back-terms">Valida 12 mesi dalla data di emissione</p>
-                      </div>
-                    </div>
+                    <div class="gc-back-content"></div>
                   </div>
                 </div>
               </div>
@@ -487,28 +459,9 @@ class ProfileDrawer {
       }
     });
 
-    // Style buttons
-    document.querySelectorAll('.gc-style-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.gc-style-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const style = btn.dataset.style;
-        const preview = document.getElementById('gcUserPreview');
-        const backContent = document.getElementById('gcBackContent');
-        preview.className = 'gc-preview ' + style;
-        if (backContent) {
-          backContent.className = 'gc-back-content ' + style;
-        }
-      });
-    });
-
     // Live preview updates
     document.getElementById('gcUserRecipient').addEventListener('input', (e) => {
       document.getElementById('gcPreviewRecipient').textContent = e.target.value || 'Nome Destinatario';
-    });
-
-    document.getElementById('gcUserMessage').addEventListener('input', (e) => {
-      document.getElementById('gcPreviewMessage').textContent = e.target.value;
     });
 
     // Form submit
@@ -630,8 +583,6 @@ class ProfileDrawer {
     const recipientName = document.getElementById('gcUserRecipient').value;
     const recipientEmail = document.getElementById('gcUserEmail').value;
     const message = document.getElementById('gcUserMessage').value;
-    const activeStyleBtn = document.querySelector('.gc-style-btn.active');
-    const style = activeStyleBtn ? activeStyleBtn.dataset.style : 'elegant';
 
     // Get sender name from user metadata
     const senderName = this.user?.user_metadata?.first_name || 'Un amico';
@@ -642,7 +593,7 @@ class ProfileDrawer {
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Creazione in corso...';
+    submitBtn.innerHTML = '<span>Creazione in corso...</span>';
     errorEl.textContent = '';
 
     try {
@@ -652,14 +603,13 @@ class ProfileDrawer {
         recipientName,
         recipientEmail,
         senderName,
-        message,
-        style
+        message
       });
 
       if (result.error) {
         errorEl.textContent = result.error;
         submitBtn.disabled = false;
-        submitBtn.textContent = '🎁 Crea Gift Card';
+        submitBtn.innerHTML = '<img src="/Images/google-wallet/icona-regalo.png" alt="" class="gc-btn-icon"> Crea Gift Card';
         return;
       }
 
@@ -687,7 +637,6 @@ class ProfileDrawer {
   async _showGiftCardSuccess(giftCard) {
     const { giftCardService } = await import('../services/giftcard.js');
     const qrUrl = giftCardService.getQRCodeUrl(giftCard.qr_code_token, 180);
-    const style = giftCard.template || 'elegant';
     
     const modal = document.getElementById('giftCardCreatorModal');
     modal.querySelector('.gc-modal-body').innerHTML = `
@@ -703,38 +652,32 @@ class ProfileDrawer {
             <div class="gc-3d-scene-success" id="gcSuccess3dScene">
               <div class="gc-card-3d gc-auto-spinning" id="gcSuccessCard3d">
                 <div class="gc-card-face gc-card-front">
-                  <div class="gc-preview ${style}">
-                    <div class="gc-pattern"></div>
-                    <div class="gc-header">
-                      <div class="gc-logo">Mimmo Fratelli</div>
-                      <div class="gc-badge">GIFT CARD</div>
-                    </div>
-                    <div class="gc-amount" style="${style === 'elegant' ? 'color:#f9ca24' : style === 'avenue' ? 'color:#fff' : style === 'minimal' ? 'color:#3d7c47' : ''}">€${giftCard.amount}</div>
-                    <div class="gc-recipient">
-                      <span class="gc-label">Per</span>
-                      <span class="gc-name">${giftCard.recipient_name}</span>
-                    </div>
-                    ${giftCard.message ? `<div class="gc-message">${giftCard.message}</div>` : ''}
-                    <div class="gc-footer">
-                      <div class="gc-from">
-                        <span class="gc-label">Da</span>
-                        <span>${giftCard.sender_name}</span>
+                  <div class="gc-preview">
+                    <div class="gc-content-right">
+                      <div class="gc-header-right">
+                        <div class="gc-logo">Mimmo Fratelli</div>
+                        <div class="gc-badge">GIFT CARD</div>
                       </div>
-                      <div class="gc-code">${giftCard.code}</div>
+                      <div class="gc-amount">€${giftCard.amount}</div>
+                      <div class="gc-recipient">
+                        <span class="gc-label">Per</span>
+                        <span class="gc-name">${giftCard.recipient_name}</span>
+                      </div>
+                      <div class="gc-qr-front">
+                        <img src="${qrUrl}" alt="QR Code">
+                      </div>
+                      <div class="gc-footer-right">
+                        <div class="gc-from">
+                          <span class="gc-label">Da</span>
+                          <span>${giftCard.sender_name}</span>
+                        </div>
+                        <div class="gc-code">${giftCard.code}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div class="gc-card-face gc-card-back">
-                  <div class="gc-back-content ${style}">
-                    <div class="gc-back-logo">Mimmo Fratelli</div>
-                    <div class="gc-back-stripe"></div>
-                    <div class="gc-back-qr">
-                      <img src="${qrUrl}" alt="QR Code">
-                    </div>
-                    <div class="gc-back-info">
-                      <p class="gc-back-terms">Scansiona per riscattare</p>
-                    </div>
-                  </div>
+                  <div class="gc-back-content"></div>
                 </div>
               </div>
             </div>
@@ -1523,6 +1466,15 @@ class ProfileDrawer {
         .gc-form-section h2 {
           margin: 0 0 0.5rem;
           font-size: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .gc-title-icon {
+          width: 5rem;
+          height: 5rem;
+          object-fit: contain;
         }
 
         .gc-subtitle {
@@ -1637,6 +1589,16 @@ class ProfileDrawer {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .gc-btn-icon {
+          width: 5rem;
+          height: 5rem;
+          object-fit: contain;
         }
 
         .gc-submit-btn:hover:not(:disabled) {
@@ -1673,154 +1635,129 @@ class ProfileDrawer {
           width: 320px;
           height: 200px;
           border-radius: 12px;
-          padding: 1.25rem;
           position: relative;
           overflow: hidden;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+          /* Use the background image */
+          background-image: url('/Images/google-wallet/background.png');
+          background-size: cover;
+          background-position: center;
+        }
+
+        /* Right-aligned content container */
+        .gc-content-right {
+          position: absolute;
+          right: 0.75rem;
+          top: 0.75rem;
+          bottom: 0.75rem;
+          width: 48%;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+          text-align: right;
+          color: #2d5c35;
         }
 
-        .gc-preview.elegant {
-          background: linear-gradient(135deg, #2d5c35, #3d7c47);
-          color: #fff;
-        }
-
-        .gc-preview.minimal {
-          background: #fff;
-          color: #1f2d1f;
-          border: 1px solid #e4ebe4;
-        }
-
-        .gc-preview.festive {
-          background: linear-gradient(135deg, #e8722a, #f59d5e);
-          color: #fff;
-        }
-
-        .gc-pattern {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: repeating-linear-gradient(45deg, transparent, transparent 15px, rgba(255,255,255,0.02) 15px, rgba(255,255,255,0.02) 16px);
-          pointer-events: none;
-        }
-
-        .gc-header {
+        .gc-header-right {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
-          position: relative;
-          z-index: 1;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.25rem;
         }
 
         .gc-logo {
           font-family: 'DM Serif Display', Georgia, serif;
-          font-size: 1.2rem;
+          font-size: 0.9rem;
           font-style: italic;
           font-weight: 600;
+          color: #2d5c35;
         }
 
         .gc-badge {
-          font-size: 0.5rem;
+          font-size: 0.4rem;
           letter-spacing: 1.5px;
-          padding: 0.2rem 0.4rem;
+          padding: 0.12rem 0.3rem;
           border-radius: 3px;
-          background: rgba(255,255,255,0.15);
-        }
-
-        .gc-preview.minimal .gc-badge {
-          background: #3d7c47;
+          background: #2d5c35;
           color: #fff;
         }
 
         .gc-amount {
           font-family: 'DM Serif Display', Georgia, serif;
-          font-size: 2.5rem;
+          font-size: 1.8rem;
           font-weight: 700;
-          position: relative;
-          z-index: 1;
-        }
-
-        .gc-preview.elegant .gc-amount {
-          color: #f9ca24;
-        }
-
-        .gc-preview.minimal .gc-amount {
-          color: #3d7c47;
+          color: #2d5c35;
+          margin: 0.15rem 0;
+          line-height: 1;
         }
 
         .gc-recipient {
-          position: relative;
-          z-index: 1;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.1rem;
         }
 
         .gc-label {
-          font-size: 0.6rem;
+          font-size: 0.45rem;
           text-transform: uppercase;
           letter-spacing: 1px;
           opacity: 0.7;
           display: block;
+          color: #5a6b5a;
         }
 
         .gc-name {
           font-family: 'DM Serif Display', Georgia, serif;
-          font-size: 1.1rem;
+          font-size: 0.8rem;
           font-style: italic;
+          color: #2d5c35;
         }
 
-        .gc-message {
-          font-size: 0.7rem;
-          font-style: italic;
-          opacity: 0.8;
-          line-height: 1.3;
-          max-height: 35px;
-          overflow: hidden;
-          position: relative;
-          z-index: 1;
-        }
-
-        .gc-footer {
+        /* QR Code in front */
+        .gc-qr-front {
+          width: 45px;
+          height: 45px;
+          background: rgba(45, 92, 53, 0.08);
+          border: 1px dashed rgba(45, 92, 53, 0.25);
+          border-radius: 4px;
           display: flex;
-          justify-content: space-between;
+          align-items: center;
+          justify-content: center;
+          margin: 0.15rem 0;
+          align-self: flex-end;
+        }
+
+        .gc-qr-front img {
+          width: 40px;
+          height: 40px;
+          border-radius: 3px;
+        }
+
+        .gc-footer-right {
+          display: flex;
+          flex-direction: column;
           align-items: flex-end;
+          gap: 0.2rem;
           margin-top: auto;
-          position: relative;
-          z-index: 1;
         }
 
         .gc-from {
-          font-size: 0.75rem;
+          font-size: 0.55rem;
+          color: #5a6b5a;
         }
 
         .gc-code {
           font-family: monospace;
-          font-size: 0.6rem;
+          font-size: 0.45rem;
           letter-spacing: 1px;
-          background: rgba(255,255,255,0.1);
-          padding: 0.3rem 0.5rem;
+          background: rgba(45, 92, 53, 0.1);
+          padding: 0.25rem 0.4rem;
           border-radius: 3px;
+          color: #2d5c35;
         }
 
-        /* Nature Style */
-        .gc-preview.avenue {
-          background: linear-gradient(135deg, #6ab04c 0%, #00b894 50%, #6ab04c 100%);
-          color: #fff;
-        }
-        
-        .gc-preview.avenue .gc-amount {
-          color: #fff;
-          text-shadow: 0 2px 10px rgba(0,0,0,0.15);
-        }
-        
-        .gc-preview.avenue .gc-badge {
-          background: rgba(255,255,255,0.25);
-        }
-        
-        .gc-style-preview.avenue {
-          background: linear-gradient(135deg, #6ab04c, #00b894);
+        /* Hide old elements */
+        .gc-pattern,
+        .gc-header,
+        .gc-footer {
+          display: none;
         }
 
         /* 3D Card Styles */
@@ -1879,75 +1816,12 @@ class ProfileDrawer {
         .gc-back-content {
           width: 100%;
           height: 100%;
-          padding: 1.25rem;
-          display: flex;
-          flex-direction: column;
           box-shadow: 0 25px 50px rgba(0,0,0,0.3);
           border-radius: 12px;
-        }
-        
-        .gc-back-content.elegant {
-          background: linear-gradient(135deg, #3d7c47, #2d5c35);
-          color: #fff;
-        }
-        
-        .gc-back-content.avenue {
-          background: linear-gradient(135deg, #00b894, #6ab04c);
-          color: #fff;
-        }
-        
-        .gc-back-content.minimal {
-          background: #fafcf8;
-          color: #1f2d1f;
-          border: 1px solid #e4ebe4;
-        }
-        
-        .gc-back-content.festive {
-          background: linear-gradient(135deg, #f59d5e, #e8722a);
-          color: #fff;
-        }
-        
-        .gc-back-logo {
-          font-family: 'DM Serif Display', Georgia, serif;
-          font-size: 1.5rem;
-          font-style: italic;
-          font-weight: 600;
-          text-align: center;
-          margin-bottom: 0.75rem;
-        }
-        
-        .gc-back-stripe {
-          height: 35px;
-          background: rgba(0,0,0,0.2);
-          margin: 0 -1.25rem;
-        }
-        
-        .gc-back-content.minimal .gc-back-stripe {
-          background: #3d7c47;
-        }
-        
-        .gc-back-qr {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .gc-back-qr img {
-          width: 80px;
-          height: 80px;
-          border-radius: 6px;
-          background: #fff;
-          padding: 4px;
-        }
-        
-        .gc-back-info {
-          text-align: center;
-        }
-        
-        .gc-back-terms {
-          font-size: 0.65rem;
-          opacity: 0.7;
+          /* Use the back image - only the image, no content */
+          background-image: url('/Images/google-wallet/Mimmo gift.png');
+          background-size: cover;
+          background-position: center;
         }
         
         .gc-rotate-controls {

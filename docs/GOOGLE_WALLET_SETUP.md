@@ -30,8 +30,11 @@
 
 1. Vai su [Google Pay & Wallet Console](https://pay.google.com/business/console)
 2. Crea un nuovo account issuer (se non ne hai uno)
-3. Prendi nota del tuo **Issuer ID** (es: `3388000000022195000`)
+3. Prendi nota del tuo **Issuer ID**: `3388000000023043592` (Mimmo Fratelli)
 4. Vai su "Users" e aggiungi l'email del service account con ruolo "Developer"
+
+> **✅ PRODUZIONE ATTIVA**: Mimmo Fratelli è approvato per Google Wallet API (approvato il 1 Gennaio 2026).
+> La classe `mimmo_fratelli_giftcard` è attiva e disponibile per tutti gli utenti.
 
 ## Step 4: Configura le variabili d'ambiente Supabase
 
