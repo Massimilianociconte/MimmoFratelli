@@ -225,15 +225,20 @@ body.menu-open nav .notif-badge {
 }
 
 .logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    font-weight: 300;
-    font-style: italic;
-    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
 }
 
 .logo a {
+    display: flex;
+    align-items: center;
     color: inherit;
+}
+
+.logo-img {
+    height: clamp(2rem, 5vw, 2.8rem);
+    width: auto;
+    object-fit: contain;
 }
 
 .nav-actions {
@@ -729,14 +734,16 @@ body.menu-open {
 }
 
 .footer-brand {
-    font-family: var(--font-display);
-    font-size: 2.25rem;
-    font-style: italic;
+    display: flex;
+    justify-content: center;
     margin-bottom: 0.35rem;
-    background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+}
+
+.footer-brand-img {
+    height: 3rem;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
 }
 
 .footer-tagline {
