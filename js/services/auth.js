@@ -34,12 +34,12 @@ class AuthService {
   _getPageUrl(page) {
     // Use the official domain for production
     const baseUrl = 'https://www.mimmofratelli.com';
-    
+
     // If running locally, use origin
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return `${window.location.origin}/${page}`;
     }
-    
+
     return `${baseUrl}/${page}`;
   }
 
@@ -61,7 +61,7 @@ class AuthService {
     supabase.auth.onAuthStateChange((event, session) => {
       this.session = session;
       this.currentUser = session?.user || null;
-      
+
       // Notify listeners
       this.authStateListeners.forEach(callback => {
         callback(event, session);
@@ -108,7 +108,7 @@ class AuthService {
       // Create profile record
       if (data.user) {
         await this._createProfile(data.user.id, metadata);
-        
+
         // Call handle-signup Edge Function to create referral code and first-order discount
         const signupData = await this._processSignup(data.user.id, email, metadata.referralCode);
         return { user: data.user, error: null, signupData };
@@ -130,7 +130,7 @@ class AuthService {
     try {
       // Get stored referral code from localStorage if not provided
       const storedRefCode = referralCode || localStorage.getItem('mimmo_referral_code');
-      
+
       const response = await fetch(`${window.AVENUE_CONFIG?.SUPABASE_URL || ''}/functions/v1/handle-signup`, {
         method: 'POST',
         headers: {
@@ -151,12 +151,12 @@ class AuthService {
       }
 
       const data = await response.json();
-      
+
       // Clear stored referral code after use
       if (storedRefCode) {
         localStorage.removeItem('mimmo_referral_code');
       }
-      
+
       return data;
     } catch (err) {
       console.error('Process signup error:', err);
@@ -180,10 +180,10 @@ class AuthService {
     // Check rate limiting (Requirement 1.7)
     if (this._isRateLimited()) {
       const remainingMinutes = this._getRemainingLockoutMinutes();
-      return { 
-        user: null, 
-        session: null, 
-        error: `Troppi tentativi. Riprova tra ${remainingMinutes} minuti.` 
+      return {
+        user: null,
+        session: null,
+        error: `Troppi tentativi. Riprova tra ${remainingMinutes} minuti.`
       };
     }
 
@@ -196,7 +196,7 @@ class AuthService {
       if (error) {
         // Record failed attempt for rate limiting
         this._recordFailedAttempt();
-        
+
         // Return generic error message (Requirement 1.4)
         return { user: null, session: null, error: INVALID_CREDENTIALS_ERROR };
       }
@@ -225,7 +225,7 @@ class AuthService {
 
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         return { error: 'Errore durante il logout' };
       }
@@ -284,7 +284,7 @@ class AuthService {
    */
   onAuthStateChange(callback) {
     this.authStateListeners.push(callback);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.authStateListeners.indexOf(callback);
@@ -393,7 +393,7 @@ class AuthService {
     try {
       // Map data fields to profile columns
       const profileData = {};
-      
+
       if (data.first_name !== undefined) profileData.first_name = data.first_name;
       if (data.last_name !== undefined) profileData.last_name = data.last_name;
       if (data.phone !== undefined) profileData.phone = data.phone;
@@ -523,19 +523,28 @@ class AuthService {
   // ============================================
 
   /**
-   * Create user profile in profiles table
-   * @private
-   */
+ * Create user profile in profiles table
+ * Note: Profile is auto-created by database trigger on_auth_user_created
+ * This is a fallback/update mechanism
+ * @private
+ */
   async _createProfile(userId, metadata) {
     try {
-      await supabase.from('profiles').insert({
+      // Use upsert to handle case where trigger already created the profile
+      const { error } = await supabase.from('profiles').upsert({
         id: userId,
         first_name: metadata.first_name || '',
         last_name: metadata.last_name || '',
         phone: metadata.phone || null
-      });
+      }, { onConflict: 'id', ignoreDuplicates: false });
+
+      if (error) {
+        // Non-blocking: profile may be created by trigger
+        console.log('Profile upsert note:', error.message);
+      }
     } catch (err) {
-      console.error('Error creating profile:', err);
+      // Non-blocking: trigger handles profile creation
+      console.log('Profile creation handled by trigger');
     }
   }
 
@@ -564,7 +573,7 @@ class AuthService {
     if (!data) return false;
 
     const { attempts, lockoutUntil } = data;
-    
+
     if (lockoutUntil && Date.now() < lockoutUntil) {
       return true;
     }
@@ -627,7 +636,7 @@ class AuthService {
   _getRemainingLockoutMinutes() {
     const data = this._getRateLimitData();
     if (!data?.lockoutUntil) return 0;
-    
+
     const remaining = Math.ceil((data.lockoutUntil - Date.now()) / 60000);
     return Math.max(0, remaining);
   }
