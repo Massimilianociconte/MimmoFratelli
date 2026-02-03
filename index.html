@@ -5,50 +5,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mimmo Fratelli | Frutta e Verdura Fresca</title>
-    <meta name="description" content="Mimmo Fratelli - Frutta e Verdura fresca di stagione. Qualità, freschezza e natura dal produttore alla tua tavola.">
-    
+    <meta name="description"
+        content="Mimmo Fratelli - Frutta e Verdura fresca di stagione. Qualità, freschezza e natura dal produttore alla tua tavola.">
+
     <!-- SEO & Social -->
     <meta name="keywords" content="frutta, verdura, fresca, biologica, stagione, ortofrutta, natura, qualità">
     <meta name="author" content="Mimmo Fratelli">
     <meta name="robots" content="index, follow">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="Mimmo Fratelli | Frutta e Verdura Fresca">
     <meta property="og:description" content="Frutta e Verdura fresca di stagione. Qualità, freschezza e natura.">
     <meta property="og:image" content="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1200">
     <meta property="og:type" content="website">
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Mimmo Fratelli | Frutta e Verdura Fresca">
     <meta name="twitter:description" content="Frutta e Verdura fresca di stagione.">
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
-    
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+
     <!-- Theme Color -->
     <meta name="theme-color" content="#f8fdf5">
 
     <!-- Fonts - Elegant Food-focused typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
-    
+
     <!-- Preload critical images with optimized sizes -->
-    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp" type="image/webp">
-    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp" type="image/webp">
-    
+    <link rel="preload" as="image"
+        href="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp" type="image/webp">
+    <link rel="preload" as="image"
+        href="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp" type="image/webp">
+
     <!-- Critical CSS inline for faster render -->
     <style>
-        body{margin:0;background:#f8fdf5;opacity:0;animation:pageLoad .6s ease forwards}
-        @keyframes pageLoad{to{opacity:1}}
-        .hero-main{min-height:100vh;position:relative;overflow:hidden}
-        .split-container{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);width:100%;gap:16px;padding:16px}
-        .split{position:relative;overflow:hidden;border-radius:20px}
-        .split-bg{position:absolute;width:100%;height:100%;object-fit:cover}
-        @media(max-width:768px){.split-container{grid-template-columns:1fr;grid-template-rows:repeat(4,1fr)}}
+        body {
+            margin: 0;
+            background: #f8fdf5;
+            opacity: 0;
+            animation: pageLoad .6s ease forwards
+        }
+
+        @keyframes pageLoad {
+            to {
+                opacity: 1
+            }
+        }
+
+        .hero-main {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden
+        }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            width: 100%;
+            gap: 16px;
+            padding: 16px
+        }
+
+        .split {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px
+        }
+
+        .split-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        @media(max-width:768px) {
+            .split-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr)
+            }
+        }
     </style>
 </head>
 
@@ -57,7 +103,8 @@
     <!-- Navigation -->
     <nav class="nav-home nav-transparent" id="mainNav">
         <a href="index.html#categorie" class="logo">
-            <img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli" class="logo-img">
+            <img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli" class="logo-img logo-img-white">
+            <img src="Images/logo_mimmofratelli_verde.png" alt="Mimmo Fratelli" class="logo-img logo-img-green">
         </a>
         <div class="nav-right">
             <a href="promos.html" class="nav-promo-badge">
@@ -82,20 +129,23 @@
             <ul class="menu-links">
                 <li><a href="index.html"><span class="menu-emoji">🏠</span> Home</a></li>
                 <li class="menu-category">
-                    <a href="collection.html?gender=frutta" class="menu-category-title"><span class="menu-emoji">🍎</span> Frutta</a>
+                    <a href="collection.html?gender=frutta" class="menu-category-title"><span
+                            class="menu-emoji">🍎</span> Frutta</a>
                     <ul class="menu-subcategories">
                         <li><a href="collection.html?gender=frutta&category=frutta-fresca">🍎 Frutta Fresca</a></li>
                         <li><a href="collection.html?gender=frutta&category=agrumi">🍊 Agrumi</a></li>
                     </ul>
                 </li>
                 <li class="menu-category">
-                    <a href="collection.html?gender=verdura" class="menu-category-title"><span class="menu-emoji">🥬</span> Verdura</a>
+                    <a href="collection.html?gender=verdura" class="menu-category-title"><span
+                            class="menu-emoji">🥬</span> Verdura</a>
                     <ul class="menu-subcategories">
                         <li><a href="collection.html?gender=verdura&category=verdura-fresca">🥬 Verdura Fresca</a></li>
                     </ul>
                 </li>
                 <li class="menu-category">
-                    <a href="collection.html?gender=conserve" class="menu-category-title"><span class="menu-emoji">🫙</span> Conserve e Preparati</a>
+                    <a href="collection.html?gender=conserve" class="menu-category-title"><span
+                            class="menu-emoji">🫙</span> Conserve e Preparati</a>
                     <ul class="menu-subcategories">
                         <li><a href="collection.html?gender=conserve&category=formaggi">🧀 Formaggi</a></li>
                         <li><a href="collection.html?gender=conserve&category=salumi">🥓 Salumi</a></li>
@@ -103,10 +153,13 @@
                     </ul>
                 </li>
                 <li class="menu-category">
-                    <a href="collection.html?gender=secchi-estratti" class="menu-category-title"><span class="menu-emoji">🫒</span> Prodotti Secchi e Estratti</a>
+                    <a href="collection.html?gender=secchi-estratti" class="menu-category-title"><span
+                            class="menu-emoji">🫒</span> Prodotti Secchi e Estratti</a>
                     <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate Pronte</a></li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a></li>
+                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate
+                                Pronte</a></li>
+                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a>
+                        </li>
                         <li><a href="collection.html?gender=secchi-estratti&category=contorni">🥕 Contorni</a></li>
                     </ul>
                 </li>
@@ -154,7 +207,7 @@
                 <a href="collection.html" class="btn-primary-dark">
                     <span>Acquista ora i nostri prodotti</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                        <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                 </a>
                 <a href="contacts.html#orari" class="btn-secondary">Scopri dove puoi trovarci</a>
@@ -174,15 +227,18 @@
             <span class="section-label">Le Nostre Categorie</span>
             <h2 class="section-title">Scegli la Freschezza</h2>
         </div>
-        
+
         <div class="split-container">
             <!-- Frutta -->
             <div class="split" onclick="window.location.href='collection.html?gender=frutta'">
                 <picture>
-                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
-                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&q=50&fm=webp"
+                        media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60&fm=webp"
+                        type="image/webp">
                     <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=60"
-                        alt="Frutta Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async" fetchpriority="high">
+                        alt="Frutta Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async"
+                        fetchpriority="high">
                 </picture>
                 <div class="split-overlay"></div>
                 <div class="split-content">
@@ -191,8 +247,9 @@
                     <p class="split-desc">Fresca e di stagione</p>
                     <a href="collection.html?gender=frutta" class="btn-explore">
                         <span>Esplora</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
@@ -201,10 +258,13 @@
             <!-- Verdura -->
             <div class="split" onclick="window.location.href='collection.html?gender=verdura'">
                 <picture>
-                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
-                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=50&fm=webp"
+                        media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60&fm=webp"
+                        type="image/webp">
                     <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=60"
-                        alt="Verdura Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async" fetchpriority="high">
+                        alt="Verdura Fresca - Mimmo Fratelli" class="split-bg" loading="eager" decoding="async"
+                        fetchpriority="high">
                 </picture>
                 <div class="split-overlay"></div>
                 <div class="split-content">
@@ -213,8 +273,9 @@
                     <p class="split-desc">Ortaggi selezionati</p>
                     <a href="collection.html?gender=verdura" class="btn-explore">
                         <span>Esplora</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
@@ -223,8 +284,10 @@
             <!-- Conserve e Preparati -->
             <div class="split" onclick="window.location.href='collection.html?gender=conserve'">
                 <picture>
-                    <source srcset="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
-                    <source srcset="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=800&q=60&fm=webp" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=600&q=50&fm=webp"
+                        media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=800&q=60&fm=webp"
+                        type="image/webp">
                     <img src="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=800&q=60"
                         alt="Conserve e Preparati - Mimmo Fratelli" class="split-bg" loading="lazy" decoding="async">
                 </picture>
@@ -235,8 +298,9 @@
                     <p class="split-desc">Sott'oli, marmellate e salse</p>
                     <a href="collection.html?gender=conserve" class="btn-explore">
                         <span>Esplora</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
@@ -245,10 +309,13 @@
             <!-- Prodotti Secchi e Estratti -->
             <div class="split" onclick="window.location.href='collection.html?gender=secchi-estratti'">
                 <picture>
-                    <source srcset="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=50&fm=webp" media="(max-width: 768px)" type="image/webp">
-                    <source srcset="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=60&fm=webp" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=50&fm=webp"
+                        media="(max-width: 768px)" type="image/webp">
+                    <source srcset="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=60&fm=webp"
+                        type="image/webp">
                     <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=60"
-                        alt="Prodotti Secchi e Estratti - Mimmo Fratelli" class="split-bg" loading="lazy" decoding="async">
+                        alt="Prodotti Secchi e Estratti - Mimmo Fratelli" class="split-bg" loading="lazy"
+                        decoding="async">
                 </picture>
                 <div class="split-overlay"></div>
                 <div class="split-content">
@@ -257,8 +324,9 @@
                     <p class="split-desc">Oli, succhi e frutta secca</p>
                     <a href="collection.html?gender=secchi-estratti" class="btn-explore">
                         <span>Esplora</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
@@ -311,7 +379,7 @@
             <a href="promos.html" class="promo-btn">
                 Vedi Offerte
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                    <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
             </a>
         </div>
@@ -323,7 +391,8 @@
     <!-- Footer -->
     <footer class="site-footer">
         <div class="footer-content">
-            <div class="footer-brand"><img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli" class="footer-brand-img"></div>
+            <div class="footer-brand"><img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli"
+                    class="footer-brand-img"></div>
             <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
             <div class="footer-links">
                 <a href="collection.html?gender=frutta">Frutta</a>
@@ -335,23 +404,32 @@
             <div class="footer-payments">
                 <p class="footer-payments-label">Metodi di pagamento accettati</p>
                 <div class="footer-payment-icons">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" loading="lazy" width="68" height="48" alt="Mastercard">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" loading="lazy" width="68" height="48" alt="Visa">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" loading="lazy" width="68" height="48" alt="Amex">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg" loading="lazy" width="68" height="48" alt="Paypal">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" loading="lazy" width="68" height="48" alt="Google Pay">
-                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48" alt="Klarna" class="payment-icon-light">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" loading="lazy" width="68" height="48" alt="Satispay">
-                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg"
+                        loading="lazy" width="68" height="48" alt="Mastercard">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg"
+                        loading="lazy" width="68" height="48" alt="Visa">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg"
+                        loading="lazy" width="68" height="48" alt="Amex">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-paypal.svg"
+                        loading="lazy" width="68" height="48" alt="Paypal">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg"
+                        loading="lazy" width="68" height="48" alt="Google Pay">
+                    <img src="https://www.efarma.com/media/wysiwyg/klarna.png" loading="lazy" width="68" height="48"
+                        alt="Klarna" class="payment-icon-light">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg"
+                        loading="lazy" width="68" height="48" alt="Satispay">
+                    <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg"
+                        loading="lazy" width="68" height="48" alt="Apple Pay" class="payment-icon-light">
                 </div>
             </div>
             <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                        <path d="M2 17l10 5 10-5"/>
-                        <path d="M2 12l10 5 10-5"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
                     </svg>
                     Creato da Web Novis
                 </a>
@@ -361,7 +439,7 @@
 
     <!-- Configuration -->
     <script src="js/config.js"></script>
-    
+
     <!-- File protocol warning -->
     <script>
         if (window.location.protocol === 'file:') {
@@ -393,14 +471,14 @@
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
             const isMobile = window.innerWidth <= 768;
-            
+
             if (isMenuOpen) {
                 // Save scroll position before locking body (mobile only)
                 if (isMobile) {
                     menuScrollY = window.scrollY;
                     document.body.style.top = `-${menuScrollY}px`;
                 }
-                
+
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
                 menuBtn.classList.add('active');
@@ -411,7 +489,7 @@
                 menuBtn.classList.remove('active');
                 if (menuText) menuText.textContent = 'Menu';
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
-                
+
                 // Restore scroll position (mobile only)
                 if (isMobile) {
                     document.body.style.top = '';
@@ -438,13 +516,13 @@
         let lastScroll = 0;
         window.addEventListener('scroll', () => {
             const currentScroll = window.pageYOffset;
-            
+
             if (currentScroll > 100) {
                 mainNav.classList.add('scrolled');
             } else {
                 mainNav.classList.remove('scrolled');
             }
-            
+
             lastScroll = currentScroll;
         });
 
@@ -497,15 +575,15 @@
 
         // --- SMOOTH SCROLL FOR SCROLL INDICATOR ---
         document.querySelector('.scroll-indicator')?.addEventListener('click', () => {
-            document.querySelector('.categories-section')?.scrollIntoView({ 
-                behavior: 'smooth' 
+            document.querySelector('.categories-section')?.scrollIntoView({
+                behavior: 'smooth'
             });
         });
     </script>
-    
+
     <!-- Bootstrap Icons for notification banner -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <!-- Notification Banner & Referral Landing -->
     <script type="module">
         import { notificationBanner } from './js/components/notification-banner.js';
@@ -515,22 +593,22 @@
         import { initReferralLanding } from './js/utils/referral-landing.js';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
-        
+
         // Initialize components with error isolation
-        try { notificationBanner.init(); } catch(e) { console.error('notificationBanner error:', e); }
-        try { inAppNotifications.init(); } catch(e) { console.error('inAppNotifications error:', e); }
-        try { notificationPrompt.init(); } catch(e) { console.error('notificationPrompt error:', e); }
-        try { initReferralLanding(); } catch(e) { console.error('referralLanding error:', e); }
-        
+        try { notificationBanner.init(); } catch (e) { console.error('notificationBanner error:', e); }
+        try { inAppNotifications.init(); } catch (e) { console.error('inAppNotifications error:', e); }
+        try { notificationPrompt.init(); } catch (e) { console.error('notificationPrompt error:', e); }
+        try { initReferralLanding(); } catch (e) { console.error('referralLanding error:', e); }
+
         // Initialize notification center in navbar (critical)
-        try { 
-            notificationCenter.init(); 
-        } catch(e) { 
-            console.error('notificationCenter error:', e); 
+        try {
+            notificationCenter.init();
+        } catch (e) {
+            console.error('notificationCenter error:', e);
         }
-        
+
         // Initialize global search
-        try { globalSearch.init(); } catch(e) { console.error('globalSearch error:', e); }
+        try { globalSearch.init(); } catch (e) { console.error('globalSearch error:', e); }
     </script>
 </body>
 
