@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
     await supabaseAdmin.from("cart_items").delete().eq("user_id", userId);
     
     // 2. Delete wishlist items
-    await supabaseAdmin.from("wishlist").delete().eq("user_id", userId);
+    await supabaseAdmin.from("wishlist_items").delete().eq("user_id", userId);
     
     // 3. Delete user presence
     await supabaseAdmin.from("user_presence").delete().eq("user_id", userId);
@@ -61,7 +61,31 @@ Deno.serve(async (req: Request) => {
     // 4. Delete user settings
     await supabaseAdmin.from("user_settings").delete().eq("user_id", userId);
     
-    // 5. Update orders to anonymize (keep for records but remove user reference)
+    // 5. Delete stock alerts
+    await supabaseAdmin.from("stock_alerts").delete().eq("user_id", userId);
+    
+    // 6. Delete push notification subscriptions
+    await supabaseAdmin.from("push_subscriptions").delete().eq("user_id", userId);
+    
+    // 7. Delete referral relationships (as referrer and referee)
+    await supabaseAdmin.from("referrals").delete().eq("referrer_id", userId);
+    await supabaseAdmin.from("referrals").delete().eq("referee_id", userId);
+    
+    // 8. Delete user referral codes
+    await supabaseAdmin.from("user_referral_codes").delete().eq("user_id", userId);
+    
+    // 9. Delete credit transactions
+    await supabaseAdmin.from("credit_transactions").delete().eq("user_id", userId);
+    
+    // 10. Delete user credits
+    await supabaseAdmin.from("user_credits").delete().eq("user_id", userId);
+    
+    // 11. Deactivate user-specific promotions (first-order codes)
+    await supabaseAdmin.from("promotions")
+      .update({ is_active: false })
+      .eq("user_id", userId);
+    
+    // 12. Update orders to anonymize (keep for records but remove user reference)
     await supabaseAdmin.from("orders")
       .update({ 
         user_id: null,
@@ -70,10 +94,10 @@ Deno.serve(async (req: Request) => {
       })
       .eq("user_id", userId);
     
-    // 6. Delete profile
+    // 13. Delete profile
     await supabaseAdmin.from("profiles").delete().eq("id", userId);
     
-    // 7. Delete the auth user
+    // 14. Delete the auth user
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     
     if (deleteError) {

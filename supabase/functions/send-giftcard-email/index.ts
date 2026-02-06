@@ -11,10 +11,23 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = "Avenue M. <noreply@avenuem.it>";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://www.mimmofratelli.com",
+  "https://mimmofratelli.com",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5500",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 const templateStyles: Record<string, { bgColor: string; textColor: string }> = {
   elegant: { bgColor: "#1a1a1a", textColor: "#ffffff" },
@@ -25,7 +38,7 @@ const templateStyles: Record<string, { bgColor: string; textColor: string }> = {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -46,14 +59,14 @@ Deno.serve(async (req: Request) => {
     if (giftCardError || !giftCard) {
       return new Response(JSON.stringify({ error: "Gift card not found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     if (!giftCard.recipient_email) {
       return new Response(JSON.stringify({ error: "No recipient email" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -137,7 +150,7 @@ Deno.serve(async (req: Request) => {
       console.error("Email send error:", errorText);
       return new Response(JSON.stringify({ error: "Email send failed" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -154,13 +167,13 @@ Deno.serve(async (req: Request) => {
     });
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Send gift card email error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

@@ -17,10 +17,23 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 const telegramBotToken = Deno.env.get("TELEGRAM_BOT_TOKEN") || "";
 const telegramChatId = Deno.env.get("TELEGRAM_CHAT_ID") || "";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://www.mimmofratelli.com",
+  "https://mimmofratelli.com",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5500",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 interface OrderItem {
   productId: string;
@@ -67,7 +80,7 @@ async function sendTelegramNotification(message: string): Promise<void> {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -76,7 +89,7 @@ Deno.serve(async (req: Request) => {
     if (!sessionId) {
       return new Response(JSON.stringify({ error: "Missing sessionId" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -89,7 +102,7 @@ Deno.serve(async (req: Request) => {
     if (session.payment_status !== "paid") {
       return new Response(JSON.stringify({ error: "Payment not completed" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -97,7 +110,7 @@ Deno.serve(async (req: Request) => {
     if (!userId) {
       return new Response(JSON.stringify({ error: "No userId in session" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -107,7 +120,7 @@ Deno.serve(async (req: Request) => {
         success: true, 
         message: "Gift card purchase - use complete-giftcard-purchase instead" 
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -142,7 +155,7 @@ Deno.serve(async (req: Request) => {
         order: fullOrder,
         alreadyExists: true 
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -236,7 +249,7 @@ Deno.serve(async (req: Request) => {
       console.error("Order creation error:", orderError);
       return new Response(JSON.stringify({ error: "Order creation failed: " + orderError.message }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -378,7 +391,7 @@ ${itemsList || 'Nessun dettaglio'}
       success: true, 
       order: fullOrder 
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
 
   } catch (error) {
@@ -387,7 +400,7 @@ ${itemsList || 'Nessun dettaglio'}
       error: error instanceof Error ? error.message : "Unknown error" 
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

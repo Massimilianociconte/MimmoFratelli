@@ -2,7 +2,7 @@
  * Payment Gateway Service
  * Avenue M. E-commerce Platform
  * 
- * Handles Stripe, PayPal, and Klarna payment integrations
+ * Handles Stripe payment integration (Klarna available via Stripe Checkout)
  */
 
 import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
@@ -87,7 +87,7 @@ class PaymentService {
             weight_grams: item.weight_grams || null
           })),
           successUrl: this._getPageUrl('checkout-success.html'),
-          cancelUrl: this._getPageUrl('checkout.html'),
+          cancelUrl: this._getPageUrl('checkout-cancel.html'),
           customerEmail: user.email,
           promotionCode: options.promotionCode,
           shippingAddress: options.shippingAddress,
@@ -140,102 +140,11 @@ class PaymentService {
   }
 
   /**
-   * Create PayPal order
-   */
-  async createPayPalOrder(cartItems, options = {}) {
-    const user = await getCurrentUser();
-    if (!user) {
-      return { error: 'Devi effettuare il login per procedere al pagamento' };
-    }
-
-    if (!isSupabaseConfigured()) {
-      return { error: 'Sistema non configurato' };
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-        body: {
-          items: cartItems,
-          giftCardCode: options.giftCardCode,
-          promotionCode: options.promotionCode
-        }
-      });
-
-      if (error) {
-        return { error: 'Errore nella creazione dell\'ordine PayPal' };
-      }
-
-      return { orderId: data.orderId, approvalUrl: data.approvalUrl };
-    } catch (err) {
-      console.error('Create PayPal order error:', err);
-      return { error: 'Errore nella creazione dell\'ordine PayPal' };
-    }
-  }
-
-  /**
-   * Capture PayPal order after approval
-   */
-  async capturePayPalOrder(orderId) {
-    try {
-      const { data, error } = await supabase.functions.invoke('capture-paypal-order', {
-        body: { orderId }
-      });
-
-      if (error) {
-        return { error: 'Errore nella conferma del pagamento PayPal' };
-      }
-
-      return { success: true, order: data.order };
-    } catch (err) {
-      console.error('Capture PayPal order error:', err);
-      return { error: 'Errore nella conferma del pagamento PayPal' };
-    }
-  }
-
-  /**
-   * Create Klarna session for installment payments
-   */
-  async createKlarnaSession(cartItems, options = {}) {
-    const user = await getCurrentUser();
-    if (!user) {
-      return { error: 'Devi effettuare il login per procedere al pagamento' };
-    }
-
-    if (!isSupabaseConfigured()) {
-      return { error: 'Sistema non configurato' };
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-klarna-session', {
-        body: {
-          items: cartItems,
-          locale: config.LOCALE || 'it-IT',
-          giftCardCode: options.giftCardCode,
-          promotionCode: options.promotionCode
-        }
-      });
-
-      if (error) {
-        return { error: 'Errore nella creazione della sessione Klarna' };
-      }
-
-      return { 
-        sessionId: data.sessionId, 
-        clientToken: data.clientToken,
-        paymentMethods: data.paymentMethods 
-      };
-    } catch (err) {
-      console.error('Create Klarna session error:', err);
-      return { error: 'Errore nella creazione della sessione Klarna' };
-    }
-  }
-
-  /**
    * Calculate order total with discounts
    */
   calculateTotal(cartItems, discount = 0, giftCardBalance = 0) {
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = subtotal >= (config.FREE_SHIPPING_THRESHOLD || 150) ? 0 : (config.STANDARD_SHIPPING_COST || 9.90);
+    const shipping = subtotal >= (config.FREE_SHIPPING_THRESHOLD || 50) ? 0 : (config.STANDARD_SHIPPING_COST || 2.90);
     const discountAmount = typeof discount === 'number' ? discount : 0;
     const giftCardAmount = Math.min(giftCardBalance, subtotal - discountAmount + shipping);
     const total = Math.max(0, subtotal - discountAmount + shipping - giftCardAmount);
@@ -249,25 +158,6 @@ class PaymentService {
     };
   }
 
-  /**
-   * Verify payment status
-   */
-  async verifyPayment(sessionId, provider = 'stripe') {
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-payment', {
-        body: { sessionId, provider }
-      });
-
-      if (error) {
-        return { verified: false, error: 'Errore nella verifica del pagamento' };
-      }
-
-      return { verified: data.verified, order: data.order };
-    } catch (err) {
-      console.error('Verify payment error:', err);
-      return { verified: false, error: 'Errore nella verifica del pagamento' };
-    }
-  }
 }
 
 export const paymentService = new PaymentService();

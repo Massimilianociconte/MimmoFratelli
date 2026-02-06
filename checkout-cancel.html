@@ -10,18 +10,74 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .cancel-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .cancel-redirect-info {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 1.25rem;
+        }
+        .cancel-redirect-info span {
+            font-weight: 600;
+            color: #555;
+        }
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            color: #555;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover {
+            border-color: #3d7c47;
+            color: #3d7c47;
+            background: rgba(61, 124, 71, 0.04);
+        }
+    </style>
 </head>
 <body>
     <main class="checkout-result">
         <div class="checkout-result-content">
-            <div class="checkout-result-icon">❌</div>
-            <h1 class="checkout-result-title">Ordine Annullato</h1>
+            <div class="checkout-result-icon">😕</div>
+            <h1 class="checkout-result-title">Pagamento annullato</h1>
             <p class="checkout-result-text">
-                Il tuo ordine è stato annullato. Non ti è stato addebitato nulla.
-                Se hai bisogno di assistenza, contattaci!
+                Nessun addebito è stato effettuato. I prodotti nel tuo carrello sono ancora disponibili.
             </p>
-            <a href="checkout.html" class="btn btn-primary">Riprova</a>
+            <div class="cancel-actions">
+                <a href="checkout.html" class="btn btn-primary">Torna al checkout</a>
+                <a href="collection.html" class="btn-outline">Continua lo shopping</a>
+            </div>
+            <p class="cancel-redirect-info">
+                Verrai reindirizzato al checkout tra <span id="countdown">10</span> secondi
+            </p>
         </div>
     </main>
+    <script>
+        (function() {
+            let seconds = 10;
+            const el = document.getElementById('countdown');
+            const timer = setInterval(function() {
+                seconds--;
+                if (el) el.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = 'checkout.html';
+                }
+            }, 1000);
+        })();
+    </script>
 </body>
 </html>

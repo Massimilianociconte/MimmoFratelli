@@ -13,10 +13,23 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://www.mimmofratelli.com",
+  "https://mimmofratelli.com",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5500",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 interface CartItem {
   productId: string;
@@ -54,7 +67,7 @@ interface CheckoutRequest {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -71,7 +84,7 @@ Deno.serve(async (req: Request) => {
       console.log("User not authenticated");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
     console.log("User authenticated:", user.id);
@@ -93,7 +106,7 @@ Deno.serve(async (req: Request) => {
     if (!items || items.length === 0) {
       return new Response(JSON.stringify({ error: "Carrello vuoto" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -140,7 +153,7 @@ Deno.serve(async (req: Request) => {
 
     // Calculate base shipping (free over €50)
     const FREE_SHIPPING_THRESHOLD = 5000; // €50 in cents
-    const SHIPPING_COST = 590; // €5.90 in cents (same as frontend)
+    const SHIPPING_COST = 290; // €2.90 in cents (same as frontend config)
     let shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
 
     // Verify and calculate user credit (after shipping is calculated)
@@ -320,7 +333,7 @@ Deno.serve(async (req: Request) => {
       sessionId: session.id, 
       url: session.url 
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Checkout session error:", error);
@@ -332,7 +345,7 @@ Deno.serve(async (req: Request) => {
       error: error instanceof Error ? error.message : "Errore interno del server" 
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

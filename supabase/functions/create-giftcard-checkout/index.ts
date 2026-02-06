@@ -13,10 +13,23 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://www.mimmofratelli.com",
+  "https://mimmofratelli.com",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5500",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 interface GiftCardRequest {
   amount: number;
@@ -31,7 +44,7 @@ interface GiftCardRequest {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -45,7 +58,7 @@ Deno.serve(async (req: Request) => {
     if (!user) {
       return new Response(JSON.stringify({ error: "Devi effettuare il login" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -66,14 +79,14 @@ Deno.serve(async (req: Request) => {
     if (!amount || amount < 10 || amount > 500) {
       return new Response(JSON.stringify({ error: "Importo non valido (min €10, max €500)" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
     if (!recipientName || !recipientEmail || !senderName) {
       return new Response(JSON.stringify({ error: "Compila tutti i campi obbligatori" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -124,7 +137,7 @@ Deno.serve(async (req: Request) => {
       sessionId: session.id, 
       url: session.url 
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Gift card checkout error:", error);
@@ -132,7 +145,7 @@ Deno.serve(async (req: Request) => {
       error: error instanceof Error ? error.message : "Errore interno del server" 
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });

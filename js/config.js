@@ -42,11 +42,11 @@ window.AVENUE_CONFIG = {
   LOCALE: 'it-IT',
   
   // Cart Settings
-  MAX_CART_QUANTITY: 50,
+  MAX_CART_QUANTITY: 10,
   
   // Shipping
   FREE_SHIPPING_THRESHOLD: 50, // Spedizione gratuita sopra €50
-  STANDARD_SHIPPING_COST: 4.90, // €4.90 spedizione standard
+  STANDARD_SHIPPING_COST: 2.90, // €2.90 spedizione standard
   
   // Rate Limiting
   MAX_LOGIN_ATTEMPTS: 5,

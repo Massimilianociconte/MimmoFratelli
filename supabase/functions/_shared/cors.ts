@@ -50,9 +50,8 @@ function isAllowedOrigin(origin: string): boolean {
 export function getCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') || '';
   
-  // For now, allow any origin to debug issues (will restrict later)
-  // Check if origin is allowed - if so, echo it back; otherwise use the origin anyway for debugging
-  const allowedOrigin = origin || '*';
+  // Only allow known origins; fall back to production domain
+  const allowedOrigin = isAllowedOrigin(origin) ? origin : 'https://www.mimmofratelli.com';
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

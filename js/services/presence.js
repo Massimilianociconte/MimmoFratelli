@@ -105,15 +105,28 @@ class PresenceService {
   sendBeacon() {
     if (!isSupabaseConfigured()) return;
     
+    const config = window.AVENUE_CONFIG || {};
+    const supabaseUrl = config.SUPABASE_URL;
+    const supabaseKey = config.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) return;
+    
     // Use sendBeacon for reliable delivery on page unload
+    const url = `${supabaseUrl}/rest/v1/user_presence?session_id=eq.${this.sessionId}`;
     const data = JSON.stringify({
-      session_id: this.sessionId,
-      page_url: window.location.pathname,
-      last_seen: new Date().toISOString()
+      last_seen: new Date().toISOString(),
+      page_url: window.location.pathname
     });
     
-    // Note: This would need a dedicated endpoint to work properly
-    // For now, we rely on the interval updates
+    const blob = new Blob([data], { type: 'application/json' });
+    
+    // sendBeacon doesn't support custom headers well, so this is best-effort
+    // The interval updates are the primary mechanism
+    try {
+      navigator.sendBeacon(url, blob);
+    } catch {
+      // Silently fail - not critical
+    }
   }
 }
 

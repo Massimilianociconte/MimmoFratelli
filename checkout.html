@@ -35,17 +35,36 @@
 
     <main class="checkout-page">
         <div class="checkout-container">
-            <h1 class="checkout-title">Checkout</h1>
+            <div class="checkout-header">
+                <h1 class="checkout-title">Checkout</h1>
+                <div class="checkout-steps">
+                    <div class="checkout-step active">
+                        <span class="step-number">1</span>
+                        <span class="step-label">Carrello</span>
+                    </div>
+                    <div class="step-divider"></div>
+                    <div class="checkout-step active">
+                        <span class="step-number">2</span>
+                        <span class="step-label">Spedizione</span>
+                    </div>
+                    <div class="step-divider"></div>
+                    <div class="checkout-step">
+                        <span class="step-number">3</span>
+                        <span class="step-label">Pagamento</span>
+                    </div>
+                </div>
+            </div>
 
             <div id="loginRequired" class="checkout-login-required" style="display: none;">
+                <div class="login-required-icon">🔐</div>
                 <p>Devi effettuare il login per procedere al checkout.</p>
-                <button class="btn btn-primary" onclick="openAuthModal()">Accedi</button>
+                <button class="btn btn-primary" onclick="openAuthModal()">Accedi al tuo account</button>
             </div>
 
             <div id="checkoutContent" class="checkout-content" style="display: none;">
                 <div class="checkout-grid">
                     <div class="checkout-summary">
-                        <h2>Riepilogo Ordine</h2>
+                        <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Riepilogo Ordine</h2>
                         <div id="cartItems" class="checkout-items"></div>
 
                         <!-- Promo Code Section -->
@@ -105,44 +124,92 @@
                                     id="discount">-€0.00</span></div>
                             <div class="total-row credit-row" style="display: none;"><span>Credito
                                     utilizzato</span><span id="creditAmount">-€0.00</span></div>
-                            <div class="total-row"><span>Consegna</span><span id="shipping">€0.00</span></div>
+                            <div class="total-row shipping-row"><span>Spedizione</span><span id="shipping">€0.00</span></div>
                             <div class="total-row total-final"><span>Totale</span><span id="total">€0.00</span></div>
                         </div>
                     </div>
 
-                    <div class="checkout-shipping">
-                        <h2>Indirizzo di Consegna</h2>
-                        <form id="shippingForm" class="shipping-form">
-                            <div class="form-row">
-                                <input type="text" id="firstName" placeholder="Nome" required>
-                                <input type="text" id="lastName" placeholder="Cognome" required>
-                            </div>
-                            <input type="text" id="address" placeholder="Indirizzo" required>
-                            <div class="form-row">
-                                <input type="text" id="city" placeholder="Città" required>
-                                <input type="text" id="postalCode" placeholder="CAP" required>
-                            </div>
-                            <input type="text" id="province" placeholder="Provincia" required>
-                            <input type="tel" id="phone" placeholder="Telefono" required>
-                        </form>
-                    </div>
-
-                    <div class="checkout-payment">
-                        <h2>Metodo di Pagamento</h2>
-                        <div class="payment-methods">
-                            <button id="payStripe" class="payment-btn payment-stripe">
-                                <span>💳</span> Carta di Credito
-                            </button>
-                            <button id="payPayPal" class="payment-btn payment-paypal">
-                                <span>🅿️</span> PayPal
-                            </button>
+                    <div class="checkout-right-col">
+                        <div class="checkout-shipping">
+                            <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Indirizzo di Consegna</h2>
+                            <form id="shippingForm" class="shipping-form">
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="firstName">Nome</label>
+                                        <input type="text" id="firstName" placeholder="Mario" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="lastName">Cognome</label>
+                                        <input type="text" id="lastName" placeholder="Rossi" required>
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <label for="address">Indirizzo</label>
+                                    <input type="text" id="address" placeholder="Via Roma 1" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="city">Città</label>
+                                        <input type="text" id="city" placeholder="Roma" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="postalCode">CAP</label>
+                                        <input type="text" id="postalCode" placeholder="00100" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="province">Provincia</label>
+                                        <input type="text" id="province" placeholder="RM" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="phone">Telefono</label>
+                                        <input type="tel" id="phone" placeholder="+39 333 1234567" required>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <p class="payment-secure">🔒 Pagamento sicuro e crittografato</p>
+
+                        <div class="checkout-payment">
+                            <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pagamento</h2>
+                            <div class="payment-methods">
+                                <button id="payStripe" class="payment-btn-main">
+                                    <span class="payment-btn-text">Procedi al pagamento</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+                            <div class="payment-logos">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-visa.svg" alt="Visa" width="36" height="24">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-mastercard.svg" alt="Mastercard" width="36" height="24">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-amex.svg" alt="Amex" width="36" height="24">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-applepay.svg" alt="Apple Pay" width="36" height="24">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-gpay.svg" alt="Google Pay" width="36" height="24">
+                                <img src="https://www.efarma.com/media/wysiwyg/klarna.png" alt="Klarna" width="36" height="24">
+                                <img src="https://www.efarma.com/static/version1762243823/frontend/Interactiv4/efarmaHyva/it_IT/svg/footer/ico-satispay.svg" alt="Satispay" width="36" height="24">
+                            </div>
+                            <p class="payment-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pagamento sicuro e crittografato via Stripe</p>
+                        </div>
+
+                        <div class="checkout-trust">
+                            <div class="trust-item">
+                                <span>🚚</span>
+                                <span>Consegna in 2-4 giorni</span>
+                            </div>
+                            <div class="trust-item">
+                                <span>🌿</span>
+                                <span>Prodotti sempre freschi</span>
+                            </div>
+                            <div class="trust-item">
+                                <span>📞</span>
+                                <span>Assistenza dedicata</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="emptyCart" class="checkout-empty" style="display: none;">
+                <div class="empty-cart-icon">🛒</div>
                 <p>Il tuo carrello è vuoto.</p>
                 <a href="collection.html" class="btn btn-primary">Scopri i Prodotti</a>
             </div>

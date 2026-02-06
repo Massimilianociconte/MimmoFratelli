@@ -171,19 +171,6 @@ class PromotionService {
   }
 
   /**
-   * Increment promotion usage count
-   */
-  async incrementUsage(promotionId) {
-    if (!isSupabaseConfigured()) return;
-
-    try {
-      await supabase.rpc('increment_promotion_usage', { promo_id: promotionId });
-    } catch (err) {
-      console.error('Increment promotion usage error:', err);
-    }
-  }
-
-  /**
    * Format discount display
    */
   formatDiscount(promotion) {

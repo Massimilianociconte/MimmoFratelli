@@ -11,6 +11,7 @@ import { giftCardService } from '../services/giftcard.js';
 import { wishlistService } from '../services/wishlist.js';
 import { referralService } from '../services/referral.js';
 import { capAutofillService } from '../services/cap-autofill.js';
+import { sanitizeString } from '../utils/validation.js';
 import { notificationCenter } from '../components/notification-center.js';
 
 // Initialize notification center
@@ -56,7 +57,7 @@ class CheckoutPage {
     await this.loadUserCredit();
     this.updateTotals();
     this.bindEvents();
-    this.prefillShippingAddress();
+    await this.prefillShippingAddress();
     this.checkFirstOrderCode();
     this.checkSavedPromoCode();
     this.initCapAutofill();
@@ -145,9 +146,14 @@ class CheckoutPage {
     try {
       const { authService } = await import('../services/auth.js');
       const user = await authService.getUser();
-      const { profile } = await authService.getProfile();
       
-      if (!user) return;
+      if (!user) {
+        console.log('Prefill: no user found');
+        return;
+      }
+      
+      const { profile, error } = await authService.getProfile();
+      console.log('Prefill profile data:', profile, 'error:', error);
       
       const meta = user.user_metadata || {};
       const data = {
@@ -159,6 +165,8 @@ class CheckoutPage {
         zip: profile?.zip || meta.zip || '',
         province: profile?.province || meta.province || ''
       };
+      
+      console.log('Prefill resolved data:', data);
       
       // Pre-fill form fields if they exist and have saved values
       const fields = {
@@ -173,12 +181,12 @@ class CheckoutPage {
       
       Object.entries(fields).forEach(([id, value]) => {
         const el = document.getElementById(id);
-        if (el && value && !el.value) {
+        if (el && value) {
           el.value = value;
         }
       });
     } catch (err) {
-      console.log('Could not prefill shipping address:', err);
+      console.error('Could not prefill shipping address:', err);
     }
   }
 
@@ -191,12 +199,15 @@ class CheckoutPage {
         variantInfo += ` (€${item.unitPrice.toFixed(2)}/Kg)`;
       }
       
+      const safeName = sanitizeString(item.name);
+      const safeImage = sanitizeString(item.image || 'Images/placeholder.jpg');
+      const safeVariant = sanitizeString(variantInfo);
       return `
         <div class="checkout-item">
-          <img src="${item.image || 'Images/placeholder.jpg'}" alt="${item.name}" class="checkout-item-img">
+          <img src="${safeImage}" alt="${safeName}" class="checkout-item-img">
           <div class="checkout-item-details">
-            <h4>${item.name}</h4>
-            <p>${variantInfo}</p>
+            <h4>${safeName}</h4>
+            <p>${safeVariant}</p>
             <p>Quantità: ${item.quantity}</p>
           </div>
           <div class="checkout-item-price">€${(item.price * item.quantity).toFixed(2)}</div>
@@ -209,8 +220,9 @@ class CheckoutPage {
     const discount = this.appliedPromo ? promotionService.calculateDiscount(this.cartItems, this.appliedPromo) : 0;
     
     // Calculate base total first (without credit)
+    const config = window.AVENUE_CONFIG || {};
     const subtotal = this.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = subtotal >= 50 ? 0 : 5.90;
+    const shipping = subtotal >= (config.FREE_SHIPPING_THRESHOLD || 50) ? 0 : (config.STANDARD_SHIPPING_COST || 2.90);
     let totalBeforeCredit = subtotal - discount + shipping;
     
     // Calculate credit to apply
@@ -305,7 +317,6 @@ class CheckoutPage {
     document.getElementById('applyPromo')?.addEventListener('click', () => this.applyPromoCode());
     document.getElementById('applyGiftCard')?.addEventListener('click', () => this.applyGiftCardCode());
     document.getElementById('payStripe')?.addEventListener('click', () => this.processPayment('stripe'));
-    document.getElementById('payPayPal')?.addEventListener('click', () => this.processPayment('paypal'));
   }
 
   /**
@@ -604,19 +615,7 @@ class CheckoutPage {
       creditToUse: this.creditToApply > 0 ? this.creditToApply : 0
     };
 
-    let result;
-    switch (provider) {
-      case 'stripe':
-        result = await paymentService.redirectToStripeCheckout(this.cartItems, options);
-        break;
-      case 'paypal':
-        result = await paymentService.createPayPalOrder(this.cartItems, options);
-        if (result.approvalUrl) {
-          window.location.href = result.approvalUrl;
-          return;
-        }
-        break;
-    }
+    const result = await paymentService.redirectToStripeCheckout(this.cartItems, options);
 
     if (result?.error) {
       alert(result.error);

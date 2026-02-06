@@ -9,14 +9,27 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = [
+  'https://www.mimmofratelli.com',
+  'https://mimmofratelli.com',
+  'http://localhost:3000',
+  'http://localhost:5500',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5500',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : 'https://www.mimmofratelli.com';
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -102,7 +115,7 @@ Deno.serve(async (req: Request) => {
       sent: potentialCount,
       message: `Notifica registrata per ${potentialCount} utenti iscritti.`
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
@@ -112,7 +125,7 @@ Deno.serve(async (req: Request) => {
       error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
   }
 });

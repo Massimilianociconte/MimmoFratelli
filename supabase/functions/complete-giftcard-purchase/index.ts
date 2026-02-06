@@ -14,10 +14,23 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://www.mimmofratelli.com",
+  "https://mimmofratelli.com",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5500",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 function generateGiftCardCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -36,7 +49,7 @@ function generateOrderNumber(): string {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -55,7 +68,7 @@ Deno.serve(async (req: Request) => {
     if (!user) {
       return new Response(JSON.stringify({ error: "Devi effettuare il login" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -63,7 +76,7 @@ Deno.serve(async (req: Request) => {
     if (!sessionId) {
       return new Response(JSON.stringify({ error: "Session ID mancante" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -74,7 +87,7 @@ Deno.serve(async (req: Request) => {
     if (session.payment_status !== 'paid') {
       return new Response(JSON.stringify({ error: "Pagamento non completato" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -82,7 +95,7 @@ Deno.serve(async (req: Request) => {
     if (session.metadata?.type !== 'gift_card') {
       return new Response(JSON.stringify({ error: "Sessione non valida per gift card" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -90,7 +103,7 @@ Deno.serve(async (req: Request) => {
     if (session.metadata?.userId !== user.id) {
       return new Response(JSON.stringify({ error: "Utente non autorizzato" }), {
         status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -118,7 +131,7 @@ Deno.serve(async (req: Request) => {
           giftCard: existingGiftCard,
           alreadyCreated: true
         }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         });
       }
     }
@@ -179,7 +192,7 @@ Deno.serve(async (req: Request) => {
       console.error('Gift card creation error:', gcError);
       return new Response(JSON.stringify({ error: "Errore nella creazione della gift card" }), {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
@@ -217,7 +230,7 @@ Deno.serve(async (req: Request) => {
       success: true, 
       giftCard: giftCard 
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
 
   } catch (error) {
@@ -226,7 +239,7 @@ Deno.serve(async (req: Request) => {
       error: error instanceof Error ? error.message : "Errore interno del server" 
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });
