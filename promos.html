@@ -54,35 +54,20 @@
                 <li><a href="index.html">🏠 Home</a></li>
                 <li class="menu-category">
                     <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=frutta&category=frutta-fresca">🍎 Frutta Fresca</a></li>
-                        <li><a href="collection.html?gender=frutta&category=agrumi">🍊 Agrumi</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="frutta"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=verdura&category=verdura-fresca">🥬 Verdura Fresca</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="verdura"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=conserve&category=formaggi">🧀 Formaggi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=salumi">🥓 Salumi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=olive-sottoli">🫒 Olive e Sottoli</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="conserve"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e
                         Estratti</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate
-                                Pronte</a></li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a>
-                        </li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=contorni">🥕 Contorni</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="secchi-estratti"></ul>
                 </li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
@@ -162,8 +147,11 @@
         import { cartService } from './js/services/cart.js';
         import { cartDrawer } from './js/components/cart-drawer.js';
         import { wishlistService } from './js/services/wishlist.js';
+        import { productService } from './js/services/products.js';
+        import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
+        import './js/components/dynamic-menu.js';
 
         // Initialize notification center
         notificationCenter.init();
@@ -275,54 +263,83 @@
             }
         }
 
+        // Store loaded products for quick add to cart
+        let loadedPromoProducts = [];
+
         async function loadPromoProducts() {
             const grid = document.getElementById('promoGrid');
-            const { items: favorites } = await wishlistService.getAllFavorites();
-            const favoriteIds = new Set(favorites.map(f => f.product_id));
 
-            const promoProducts = [
-                { id: 'p1', name: "Arance Tarocco", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p2', name: "Zucchine Bio", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&q=60&fm=webp"], gender: 'verdura' },
-                { id: 'p3', name: "Kiwi Zespri", price: 3.90, sale_price: 3.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p4', name: "Peperoni Misti", price: 4.50, sale_price: 3.80, unit: 'kg', images: ["https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&q=60&fm=webp"], gender: 'verdura' },
-                { id: 'p5', name: "Mele Fuji", price: 3.20, sale_price: 2.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p6', name: "Pomodori Ciliegino", price: 4.00, sale_price: 3.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1546470427-227c7369a9b9?w=400&q=60&fm=webp"], gender: 'verdura' }
-            ];
+            // Show loading state
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><div class="loading-spinner"></div><p style="color:#888;margin-top:1rem;">Caricamento offerte...</p></div>';
 
-            grid.innerHTML = promoProducts.map((product, i) => {
-                const isFav = favoriteIds.has(product.id);
-                const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
-                const productUrl = `product.html?id=${product.id}&gender=${product.gender}`;
+            try {
+                const { items: favorites } = await wishlistService.getAllFavorites();
+                const favoriteIds = new Set(favorites.map(f => f.product_id));
 
-                return `
-                    <div class="product-card-small" data-product-id="${product.id}" style="animation-delay: ${i * 0.05}s">
-                        <a href="${productUrl}" class="card-image-small">
-                            <img src="${product.images[0]}" alt="${product.name}" loading="lazy">
-                            <span class="sale-badge">-${discountPercent}%</span>
-                        </a>
-                        <button class="card-favorite-small ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${product.id}', this)">
-                            ${isFav ? '♥' : '♡'}
-                        </button>
-                        <button class="card-quick-add" data-product-id="${product.id}" onclick="event.stopPropagation(); quickAddToCart('${product.id}')" title="Aggiungi al carrello">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 5v14M5 12h14"/>
-                            </svg>
-                        </button>
-                        <div class="card-info-small">
-                            <h3 class="card-name-small">${product.name}</h3>
-                            <p class="card-price-small">
-                                <span class="original">€${product.price.toFixed(2)}</span>
-                                <span class="sale">€${product.sale_price.toFixed(2)}</span>
-                                <span class="card-unit">/${product.unit}</span>
-                            </p>
+                // Fetch real discounted products from DB
+                let promoProducts = [];
+
+                if (isSupabaseConfigured()) {
+                    const { data, error } = await supabase
+                        .from('products')
+                        .select('*')
+                        .eq('is_active', true)
+                        .not('sale_price', 'is', null)
+                        .order('updated_at', { ascending: false });
+
+                    if (!error && data) {
+                        // Filter: sale_price must be less than price
+                        promoProducts = data.filter(p => p.sale_price && p.sale_price < p.price);
+                    }
+                }
+
+                // Store for quickAddToCart
+                loadedPromoProducts = promoProducts;
+
+                if (promoProducts.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><p style="color:#888;font-size:1.1rem;">Nessuna offerta disponibile al momento.<br>Torna a trovarci presto!</p><a href="collection.html" style="display:inline-block;margin-top:1rem;padding:0.75rem 1.5rem;background:#2d5016;color:white;border-radius:8px;text-decoration:none;">Scopri i prodotti</a></div>';
+                    return;
+                }
+
+                grid.innerHTML = promoProducts.map((product, i) => {
+                    const isFav = favoriteIds.has(product.id);
+                    const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
+                    const unit = product.unit_measure || 'kg';
+                    const img = product.images?.[0] || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp';
+                    const productUrl = `product.html?id=${product.id}&gender=${product.gender || 'frutta'}`;
+
+                    return `
+                        <div class="product-card-small" data-product-id="${product.id}" style="animation-delay: ${i * 0.05}s">
+                            <a href="${productUrl}" class="card-image-small">
+                                <img src="${img}" alt="${product.name}" loading="lazy">
+                                <span class="sale-badge">-${discountPercent}%</span>
+                            </a>
+                            <button class="card-favorite-small ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${product.id}', this)">
+                                ${isFav ? '♥' : '♡'}
+                            </button>
+                            <button class="card-quick-add" data-product-id="${product.id}" onclick="event.stopPropagation(); quickAddToCart('${product.id}')" title="Aggiungi al carrello">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
+                            <div class="card-info-small">
+                                <h3 class="card-name-small">${product.name}</h3>
+                                <p class="card-price-small">
+                                    <span class="original">€${product.price.toFixed(2)}</span>
+                                    <span class="sale">€${product.sale_price.toFixed(2)}</span>
+                                    <span class="card-unit">/${unit}</span>
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading promo products:', err);
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;"><p style="color:#e74c3c;">Errore nel caricamento delle offerte.</p></div>';
+            }
         }
 
         window.toggleFavorite = async function (productId, btn) {
-            // Use the unified toggleFavorite method that handles both guest and authenticated users
             const { isFavorite, error } = await wishlistService.toggleFavorite(productId);
 
             if (error) {
@@ -339,32 +356,30 @@
             }
         };
 
-        // Quick add to cart
+        // Quick add to cart — uses real DB products
         window.quickAddToCart = async function (productId) {
-            const promoProducts = [
-                { id: 'p1', name: "Arance Tarocco", price: 2.50, sale_price: 1.90, unit: 'kg', images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p2', name: "Zucchine Bio", price: 2.80, sale_price: 2.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&q=60&fm=webp"], gender: 'verdura' },
-                { id: 'p3', name: "Kiwi Zespri", price: 3.90, sale_price: 3.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p4', name: "Peperoni Misti", price: 4.50, sale_price: 3.80, unit: 'kg', images: ["https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&q=60&fm=webp"], gender: 'verdura' },
-                { id: 'p5', name: "Mele Fuji", price: 3.20, sale_price: 2.50, unit: 'kg', images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&q=60&fm=webp"], gender: 'frutta' },
-                { id: 'p6', name: "Pomodori Ciliegino", price: 4.00, sale_price: 3.20, unit: 'kg', images: ["https://images.unsplash.com/photo-1546470427-227c7369a9b9?w=400&q=60&fm=webp"], gender: 'verdura' }
-            ];
-
-            const product = promoProducts.find(p => p.id === productId);
+            const product = loadedPromoProducts.find(p => p.id === productId);
             if (!product) return;
 
             const btn = document.querySelector(`.card-quick-add[data-product-id="${productId}"]`);
             if (btn) btn.classList.add('adding');
 
             try {
+                const unitMeasure = product.unit_measure || 'kg';
+                const isPieceBased = unitMeasure === 'pz';
+                const basePrice = product.sale_price && product.sale_price < product.price ? product.sale_price : product.price;
+                const defaultWeightGrams = isPieceBased ? null : 1000;
+
                 const item = {
                     productId: product.id,
                     name: product.name,
-                    price: product.sale_price,
-                    image: product.images[0],
-                    size: product.unit,
-                    color: 'Standard',
-                    quantity: 1
+                    price: basePrice,
+                    unitPrice: basePrice,
+                    image: product.images?.[0] || '',
+                    size: isPieceBased ? '1 pz' : '1 Kg',
+                    color: 'Fresco',
+                    quantity: 1,
+                    weight_grams: defaultWeightGrams
                 };
 
                 await cartService.addItem(item);

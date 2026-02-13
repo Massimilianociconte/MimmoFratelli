@@ -86,35 +86,20 @@
                 <li><a href="index.html">🏠 Home</a></li>
                 <li class="menu-category">
                     <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=frutta&category=frutta-fresca">🍎 Frutta Fresca</a></li>
-                        <li><a href="collection.html?gender=frutta&category=agrumi">🍊 Agrumi</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="frutta"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=verdura&category=verdura-fresca">🥬 Verdura Fresca</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="verdura"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=conserve&category=formaggi">🧀 Formaggi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=salumi">🥓 Salumi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=olive-sottoli">🫒 Olive e Sottoli</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="conserve"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e
                         Estratti</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate
-                                Pronte</a></li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a>
-                        </li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=contorni">🥕 Contorni</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="secchi-estratti"></ul>
                 </li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
@@ -144,6 +129,29 @@
                 <div class="scroll-line"></div>
             </div>
         </div>
+    </div>
+
+    <!-- Gender/Section Switcher -->
+    <div class="gender-switcher" id="genderSwitcher">
+        <div class="gender-switcher-track">
+            <a href="collection.html?gender=frutta" class="gender-pill" data-gender="frutta">
+                <span class="gender-pill-icon">🍎</span>
+                <span class="gender-pill-label">Frutta</span>
+            </a>
+            <a href="collection.html?gender=verdura" class="gender-pill" data-gender="verdura">
+                <span class="gender-pill-icon">🥬</span>
+                <span class="gender-pill-label">Verdura</span>
+            </a>
+            <a href="collection.html?gender=conserve" class="gender-pill" data-gender="conserve">
+                <span class="gender-pill-icon">🫙</span>
+                <span class="gender-pill-label">Conserve</span>
+            </a>
+            <a href="collection.html?gender=secchi-estratti" class="gender-pill" data-gender="secchi-estratti">
+                <span class="gender-pill-icon">🫒</span>
+                <span class="gender-pill-label">Secchi e Estratti</span>
+            </a>
+        </div>
+        <div class="gender-subcategories" id="genderSubcategories"></div>
     </div>
 
     <!-- Filter Bar -->
@@ -341,6 +349,7 @@
         import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { inAppNotifications } from './js/services/in-app-notifications.js';
         import { notificationPrompt } from './js/components/notification-prompt.js';
+        import { fetchCategoriesByGender, getCategoryIcon } from './js/components/dynamic-menu.js';
 
         // --- STABLE VIEWPORT HEIGHT FOR MOBILE ---
         function setVH() {
@@ -431,6 +440,36 @@
             };
             document.getElementById('pageTitle').textContent = titleMap[gender] || 'Prodotti';
             document.title = `${titleMap[gender] || 'Prodotti'} | Mimmo Fratelli`;
+
+            // --- Gender Switcher: highlight active pill & load subcategories ---
+            const categorySlug = params.get('category') || null;
+            document.querySelectorAll('.gender-pill').forEach(pill => {
+                if (pill.dataset.gender === gender) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+
+            const subContainer = document.getElementById('genderSubcategories');
+            try {
+                const catsByGender = await fetchCategoriesByGender();
+                const cats = catsByGender.get(gender) || [];
+                if (cats.length > 0 && subContainer) {
+                    subContainer.innerHTML = cats.map(cat => {
+                        const icon = getCategoryIcon(cat.slug);
+                        const isActive = categorySlug === cat.slug;
+                        return `<a href="collection.html?gender=${encodeURIComponent(gender)}&category=${encodeURIComponent(cat.slug)}" class="gender-sub-pill${isActive ? ' active' : ''}"><span class="gender-sub-pill-icon">${icon}</span> ${cat.name}</a>`;
+                    }).join('');
+                }
+            } catch (err) {
+                console.warn('Gender switcher: could not load subcategories', err);
+            }
+
+            const activePill = document.querySelector('.gender-pill.active');
+            if (activePill) {
+                activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
 
             // Load products
             await loadProducts();
@@ -1041,6 +1080,7 @@
         import { initReferralLanding } from './js/utils/referral-landing.js';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
+        import './js/components/dynamic-menu.js';
 
         // Initialize notification banner
         notificationBanner.init();

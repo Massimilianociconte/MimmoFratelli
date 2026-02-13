@@ -11,6 +11,17 @@ let products = [];
 let categories = [];
 let deleteCallback = null;
 
+// Track admin's own save actions to suppress self-notifications
+let lastProductSaveTimestamp = 0;
+
+// HTML sanitization utility (short alias for use in templates)
+function esc(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
 const adminContainer = document.getElementById('adminContainer');
@@ -187,11 +198,12 @@ async function showAdminPanel() {
 
     // Load data
     await loadDashboardData();
-    await loadProducts();
     await loadCategories();
+    await loadProducts();
     
-    // Restore last visited section from localStorage
-    const savedSection = localStorage.getItem('cms_current_section');
+    // Restore section from URL hash first, then localStorage fallback
+    const hashSection = window.location.hash?.replace('#', '');
+    const savedSection = hashSection || localStorage.getItem('cms_current_section');
     if (savedSection && document.getElementById(`${savedSection}Section`)) {
         navigateToSection(savedSection);
     }
@@ -269,7 +281,10 @@ async function restoreModalState() {
 
 // Navigation
 function navigateToSection(section) {
-    // Save current section to localStorage for persistence on refresh
+    // Persist via URL hash and localStorage
+    if (window.location.hash !== `#${section}`) {
+        history.replaceState(null, '', `#${section}`);
+    }
     localStorage.setItem('cms_current_section', section);
     
     // Update nav
@@ -367,10 +382,10 @@ function renderRecentProducts(products) {
             : `€${p.price}`;
         return `
         <tr>
-            <td><img src="${getImagePath(p.images?.[0])}" alt="${p.name}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
-            <td>${p.name}</td>
+            <td><img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
+            <td>${esc(p.name)}</td>
             <td class="price-cell">${priceHtml}</td>
-            <td>${p.categories?.name || '-'}</td>
+            <td>${esc(p.categories?.name || '-')}</td>
             <td><span class="status-badge ${p.is_active ? 'status-active' : 'status-inactive'}">${p.is_active ? 'Attivo' : 'Inattivo'}</span></td>
         </tr>
     `}).join('');
@@ -569,8 +584,8 @@ function renderProducts(productList) {
         const discountPercent = hasDiscount ? Math.round((1 - p.sale_price / p.price) * 100) : 0;
         return `
         <tr class="${hasDiscount ? 'has-discount' : ''}">
-            <td><img src="${getImagePath(p.images?.[0])}" alt="${p.name}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
-            <td><strong>${p.name}</strong><br><small style="color:#999">${p.slug}</small></td>
+            <td><img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
+            <td><strong>${esc(p.name)}</strong><br><small style="color:#999">${esc(p.slug)}</small></td>
             <td class="price-cell">${hasDiscount ? `<span class="price-original">€${p.price}</span>` : `€${p.price}`}</td>
             <td class="price-cell">${hasDiscount ? `<span class="price-sale">€${p.sale_price}</span> <span class="discount-tag">-${discountPercent}%</span>` : '-'}</td>
             <td>${getProductTypeLabel(p.gender)}</td>
@@ -578,7 +593,7 @@ function renderProducts(productList) {
             <td><span class="status-badge ${p.is_active ? 'status-active' : 'status-inactive'}">${p.is_active ? 'Attivo' : 'Inattivo'}</span></td>
             <td class="actions-cell">
                 <button class="btn-edit" onclick="editProduct('${p.id}')">Modifica</button>
-                <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${p.name}')">Elimina</button>
+                <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${esc(p.name).replace(/'/g, "\\'")}')">Elimina</button>
             </td>
         </tr>
     `}).join('');
@@ -591,9 +606,9 @@ function renderProducts(productList) {
             return `
             <div class="mobile-product-card ${hasDiscount ? 'has-discount' : ''}">
                 <div class="mobile-card-header">
-                    <img src="${getImagePath(p.images?.[0])}" alt="${p.name}" class="mobile-card-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+                    <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="mobile-card-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
                     <div class="mobile-card-title">
-                        <h4>${p.name}</h4>
+                        <h4>${esc(p.name)}</h4>
                         <span class="status-badge mobile-card-status ${p.is_active ? 'status-active' : 'status-inactive'}">${p.is_active ? 'Attivo' : 'Inattivo'}</span>
                     </div>
                     ${hasDiscount ? `<span class="mobile-discount-badge">-${discountPercent}%</span>` : ''}
@@ -618,7 +633,7 @@ function renderProducts(productList) {
                 </div>
                 <div class="mobile-card-actions">
                     <button class="btn-edit" onclick="editProduct('${p.id}')">✏️ Modifica</button>
-                    <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${p.name}')">🗑️ Elimina</button>
+                    <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${esc(p.name).replace(/'/g, "\\'")}')">🗑️ Elimina</button>
                 </div>
             </div>
         `}).join('');
@@ -699,8 +714,8 @@ function openProductModal(product = null) {
         categorySelect.value = product.category_id;
     }
     
-    // Add event listener for seasonal checkbox
-    document.getElementById('productSeasonal').addEventListener('change', updateSeasonalNotificationPanel);
+    // Set handler directly to avoid duplicate listeners on repeated modal opens
+    document.getElementById('productSeasonal').onchange = updateSeasonalNotificationPanel;
 
     modal.classList.add('active');
     
@@ -1340,6 +1355,7 @@ window.confirmDeleteProduct = function(id, name) {
 async function handleProductSubmit(e) {
     e.preventDefault();
     const errorEl = document.getElementById('productError');
+    const saveBtn = document.getElementById('saveProductBtn');
     errorEl.textContent = '';
 
     const id = document.getElementById('productId').value;
@@ -1351,12 +1367,35 @@ async function handleProductSubmit(e) {
     
     const unitMeasure = document.getElementById('productUnitMeasure').value || 'kg';
     
+    const name = document.getElementById('productName').value.trim();
+    const slug = document.getElementById('productSlug').value.trim();
+    const price = parseFloat(document.getElementById('productPrice').value);
+    const salePriceRaw = document.getElementById('productSalePrice').value;
+    const salePrice = salePriceRaw ? parseFloat(salePriceRaw) : null;
+    
+    // --- Client-side validation ---
+    if (!name) { errorEl.textContent = 'Il nome del prodotto è obbligatorio.'; return; }
+    if (!slug) { errorEl.textContent = 'Lo slug è obbligatorio.'; return; }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+        errorEl.textContent = 'Slug non valido: usa solo lettere minuscole, numeri e trattini (es. "pomodoro-rosso").';
+        return;
+    }
+    if (isNaN(price) || price <= 0) { errorEl.textContent = 'Il prezzo deve essere maggiore di zero.'; return; }
+    if (salePrice !== null && (isNaN(salePrice) || salePrice <= 0)) {
+        errorEl.textContent = 'Il prezzo saldo deve essere maggiore di zero oppure vuoto.';
+        return;
+    }
+    if (salePrice !== null && salePrice >= price) {
+        errorEl.textContent = `Il prezzo saldo (€${salePrice}) deve essere inferiore al prezzo di listino (€${price}).`;
+        return;
+    }
+    
     const productData = {
-        name: document.getElementById('productName').value.trim(),
-        slug: document.getElementById('productSlug').value.trim(),
+        name: name,
+        slug: slug,
         description: document.getElementById('productDescription').value.trim() || null,
-        price: parseFloat(document.getElementById('productPrice').value),
-        sale_price: document.getElementById('productSalePrice').value ? parseFloat(document.getElementById('productSalePrice').value) : null,
+        price: price,
+        sale_price: salePrice,
         gender: document.getElementById('productGender').value || null,
         page_type: document.getElementById('productPageType').value || null,
         category_id: document.getElementById('productCategory').value || null,
@@ -1374,8 +1413,15 @@ async function handleProductSubmit(e) {
         gross_weight_grams: null
     };
 
+    // --- Loading state ---
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Salvataggio...';
+
     try {
         console.log('Saving product:', productData);
+        
+        // Mark timestamp so realtime handler can suppress self-notifications
+        lastProductSaveTimestamp = Date.now();
         
         let result;
         let savedProductId = id;
@@ -1424,6 +1470,9 @@ async function handleProductSubmit(e) {
     } catch (err) {
         console.error('Save product error:', err);
         errorEl.textContent = 'Errore nel salvataggio: ' + err.message;
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Salva Prodotto';
     }
 }
 
@@ -1551,6 +1600,9 @@ async function handleTestNotification() {
 
 async function deleteProduct(id) {
     try {
+        // Delete weight_inventory rows first (child records)
+        await supabase.from('weight_inventory').delete().eq('product_id', id);
+        
         const { error } = await supabase.from('products').delete().eq('id', id);
         if (error) throw error;
 
@@ -1574,6 +1626,7 @@ async function loadCategories() {
         if (error) throw error;
         categories = data || [];
         renderCategories(categories);
+        populateCategoryFilter();
     } catch (err) {
         console.error('Load categories error:', err);
     }
@@ -1594,13 +1647,13 @@ function renderCategories(categoryList) {
         const icon = getCategoryIcon(c.slug);
         return `
         <tr>
-            <td><span class="category-icon">${icon}</span> <strong>${c.name}</strong></td>
-            <td><code>${c.slug}</code></td>
+            <td><span class="category-icon">${icon}</span> <strong>${esc(c.name)}</strong></td>
+            <td><code>${esc(c.slug)}</code></td>
             <td>${products.filter(p => p.category_id === c.id).length}</td>
             <td><span class="status-badge ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'Attiva' : 'Inattiva'}</span></td>
             <td class="action-btns">
                 <button class="btn-edit" onclick="editCategory('${c.id}')">Modifica</button>
-                <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${c.name}')">Elimina</button>
+                <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${esc(c.name).replace(/'/g, "\\'")}')">​Elimina</button>
             </td>
         </tr>
     `}).join('');
@@ -1614,14 +1667,14 @@ function renderCategories(categoryList) {
             <div class="mobile-product-card">
                 <div class="mobile-card-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0.5rem;">
                     <div class="mobile-card-title" style="flex: 1;">
-                        <h4><span class="category-icon-large">${icon}</span> ${c.name}</h4>
+                        <h4><span class="category-icon-large">${icon}</span> ${esc(c.name)}</h4>
                         <span class="status-badge mobile-card-status ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'Attiva' : 'Inattiva'}</span>
                     </div>
                 </div>
                 <div class="mobile-card-grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="mobile-card-field">
                         <span class="mobile-card-label">Slug</span>
-                        <span class="mobile-card-value"><code>${c.slug}</code></span>
+                        <span class="mobile-card-value"><code>${esc(c.slug)}</code></span>
                     </div>
                     <div class="mobile-card-field">
                         <span class="mobile-card-label">Prodotti</span>
@@ -1630,7 +1683,7 @@ function renderCategories(categoryList) {
                 </div>
                 <div class="mobile-card-actions">
                     <button class="btn-edit" onclick="editCategory('${c.id}')">✏️ Modifica</button>
-                    <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${c.name}')">🗑️ Elimina</button>
+                    <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${esc(c.name).replace(/'/g, "\\'")}')">🗑️ Elimina</button>
                 </div>
             </div>
         `}).join('');
@@ -1651,10 +1704,12 @@ function openCategoryModal(category = null) {
         document.getElementById('categoryName').value = category.name;
         document.getElementById('categorySlug').value = category.slug;
         document.getElementById('categoryDescription').value = category.description || '';
+        document.getElementById('categoryDisplayOrder').value = category.display_order || 0;
         document.getElementById('categoryActive').checked = category.is_active;
     } else {
         title.textContent = 'Nuova Categoria';
         document.getElementById('categoryId').value = '';
+        document.getElementById('categoryDisplayOrder').value = 0;
         document.getElementById('categoryActive').checked = true;
     }
 
@@ -1690,6 +1745,7 @@ async function handleCategorySubmit(e) {
         name: document.getElementById('categoryName').value.trim(),
         slug: document.getElementById('categorySlug').value.trim(),
         description: document.getElementById('categoryDescription').value.trim() || null,
+        display_order: parseInt(document.getElementById('categoryDisplayOrder').value) || 0,
         is_active: document.getElementById('categoryActive').checked
     };
 
@@ -1722,9 +1778,27 @@ async function handleCategorySubmit(e) {
 
 async function deleteCategory(id) {
     try {
+        // Check for products associated with this category
+        const linkedProducts = products.filter(p => p.category_id === id);
+        if (linkedProducts.length > 0) {
+            const proceed = confirm(
+                `Questa categoria ha ${linkedProducts.length} prodott${linkedProducts.length === 1 ? 'o' : 'i'} associat${linkedProducts.length === 1 ? 'o' : 'i'}.\n` +
+                `Procedendo, i prodotti verranno scollegati dalla categoria.\n\nContinuare?`
+            );
+            if (!proceed) return;
+            
+            // Unlink products from this category
+            const { error: unlinkError } = await supabase
+                .from('products')
+                .update({ category_id: null })
+                .eq('category_id', id);
+            if (unlinkError) throw unlinkError;
+        }
+        
         const { error } = await supabase.from('categories').delete().eq('id', id);
         if (error) throw error;
 
+        await loadProducts();
         await loadCategories();
         await loadDashboardData();
         showToast('Categoria eliminata!', 'success');
@@ -1907,19 +1981,34 @@ async function searchGiftCards() {
 
             return `
                 <div class="gc-result-item" onclick="showGcDetail('${gc.id}')">
-                    <div class="gc-result-preview ${style}">
-                        <div class="gc-logo">Mimmo Fratelli</div>
-                        <div class="gc-amount">€${gc.amount}</div>
-                        <div class="gc-code">${gc.code}</div>
+                    <div class="gc-card-img">
+                        <div class="gc-card-img-content">
+                            <div class="gc-card-img-header">
+                                <div class="gc-card-img-logo">Mimmo Fratelli</div>
+                                <div class="gc-card-img-badge">GIFT CARD</div>
+                            </div>
+                            <div class="gc-card-img-amount">€${gc.amount}</div>
+                            <div class="gc-card-img-recipient">
+                                <span class="gc-card-img-label">PER</span>
+                                <span class="gc-card-img-name">${esc(gc.recipient_name)}</span>
+                            </div>
+                            <div class="gc-card-img-footer">
+                                <div class="gc-card-img-from">
+                                    <span class="gc-card-img-label">DA</span>
+                                    <span>${esc(gc.sender_name)}</span>
+                                </div>
+                                <div class="gc-card-img-code">${esc(gc.code)}</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="gc-result-info">
                         <div class="gc-result-row">
                             <span class="gc-result-label">Destinatario</span>
-                            <span class="gc-result-value">${gc.recipient_name}</span>
+                            <span class="gc-result-value">${esc(gc.recipient_name)}</span>
                         </div>
                         <div class="gc-result-row">
                             <span class="gc-result-label">Da</span>
-                            <span class="gc-result-value">${gc.sender_name}</span>
+                            <span class="gc-result-value">${esc(gc.sender_name)}</span>
                         </div>
                         <div class="gc-result-row">
                             <span class="gc-result-label">Stato</span>
@@ -1965,24 +2054,25 @@ async function showGcDetail(gcId) {
 
         body.innerHTML = `
             <div class="gc-detail-header">
-                <div class="gc-detail-preview ${style}">
-                    <div class="gc-pattern"></div>
-                    <div class="gc-header">
-                        <div class="gc-logo">Mimmo Fratelli</div>
-                        <div class="gc-badge">GIFT CARD</div>
-                    </div>
-                    <div class="gc-amount" style="${style === 'elegant' ? 'color:#e6c347' : style === 'minimal' ? 'color:#a83f39' : ''}">€${gc.amount}</div>
-                    <div class="gc-recipient">
-                        <span class="gc-label">Per</span>
-                        <span class="gc-name">${gc.recipient_name}</span>
-                    </div>
-                    ${gc.message ? `<div class="gc-message">${gc.message}</div>` : ''}
-                    <div class="gc-footer">
-                        <div class="gc-from">
-                            <span class="gc-label">Da</span>
-                            <span>${gc.sender_name}</span>
+                <div class="gc-detail-img-card">
+                    <div class="gc-card-img-content">
+                        <div class="gc-card-img-header">
+                            <div class="gc-card-img-logo">Mimmo Fratelli</div>
+                            <div class="gc-card-img-badge">GIFT CARD</div>
                         </div>
-                        <div class="gc-code">${gc.code}</div>
+                        <div class="gc-card-img-amount" style="font-size:2.2rem;">€${gc.amount}</div>
+                        <div class="gc-card-img-recipient">
+                            <span class="gc-card-img-label">PER</span>
+                            <span class="gc-card-img-name">${esc(gc.recipient_name)}</span>
+                        </div>
+                        ${gc.message ? `<div class="gc-detail-message">${esc(gc.message)}</div>` : ''}
+                        <div class="gc-card-img-footer">
+                            <div class="gc-card-img-from">
+                                <span class="gc-card-img-label">DA</span>
+                                <span>${esc(gc.sender_name)}</span>
+                            </div>
+                            <div class="gc-card-img-code">${esc(gc.code)}</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -1998,7 +2088,7 @@ async function showGcDetail(gcId) {
                 <div class="gc-detail-grid">
                     <div class="gc-detail-field">
                         <label>Codice</label>
-                        <span style="font-family:monospace">${gc.code}</span>
+                        <span style="font-family:monospace">${esc(gc.code)}</span>
                     </div>
                     <div class="gc-detail-field">
                         <label>Stato</label>
@@ -2006,15 +2096,15 @@ async function showGcDetail(gcId) {
                     </div>
                     <div class="gc-detail-field">
                         <label>Destinatario</label>
-                        <span>${gc.recipient_name}</span>
+                        <span>${esc(gc.recipient_name)}</span>
                     </div>
                     <div class="gc-detail-field">
                         <label>Email</label>
-                        <span>${gc.recipient_email}</span>
+                        <span>${esc(gc.recipient_email)}</span>
                     </div>
                     <div class="gc-detail-field">
                         <label>Mittente</label>
-                        <span>${gc.sender_name}</span>
+                        <span>${esc(gc.sender_name)}</span>
                     </div>
                     <div class="gc-detail-field">
                         <label>Data Creazione</label>
@@ -2035,7 +2125,7 @@ async function showGcDetail(gcId) {
                     ${gc.message ? `
                     <div class="gc-detail-field full">
                         <label>Messaggio</label>
-                        <span>"${gc.message}"</span>
+                        <span>"${esc(gc.message)}"</span>
                     </div>
                     ` : ''}
                 </div>
@@ -2363,11 +2453,11 @@ function renderProductSelectionPage() {
     const visibleProducts = products.slice(start, end);
     
     grid.innerHTML = visibleProducts.map(p => `
-        <label class="product-select-item" data-name="${p.name.toLowerCase()}" data-id="${p.id}">
+        <label class="product-select-item" data-name="${esc(p.name).toLowerCase()}" data-id="${p.id}">
             <input type="checkbox" value="${p.id}" ${selectedProductIds.includes(p.id) ? 'checked' : ''} onchange="toggleProductSelection(this, '${p.id}')">
-            <img src="${getImagePath(p.images?.[0])}" alt="${p.name}" class="product-select-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+            <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-select-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
             <div class="product-select-info">
-                <div class="product-select-name">${p.name}</div>
+                <div class="product-select-name">${esc(p.name)}</div>
                 <div class="product-select-price">
                     ${p.sale_price ? `<span class="original">€${p.price}</span><span class="sale">€${p.sale_price}</span>` : `€${p.price}`}
                 </div>
@@ -2522,6 +2612,11 @@ window.applyDiscount = async function() {
         return;
     }
     
+    const discountLabel = discountType === 'percentage' ? `-${discountValue}%` : `-€${discountValue.toFixed(2)}`;
+    if (!confirm(`Applicare uno sconto di ${discountLabel} a ${affectedProducts.length} prodott${affectedProducts.length === 1 ? 'o' : 'i'}?`)) {
+        return;
+    }
+    
     const btn = document.getElementById('applyDiscountBtn');
     btn.disabled = true;
     btn.textContent = `⏳ Applicando a ${affectedProducts.length} prodotti...`;
@@ -2626,9 +2721,9 @@ async function loadDiscountedProducts() {
             <div class="discounted-product-card">
                 <span class="discount-badge">-${discountPercent}%</span>
                 <div class="product-info">
-                    <img src="${getImagePath(p.images?.[0])}" alt="${p.name}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+                    <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
                     <div class="product-details">
-                        <div class="product-name">${p.name}</div>
+                        <div class="product-name">${esc(p.name)}</div>
                         <div class="product-prices">
                             <span class="original-price">€${p.price}</span>
                             <span class="sale-price">€${p.sale_price}</span>
@@ -2714,10 +2809,12 @@ let orders = [];
 let filteredOrders = [];
 let orderSortField = 'created_at';
 let orderSortDir = 'desc';
+const ORDERS_PAGE_SIZE = 200;
+let allOrdersLoaded = false;
 
 async function loadOrders() {
     try {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
             .from('orders')
             .select(`
                 *,
@@ -2729,19 +2826,82 @@ async function loadOrders() {
                     size,
                     color
                 )
-            `)
-            .order('created_at', { ascending: false });
+            `, { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(0, ORDERS_PAGE_SIZE - 1);
 
         if (error) throw error;
         orders = data || [];
+        allOrdersLoaded = orders.length >= (count || 0);
         filteredOrders = [...orders];
         applyOrderFilters();
         setupOrdersEventListeners();
+        
+        if (!allOrdersLoaded) {
+            renderLoadMoreOrders(orders.length, count);
+        }
     } catch (err) {
         console.error('Load orders error:', err);
         showToast('Errore nel caricamento ordini', 'error');
     }
 }
+
+async function loadMoreOrders() {
+    try {
+        const offset = orders.length;
+        const { data, error, count } = await supabase
+            .from('orders')
+            .select(`
+                *,
+                order_items (
+                    id,
+                    product_name,
+                    product_price,
+                    quantity,
+                    size,
+                    color
+                )
+            `, { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(offset, offset + ORDERS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+        orders = orders.concat(data || []);
+        allOrdersLoaded = orders.length >= (count || 0);
+        filteredOrders = [...orders];
+        applyOrderFilters();
+        
+        // Remove or update load-more button
+        const loadMoreContainer = document.getElementById('ordersLoadMore');
+        if (loadMoreContainer) {
+            if (allOrdersLoaded) {
+                loadMoreContainer.remove();
+            } else {
+                renderLoadMoreOrders(orders.length, count);
+            }
+        }
+    } catch (err) {
+        console.error('Load more orders error:', err);
+        showToast('Errore nel caricamento ordini aggiuntivi', 'error');
+    }
+}
+
+function renderLoadMoreOrders(loaded, total) {
+    let container = document.getElementById('ordersLoadMore');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'ordersLoadMore';
+        container.style.cssText = 'text-align:center;padding:1.5rem;';
+        // Insert after the orders table container
+        const tableContainer = document.querySelector('#ordersSection .table-container');
+        if (tableContainer) tableContainer.after(container);
+    }
+    container.innerHTML = `
+        <p style="color:#666;font-size:0.85rem;margin:0 0 0.5rem;">Mostrati ${loaded} di ${total} ordini</p>
+        <button class="btn-secondary" onclick="loadMoreOrders()">Carica altri ${ORDERS_PAGE_SIZE}</button>
+    `;
+}
+window.loadMoreOrders = loadMoreOrders;
 
 function setupOrdersEventListeners() {
     // Search input
@@ -2776,7 +2936,7 @@ function setupOrdersEventListeners() {
     document.getElementById('orderPaymentFilter')?.addEventListener('change', applyOrderFilters);
     
     // Reset filters
-    document.getElementById('resetFiltersBtn')?.addEventListener('click', resetOrderFilters);
+    document.getElementById('resetOrderFiltersBtn')?.addEventListener('click', resetOrderFilters);
     
     // Sortable headers
     document.querySelectorAll('.orders-table th.sortable').forEach(th => {
@@ -3239,39 +3399,23 @@ window.viewOrderDetails = function(orderId) {
     
     const modal = document.createElement('div');
     modal.className = 'order-detail-modal';
-    modal.onclick = (e) => {
-        if (e.target === modal) modal.remove();
-    };
     modal.innerHTML = `
         <div class="order-detail-box">
-            <button class="order-detail-close" onclick="this.closest('.order-detail-modal').remove()">×</button>
+            <button class="order-detail-close">×</button>
             ${detailsHtml}
         </div>
     `;
     document.body.appendChild(modal);
-    
-    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
-    modal.querySelector('.order-detail-close').onclick = () => {
+    
+    const closeModal = () => {
         modal.remove();
         document.body.style.overflow = '';
         clearModalState();
     };
     
-    // Also clear state when clicking outside
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            modal.remove();
-            document.body.style.overflow = '';
-            clearModalState();
-        }
-    };
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            modal.remove();
-            document.body.style.overflow = '';
-        }
-    };
+    modal.querySelector('.order-detail-close').onclick = closeModal;
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 };
 
 // Update navigateToSection to load orders
@@ -3477,10 +3621,14 @@ function renderNotifications() {
             html += `<div class="notification-date-separator">${notifDate}</div>`;
         }
         
-        const iconClass = notification.type === 'new_product' ? 'new-product' : 
-                         notification.type === 'updated_product' ? 'updated-product' : 'low-stock';
-        const icon = notification.type === 'new_product' ? '🆕' : 
-                    notification.type === 'updated_product' ? '✏️' : '⚠️';
+        const iconMap = {
+            'new_product': { cls: 'new-product', icon: '🆕' },
+            'updated_product': { cls: 'updated-product', icon: '✏️' },
+            'new_order': { cls: 'new-order', icon: '📦' },
+            'new_giftcard': { cls: 'new-giftcard', icon: '🎁' },
+            'low_stock': { cls: 'low-stock', icon: '⚠️' }
+        };
+        const { cls: iconClass, icon } = iconMap[notification.type] || iconMap['low_stock'];
         
         const time = new Date(notification.timestamp).toLocaleTimeString('it-IT', { 
             hour: '2-digit', 
@@ -3537,6 +3685,9 @@ window.handleNotificationClick = function(notificationId, productId, productSlug
 function subscribeToProductChanges() {
     if (!supabase) return;
     
+    // Suppress self-notifications within 5 seconds of an admin save
+    const isSelfAction = () => (Date.now() - lastProductSaveTimestamp) < 5000;
+    
     // Subscribe to INSERT events
     supabase
         .channel('product-inserts')
@@ -3546,6 +3697,9 @@ function subscribeToProductChanges() {
             table: 'products'
         }, (payload) => {
             const product = payload.new;
+            // Still reload data, but skip notification if this was our own save
+            loadProducts();
+            if (isSelfAction()) return;
             addNotification({
                 type: 'new_product',
                 title: 'Nuovo prodotto aggiunto',
@@ -3553,8 +3707,6 @@ function subscribeToProductChanges() {
                 productId: product.id,
                 productSlug: product.slug
             });
-            // Reload products list
-            loadProducts();
         })
         .subscribe();
     
@@ -3568,6 +3720,12 @@ function subscribeToProductChanges() {
         }, (payload) => {
             const product = payload.new;
             const oldProduct = payload.old;
+            
+            // Always reload data to keep list fresh
+            loadProducts();
+            
+            // Skip notification if this was our own save
+            if (isSelfAction()) return;
             
             // Only notify for significant changes
             const significantChange = 
@@ -3591,9 +3749,44 @@ function subscribeToProductChanges() {
                     productId: product.id,
                     productSlug: product.slug
                 });
-                // Reload products list
-                loadProducts();
             }
+        })
+        .subscribe();
+    
+    // Subscribe to new orders
+    supabase
+        .channel('order-inserts')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'orders'
+        }, (payload) => {
+            const order = payload.new;
+            const total = parseFloat(order.total || 0).toFixed(2);
+            addNotification({
+                type: 'new_order',
+                title: 'Nuovo ordine ricevuto',
+                message: `Ordine #${order.order_number || '—'} — €${total}`
+            });
+            // Refresh dashboard stats
+            loadDashboardData();
+        })
+        .subscribe();
+    
+    // Subscribe to new gift card purchases
+    supabase
+        .channel('giftcard-inserts')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'gift_cards'
+        }, (payload) => {
+            const gc = payload.new;
+            addNotification({
+                type: 'new_giftcard',
+                title: 'Nuova Gift Card acquistata',
+                message: `€${gc.amount} per ${gc.recipient_name || 'N/D'}`
+            });
         })
         .subscribe();
 }
@@ -3681,12 +3874,10 @@ function renderKeywordTags() {
 }
 
 /**
- * Escape HTML to prevent XSS
+ * Escape HTML to prevent XSS (alias for esc())
  */
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return esc(text);
 }
 
 // Handle Enter key in keyword input

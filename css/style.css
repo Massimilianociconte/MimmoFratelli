@@ -183,6 +183,44 @@ nav.scrolled {
     background: rgba(250, 252, 248, 0.95);
     backdrop-filter: blur(10px);
     box-shadow: var(--shadow-sm);
+    color: var(--text-color);
+}
+
+/* Dark icons/text on white scrolled navbar (non-green navbars) */
+nav.scrolled .nav-icon-btn,
+nav.scrolled .menu-btn {
+    color: var(--text-color);
+}
+
+nav.scrolled .nav-icon-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+nav.scrolled .menu-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Keep white icons on navbars that stay green when scrolled */
+nav.nav-home.scrolled,
+nav.nav-transparent.scrolled {
+    color: #fff;
+}
+
+nav.nav-home.scrolled .nav-icon-btn,
+nav.nav-home.scrolled .menu-btn,
+nav.nav-transparent.scrolled .nav-icon-btn,
+nav.nav-transparent.scrolled .menu-btn {
+    color: #fff;
+}
+
+nav.nav-home.scrolled .nav-icon-btn:hover,
+nav.nav-transparent.scrolled .nav-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+nav.nav-home.scrolled .menu-btn:hover,
+nav.nav-transparent.scrolled .menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Force green navbar when menu is open, regardless of scroll state */
@@ -1029,6 +1067,154 @@ body.menu-open {
     }
 }
 
+/* Gender/Section Switcher */
+.gender-switcher {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--line-color);
+    padding: 0.75rem 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 51;
+}
+
+.gender-switcher-track {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.75rem;
+    justify-content: center;
+}
+
+.gender-switcher-track::-webkit-scrollbar {
+    display: none;
+}
+
+.gender-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 50px;
+    border: 1.5px solid var(--line-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.25s var(--ease);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.gender-pill:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(34, 139, 34, 0.1);
+}
+
+.gender-pill.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, #1a8f1a) 100%);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 3px 14px rgba(34, 139, 34, 0.3);
+}
+
+.gender-pill-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.gender-pill-label {
+    letter-spacing: 0.3px;
+}
+
+.gender-subcategories {
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.65rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gender-subcategories::-webkit-scrollbar {
+    display: none;
+}
+
+.gender-subcategories:empty {
+    display: none;
+    padding: 0;
+}
+
+.gender-sub-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    background: var(--bg-warm, #f5f3ef);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s var(--ease);
+    border: 1px solid transparent;
+    flex-shrink: 0;
+}
+
+.gender-sub-pill:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.gender-sub-pill.active {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+}
+
+.gender-sub-pill-icon {
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .gender-switcher {
+        padding: 0.6rem 0.75rem 0;
+    }
+
+    .gender-switcher-track {
+        justify-content: flex-start;
+        gap: 0.4rem;
+        padding-bottom: 0.6rem;
+    }
+
+    .gender-pill {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.72rem;
+    }
+
+    .gender-subcategories {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        padding-bottom: 0.55rem;
+    }
+
+    .gender-sub-pill {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.7rem;
+    }
+}
+
 /* Filter Bar */
 .filter-bar {
     display: flex;
@@ -1039,7 +1225,7 @@ body.menu-open {
     border-bottom: 1px solid var(--line-color);
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 49;
     gap: 1rem;
 }
 
@@ -4100,6 +4286,7 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     display: flex;
     gap: 0.5rem;
     width: 100%;
+    align-items: center;
 }
 
 .promo-input {
@@ -4139,13 +4326,22 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
 }
 
 /* Pulsanti Applica specifici per checkout - visibilità desktop */
+.btn.btn-promo {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    opacity: 1;
+    transform: none;
+    border-radius: 8px;
+}
+
 .btn-apply-promo-code,
 .btn-apply-giftcard {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     min-width: 100px;
-    height: auto;
     visibility: visible;
     opacity: 1;
 }
@@ -4155,7 +4351,7 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     .promo-input-group {
         display: flex;
         flex-direction: row;
-        align-items: stretch;
+        align-items: center;
     }
 
     .promo-input-group .promo-input {
@@ -4164,7 +4360,6 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
 
     .promo-input-group .btn-promo {
         flex-shrink: 0;
-        align-self: stretch;
     }
 }
 
@@ -5184,10 +5379,21 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
 }
 
 /* Scrolled state - reset to default */
+.promos-page nav.nav-on-green.scrolled .logo a,
+.promos-page nav.nav-on-green.scrolled .menu-btn {
+    color: var(--text-color);
+    text-shadow: none;
+}
+
 .promos-page nav.nav-on-green.scrolled .nav-icon-btn {
+    color: var(--text-color);
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+}
+
+.promos-page nav.nav-on-green.scrolled .nav-icon-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .promos-page nav.nav-on-green.scrolled .nav-icon-btn svg {
@@ -7294,6 +7500,15 @@ img {
     color: #ffffff;
 }
 
+/* Keep white logo on nav-transparent since background stays green when scrolled */
+.nav-transparent.scrolled .logo-img-white {
+    display: block;
+}
+
+.nav-transparent.scrolled .logo-img-green {
+    display: none;
+}
+
 .logo {
     display: flex;
     align-items: center;
@@ -8495,6 +8710,7 @@ img {
 .promo-input-group {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 
 .promo-input {
@@ -9097,6 +9313,17 @@ nav.scrolled .notif-center-btn:hover {
     background: rgba(255, 255, 255, 0.25);
 }
 
+.nav-on-green.scrolled .notif-center-btn {
+    background: var(--bg-warm);
+    border-color: var(--line-color);
+    color: var(--text-color);
+}
+
+.nav-on-green.scrolled .notif-center-btn:hover {
+    background: var(--line-color);
+    border-color: var(--primary);
+}
+
 /* Nav-actions wrapper compatibility */
 .nav-actions .notif-center-wrapper {
     display: inline-flex;
@@ -9109,6 +9336,26 @@ nav.scrolled .notif-center-btn:hover {
 }
 
 .nav-actions .notif-center-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure notif button uses dark style on white scrolled navbars */
+nav.scrolled .nav-actions .notif-center-btn {
+    color: var(--text-color);
+}
+
+nav.scrolled .nav-actions .notif-center-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Keep white on green scrolled navbars */
+nav.nav-home.scrolled .nav-actions .notif-center-btn,
+nav.nav-transparent.scrolled .nav-actions .notif-center-btn {
+    color: #fff;
+}
+
+nav.nav-home.scrolled .nav-actions .notif-center-btn:hover,
+nav.nav-transparent.scrolled .nav-actions .notif-center-btn:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
@@ -9150,9 +9397,16 @@ nav.scrolled .notif-center-btn:hover {
     border-color: white;
 }
 
-.nav-home.scrolled .nav-search-btn {
+nav.scrolled .nav-search-btn {
     color: var(--primary);
     background: var(--primary-soft);
+    border-color: var(--primary);
+    backdrop-filter: none;
+}
+
+nav.scrolled .nav-search-btn:hover {
+    background: var(--primary);
+    color: #fff;
     border-color: var(--primary);
 }
 
@@ -9161,6 +9415,7 @@ nav.scrolled .notif-center-btn:hover {
     color: white;
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
 }
 
 .nav-home.scrolled .nav-search-btn:hover,

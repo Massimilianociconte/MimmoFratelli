@@ -527,7 +527,7 @@
                             </select>
                         </div>
                         
-                        <button class="btn-reset-filters" id="resetFiltersBtn">🔄 Reset filtri</button>
+                        <button class="btn-reset-filters" id="resetOrderFiltersBtn">🔄 Reset filtri</button>
                     </div>
                     
                     <div class="search-results-info">
@@ -950,6 +950,11 @@
                 <div class="form-group">
                     <label for="categoryDescription">Descrizione</label>
                     <textarea id="categoryDescription" rows="2" placeholder="Descrizione"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="categoryDisplayOrder">Ordine di visualizzazione</label>
+                    <input type="number" id="categoryDisplayOrder" min="0" step="1" value="0" placeholder="0 = default">
+                    <small style="color:#888;font-size:0.8rem;">Le categorie nel frontend vengono ordinate per questo valore (crescente).</small>
                 </div>
                 <div class="form-group checkbox-group">
                     <label>

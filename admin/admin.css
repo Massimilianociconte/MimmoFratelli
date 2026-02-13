@@ -2234,68 +2234,105 @@ body {
     box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
-.gc-result-preview {
-    height: 140px;
-    padding: 1rem;
+/* Image-based gift card preview in search results */
+.gc-card-img {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    overflow: hidden;
+    background-image: url('/Images/google-wallet/background.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gc-card-img-content {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 48%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    position: relative;
+    text-align: right;
+    color: #2d5c35;
 }
 
-.gc-result-preview.elegant {
-    background: linear-gradient(135deg, #2d5c35, #3d7c47);
-    color: #fff;
+.gc-card-img-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
 }
 
-.gc-result-preview.avenue {
-    background: linear-gradient(135deg, #6ab04c, #00b894);
-    color: #fff;
-}
-
-.gc-result-preview.minimal {
-    background: #fff;
-    color: #1a1a1a;
-    border-bottom: 1px solid #e4ebe4;
-}
-
-.gc-result-preview.festive {
-    background: linear-gradient(135deg, #e8722a, #f59d5e);
-    color: #fff;
-}
-
-.gc-result-preview .gc-logo {
+.gc-card-img-logo {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-style: italic;
+    font-weight: 600;
+    color: #2d5c35;
 }
 
-.gc-result-preview .gc-amount {
+.gc-card-img-badge {
+    font-size: 0.4rem;
+    letter-spacing: 1.5px;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    background: #2d5c35;
+    color: #fff;
+    font-weight: 600;
+}
+
+.gc-card-img-amount {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 700;
+    color: #2d5c35;
+    margin: 0.15rem 0;
+    line-height: 1;
 }
 
-.gc-result-preview.elegant .gc-amount {
-    color: #fff;
+.gc-card-img-recipient {
+    margin-bottom: 0.1rem;
 }
 
-.gc-result-preview.avenue .gc-amount {
-    color: #fff;
+.gc-card-img-label {
+    font-size: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    display: block;
+    color: #5a6b5a;
 }
 
-.gc-result-preview.minimal .gc-amount {
-    color: #3d7c47;
+.gc-card-img-name {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: #2d5c35;
 }
 
-.gc-result-preview.festive .gc-amount {
-    color: #fff;
+.gc-card-img-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    margin-top: auto;
 }
 
-.gc-result-preview .gc-code {
+.gc-card-img-from {
+    font-size: 0.5rem;
+    color: #5a6b5a;
+}
+
+.gc-card-img-code {
     font-family: monospace;
-    font-size: 0.7rem;
-    opacity: 0.8;
+    font-size: 0.4rem;
+    letter-spacing: 1px;
+    background: rgba(45, 92, 53, 0.1);
+    padding: 0.2rem 0.35rem;
+    border-radius: 3px;
+    color: #2d5c35;
 }
 
 .gc-result-info {
@@ -2389,15 +2426,42 @@ body {
     text-align: center;
 }
 
-.gc-detail-preview {
+.gc-detail-img-card {
     width: 320px;
     height: 200px;
     margin: 0 auto 1.5rem;
     border-radius: 12px;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background-image: url('/Images/google-wallet/background.png');
+    background-size: cover;
+    background-position: center;
     box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.gc-detail-img-card .gc-card-img-content {
+    right: 1rem;
+    top: 1rem;
+    bottom: 1rem;
+}
+
+.gc-detail-img-card .gc-card-img-logo {
+    font-size: 1rem;
+}
+
+.gc-detail-img-card .gc-card-img-name {
+    font-size: 0.85rem;
+}
+
+.gc-detail-message {
+    font-size: 0.6rem;
+    font-style: italic;
+    color: #5a6b5a;
+    opacity: 0.85;
+    line-height: 1.3;
+    margin: 0.1rem 0;
+    max-height: 2rem;
+    overflow: hidden;
 }
 
 .gc-detail-qr {
@@ -4765,6 +4829,14 @@ body {
 
 .notification-icon.low-stock {
     background: #fef3c7;
+}
+
+.notification-icon.new-order {
+    background: #ffedd5;
+}
+
+.notification-icon.new-giftcard {
+    background: #f3e8ff;
 }
 
 .notification-content {

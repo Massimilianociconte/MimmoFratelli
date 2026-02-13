@@ -53,35 +53,20 @@
                 <li><a href="index.html">🏠 Home</a></li>
                 <li class="menu-category">
                     <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=frutta&category=frutta-fresca">🍎 Frutta Fresca</a></li>
-                        <li><a href="collection.html?gender=frutta&category=agrumi">🍊 Agrumi</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="frutta"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=verdura&category=verdura-fresca">🥬 Verdura Fresca</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="verdura"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=conserve&category=formaggi">🧀 Formaggi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=salumi">🥓 Salumi</a></li>
-                        <li><a href="collection.html?gender=conserve&category=olive-sottoli">🫒 Olive e Sottoli</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="conserve"></ul>
                 </li>
                 <li class="menu-category">
                     <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e
                         Estratti</a>
-                    <ul class="menu-subcategories">
-                        <li><a href="collection.html?gender=secchi-estratti&category=insalate-pronte">🥗 Insalate
-                                Pronte</a></li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=piatti-pronti">🍲 Piatti Pronti</a>
-                        </li>
-                        <li><a href="collection.html?gender=secchi-estratti&category=contorni">🥕 Contorni</a></li>
-                    </ul>
+                    <ul class="menu-subcategories" data-gender="secchi-estratti"></ul>
                 </li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
@@ -189,6 +174,7 @@
         import { wishlistService } from './js/services/wishlist.js';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
+        import './js/components/dynamic-menu.js';
 
         // Initialize notification center
         notificationCenter.init();
