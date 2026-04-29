@@ -104,15 +104,13 @@ class GiftCardService {
         }
 
         try {
-            const { data: giftCard, error } = await supabase
-                .from('gift_cards')
-                .select('*')
-                .eq('qr_code_token', qrToken)
-                .maybeSingle();
+            const { data, error } = await supabase
+                .rpc('get_gift_card_by_token', { p_qr_token: qrToken });
 
             if (error) throw error;
+            const giftCard = data?.giftCard || null;
             if (!giftCard) {
-                return { error: 'Gift card non trovata' };
+                return { error: data?.error || 'Gift card non trovata' };
             }
 
             return { giftCard };
@@ -137,10 +135,7 @@ class GiftCardService {
 
         try {
             const { data, error } = await supabase
-                .rpc('redeem_gift_card', {
-                    p_qr_token: qrToken,
-                    p_user_id: session.session.user.id
-                });
+                .rpc('redeem_gift_card', { p_qr_token: qrToken });
 
             if (error) throw error;
 
@@ -336,29 +331,19 @@ class GiftCardService {
 
         try {
             const { data, error } = await supabase
-                .from('gift_cards')
-                .select('*')
-                .eq('code', code.toUpperCase().trim().replace(/-/g, ''))
-                .maybeSingle();
+                .rpc('validate_gift_card_code', { p_code: code });
 
-            // Try with dashes if not found
-            if (!data) {
-                const { data: data2 } = await supabase
-                    .from('gift_cards')
-                    .select('*')
-                    .eq('code', code.toUpperCase().trim())
-                    .maybeSingle();
-                
-                if (data2) {
-                    return this._validateGiftCardData(data2);
-                }
+            if (error) throw error;
+
+            if (!data?.valid) {
+                return { valid: false, error: data?.error || 'Codice non trovato o non valido' };
             }
 
-            if (error || !data) {
-                return { valid: false, error: 'Codice non trovato o non valido' };
-            }
-
-            return this._validateGiftCardData(data);
+            return {
+                valid: true,
+                balance: data.balance,
+                giftCard: data.giftCard
+            };
         } catch (err) {
             console.error('Validate code error:', err);
             return { valid: false, error: 'Errore nella verifica del codice' };

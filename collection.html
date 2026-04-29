@@ -350,7 +350,6 @@
         import { productService } from './js/services/products.js';
         import { supabase, isSupabaseConfigured } from './js/supabase.js';
         import { inAppNotifications } from './js/services/in-app-notifications.js';
-        import { notificationPrompt } from './js/components/notification-prompt.js';
         import { fetchCategoriesByGender, getCategoryIcon } from './js/components/dynamic-menu.js';
 
         // --- STABLE VIEWPORT HEIGHT FOR MOBILE ---
@@ -365,6 +364,30 @@
         let products = [];
         const params = new URLSearchParams(window.location.search);
         const gender = params.get('gender') || 'frutta';
+        const FALLBACK_IMAGE = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22 viewBox=%220 0 400 400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f4f1ec%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2264%22%3E%F0%9F%8D%8E%3C/text%3E%3C/svg%3E';
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function safeImageUrl(value) {
+            try {
+                const url = new URL(value || FALLBACK_IMAGE, window.location.origin);
+                return ['http:', 'https:', 'data:'].includes(url.protocol) ? url.href : FALLBACK_IMAGE;
+            } catch {
+                return FALLBACK_IMAGE;
+            }
+        }
+
+        function jsString(value) {
+            return JSON.stringify(String(value ?? '')).replace(/</g, '\\u003c');
+        }
 
         // Menu toggle
         let menuScrollY = 0;
@@ -416,8 +439,6 @@
             // Initialize in-app notifications
             inAppNotifications.init();
 
-            // Show notification prompt after a delay
-            notificationPrompt.init();
             authModal.init();
             profileDrawer.init();
             cartDrawer.init();
@@ -461,7 +482,7 @@
                     subContainer.innerHTML = cats.map(cat => {
                         const icon = getCategoryIcon(cat.slug);
                         const isActive = categorySlug === cat.slug;
-                        return `<a href="collection.html?gender=${encodeURIComponent(gender)}&category=${encodeURIComponent(cat.slug)}" class="gender-sub-pill${isActive ? ' active' : ''}"><span class="gender-sub-pill-icon">${icon}</span> ${cat.name}</a>`;
+                        return `<a href="collection.html?gender=${encodeURIComponent(gender)}&category=${encodeURIComponent(cat.slug)}" class="gender-sub-pill${isActive ? ' active' : ''}"><span class="gender-sub-pill-icon">${escapeHtml(icon)}</span> ${escapeHtml(cat.name)}</a>`;
                     }).join('');
                 }
             } catch (err) {
@@ -843,9 +864,13 @@
 
             grid.innerHTML = products.map((product, i) => {
                 const isFav = favoriteIds.has(product.id);
-                const hasDiscount = product.sale_price && product.sale_price < product.price;
-                const img = product.images?.[0] || '';
-                const productUrl = `product.html?id=${product.id}&gender=${gender}`;
+                const price = Number(product.price) || 0;
+                const salePrice = Number(product.sale_price) || 0;
+                const hasDiscount = salePrice && salePrice < price;
+                const img = safeImageUrl(product.images?.[0]);
+                const productId = String(product.id ?? '');
+                const productName = escapeHtml(product.name || 'Prodotto');
+                const productUrl = `product.html?id=${encodeURIComponent(productId)}&gender=${encodeURIComponent(gender)}`;
                 const isUnavailable = !product.is_active && product.is_active !== undefined;
                 // Get unit from unit_measure field, with proper display labels
                 const unitMeasure = product.unit_measure || 'kg';
@@ -861,27 +886,27 @@
                         : '';
 
                 return `
-                    <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${product.id}" style="animation-delay: ${i * 0.03}s">
-                        <a href="${productUrl}" class="card-image-small">
-                            <img src="${img}" alt="${product.name}" loading="lazy" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
+                    <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${escapeHtml(productId)}" style="animation-delay: ${i * 0.03}s">
+                        <a href="${escapeHtml(productUrl)}" class="card-image-small">
+                            <img src="${escapeHtml(img)}" alt="${productName}" loading="lazy" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
                             ${seasonalBadge}
                             ${hasDiscount && !isUnavailable ? '<span class="sale-badge">Offerta</span>' : ''}
                             ${product.is_new ? '<span class="fresh-badge">Novità</span>' : ''}
                         </a>
-                        <button class="card-favorite-small ${isFav ? 'active' : ''}" data-product-id="${product.id}" onclick="event.stopPropagation(); toggleFavorite('${product.id}', this)">
+                        <button class="card-favorite-small ${isFav ? 'active' : ''}" data-product-id="${escapeHtml(productId)}" onclick='event.stopPropagation(); toggleFavorite(${jsString(productId)}, this)'>
                             ${isFav ? '♥' : '♡'}
                         </button>
                         ${!isUnavailable ? `
-                        <button class="card-quick-add" data-product-id="${product.id}" onclick="event.stopPropagation(); quickAddToCart('${product.id}')" title="Aggiungi al carrello">
+                        <button class="card-quick-add" data-product-id="${escapeHtml(productId)}" onclick='event.stopPropagation(); quickAddToCart(${jsString(productId)})' title="Aggiungi al carrello">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 5v14M5 12h14"/>
                             </svg>
                         </button>
                         ` : ''}
                         <div class="card-info-small">
-                            <h3 class="card-name-small">${product.name}</h3>
+                            <h3 class="card-name-small">${productName}</h3>
                             <p class="card-price-small">
-                                ${hasDiscount ? `<span class="original">€${product.price.toFixed(2)}</span><span class="sale">€${product.sale_price.toFixed(2)}</span>` : `€${product.price.toFixed(2)}`}
+                                ${hasDiscount ? `<span class="original">€${price.toFixed(2)}</span><span class="sale">€${salePrice.toFixed(2)}</span>` : `€${price.toFixed(2)}`}
                                 <span class="card-unit">/${unit}</span>
                             </p>
                         </div>

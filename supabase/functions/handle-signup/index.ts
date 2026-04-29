@@ -79,21 +79,89 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
+      supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { userId, email, referralCode, ipAddress }: SignupRequest = await req.json();
+    const { userId: requestedUserId, email: requestedEmail, referralCode, ipAddress }: SignupRequest = await req.json();
 
-    if (!userId || !email) {
+    if (!requestedUserId || !requestedEmail) {
       return new Response(JSON.stringify({ error: "userId and email required" }), {
         status: 400,
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       });
     }
 
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearerToken = authHeader.replace(/^Bearer\s+/i, "");
+
+    if (bearerToken && bearerToken !== supabaseAnonKey) {
+      const supabaseUserClient = createClient(
+        supabaseUrl,
+        supabaseAnonKey,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user: authenticatedUser } } = await supabaseUserClient.auth.getUser();
+
+      if (!authenticatedUser || authenticatedUser.id !== requestedUserId) {
+        return new Response(JSON.stringify({ error: "Unauthorized signup context" }), {
+          status: 401,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const { data: signupUser, error: signupUserError } = await supabaseAdmin.auth.admin.getUserById(requestedUserId);
+    if (signupUserError || !signupUser?.user) {
+      return new Response(JSON.stringify({ error: "Signup user not found" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    if (signupUser.user.email?.toLowerCase() !== requestedEmail.toLowerCase()) {
+      return new Response(JSON.stringify({ error: "Signup email does not match user" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = signupUser.user.id;
+    const email = signupUser.user.email || requestedEmail;
+
     console.log(`Processing signup for user ${userId} (${email})`);
+
+    const [{ data: existingReferralCode }, { data: existingFirstOrderPromo }] = await Promise.all([
+      supabaseAdmin
+        .from('user_referral_codes')
+        .select('code')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('promotions')
+        .select('code, discount_value, referral_bonus')
+        .eq('user_id', userId)
+        .eq('is_first_order_code', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    ]);
+
+    if (existingReferralCode && existingFirstOrderPromo) {
+      return new Response(JSON.stringify({
+        success: true,
+        firstOrderCode: existingFirstOrderPromo.code,
+        discountPercent: Number(existingFirstOrderPromo.discount_value),
+        referralCode: existingReferralCode.code,
+        isReferral: Boolean(existingFirstOrderPromo.referral_bonus),
+        alreadyProcessed: true
+      }), {
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
 
     // Get system configuration
     const { data: configData } = await supabaseAdmin
@@ -173,39 +241,43 @@ Deno.serve(async (req: Request) => {
     endsAt.setDate(endsAt.getDate() + validityDays);
 
     // Create first-order promotion
-    const { data: promotion, error: promoError } = await supabaseAdmin
-      .from('promotions')
-      .insert({
-        name: isValidReferral ? 'Sconto Primo Ordine (Referral)' : 'Sconto Primo Ordine',
-        description: `${discountPercent}% di sconto sul tuo primo ordine`,
-        code: promoCode,
-        discount_type: 'percentage',
-        discount_value: discountPercent,
-        min_purchase: 0,
-        max_discount: null,
-        usage_limit: 1,
-        usage_count: 0,
-        starts_at: startsAt.toISOString(),
-        ends_at: endsAt.toISOString(),
-        is_active: true,
-        user_id: userId,
-        is_first_order_code: true,
-        referral_bonus: isValidReferral
-      })
-      .select()
-      .single();
+    let firstOrderCode = existingFirstOrderPromo?.code || null;
+    if (!firstOrderCode) {
+      const { data: promotion, error: promoError } = await supabaseAdmin
+        .from('promotions')
+        .insert({
+          name: isValidReferral ? 'Sconto Primo Ordine (Referral)' : 'Sconto Primo Ordine',
+          description: `${discountPercent}% di sconto sul tuo primo ordine`,
+          code: promoCode,
+          discount_type: 'percentage',
+          discount_value: discountPercent,
+          min_purchase: 0,
+          max_discount: null,
+          usage_limit: 1,
+          usage_count: 0,
+          starts_at: startsAt.toISOString(),
+          ends_at: endsAt.toISOString(),
+          is_active: true,
+          user_id: userId,
+          is_first_order_code: true,
+          referral_bonus: isValidReferral
+        })
+        .select()
+        .single();
 
-    if (promoError) {
-      console.error('Error creating promotion:', promoError);
-      throw promoError;
+      if (promoError) {
+        console.error('Error creating promotion:', promoError);
+        throw promoError;
+      }
+
+      firstOrderCode = promotion.code;
+      console.log(`Created first-order code ${firstOrderCode} with ${discountPercent}% discount`);
     }
 
-    console.log(`Created first-order code ${promoCode} with ${discountPercent}% discount`);
-
     // Generate unique referral code for the new user
-    let userReferralCode = generateReferralCode();
+    let userReferralCode = existingReferralCode?.code || generateReferralCode();
     attempts = 0;
-    while (attempts < 10) {
+    while (!existingReferralCode && attempts < 10) {
       const { data: existing } = await supabaseAdmin
         .from('user_referral_codes')
         .select('code')
@@ -218,22 +290,24 @@ Deno.serve(async (req: Request) => {
     }
 
     // Create user's referral code
-    const { error: refCodeError } = await supabaseAdmin
-      .from('user_referral_codes')
-      .insert({
-        user_id: userId,
-        code: userReferralCode,
-        is_active: true,
-        total_referrals: 0,
-        total_conversions: 0,
-        total_earned: 0
-      });
+    if (!existingReferralCode) {
+      const { error: refCodeError } = await supabaseAdmin
+        .from('user_referral_codes')
+        .insert({
+          user_id: userId,
+          code: userReferralCode,
+          is_active: true,
+          total_referrals: 0,
+          total_conversions: 0,
+          total_earned: 0
+        });
 
-    if (refCodeError) {
-      console.error('Error creating referral code:', refCodeError);
-      // Don't throw - this is not critical
-    } else {
-      console.log(`Created referral code ${userReferralCode} for user`);
+      if (refCodeError) {
+        console.error('Error creating referral code:', refCodeError);
+        // Don't throw - this is not critical
+      } else {
+        console.log(`Created referral code ${userReferralCode} for user`);
+      }
     }
 
     // Create referral relationship if valid
@@ -274,7 +348,7 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify({
       success: true,
-      firstOrderCode: promoCode,
+      firstOrderCode,
       discountPercent,
       referralCode: userReferralCode,
       isReferral: isValidReferral,

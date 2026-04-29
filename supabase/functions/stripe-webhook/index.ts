@@ -29,6 +29,32 @@ interface OrderItem {
   weight_grams?: number | null;
 }
 
+interface PendingCheckoutSession {
+  stripe_session_id: string;
+  user_id: string;
+  checkout_type: "order" | "gift_card";
+  items: PendingCheckoutItem[];
+  shipping_address: Record<string, string> | null;
+  subtotal: number | string;
+  discount_amount: number | string;
+  gift_card_amount: number | string;
+  user_credit_amount: number | string;
+  shipping_cost: number | string;
+  total: number | string;
+  promotion_code: string | null;
+  gift_card_code: string | null;
+}
+
+interface PendingCheckoutItem {
+  product_id?: string;
+  product_name?: string;
+  product_price?: number | string;
+  quantity?: number;
+  size?: string;
+  color?: string;
+  weight_grams?: number | null;
+}
+
 function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -47,6 +73,160 @@ function generateGiftCardCode(): string {
 function generateQRToken(): string {
   // Generate a UUID v4
   return crypto.randomUUID();
+}
+
+function getPaymentId(session: Stripe.Checkout.Session): string | null {
+  if (!session.payment_intent) return null;
+  return typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+}
+
+async function getExpandedSession(sessionId: string): Promise<Stripe.Checkout.Session> {
+  return await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ["payment_intent", "line_items", "line_items.data.price.product"]
+  });
+}
+
+function orderItemsFromLineItems(session: Stripe.Checkout.Session): OrderItem[] {
+  const lineItems = session.line_items?.data || [];
+
+  return lineItems.map((lineItem) => {
+    const stripeProduct = lineItem.price?.product;
+    const productData = typeof stripeProduct === "object" && stripeProduct !== null
+      ? stripeProduct as { name?: string; metadata?: Record<string, string> }
+      : null;
+    const metadata = productData?.metadata || {};
+    const quantity = lineItem.quantity || 1;
+    const unitAmount = lineItem.price?.unit_amount ?? Math.round((lineItem.amount_subtotal || 0) / quantity);
+
+    return {
+      productId: metadata.productId || "",
+      name: lineItem.description || productData?.name || "Prodotto",
+      price: unitAmount / 100,
+      quantity,
+      size: metadata.size || "Standard",
+      color: metadata.color || "Standard",
+      weight_grams: metadata.weight_grams ? Number(metadata.weight_grams) : null
+    };
+  }).filter((item) => item.productId);
+}
+
+function orderItemsFromPendingCheckout(pendingCheckout: PendingCheckoutSession | null): OrderItem[] {
+  if (!pendingCheckout?.items || !Array.isArray(pendingCheckout.items)) return [];
+
+  return pendingCheckout.items
+    .map((item) => ({
+      productId: item.product_id || "",
+      name: item.product_name || "Prodotto",
+      price: Number(item.product_price || 0),
+      quantity: Number(item.quantity || 1),
+      size: item.size || "Standard",
+      color: item.color || "Standard",
+      weight_grams: item.weight_grams ? Number(item.weight_grams) : null
+    }))
+    .filter((item) => item.productId && item.price > 0);
+}
+
+async function loadPendingCheckout(
+  supabaseAdmin: any,
+  sessionId: string
+): Promise<PendingCheckoutSession | null> {
+  const { data, error } = await supabaseAdmin
+    .from("pending_checkout_sessions")
+    .select("*")
+    .eq("stripe_session_id", sessionId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Pending checkout lookup unavailable; falling back to Stripe data:", error);
+    return null;
+  }
+
+  return data as PendingCheckoutSession | null;
+}
+
+async function markPendingCheckout(
+  supabaseAdmin: any,
+  sessionId: string,
+  paymentId: string | null,
+  status: "paid" | "completed" | "expired" | "cancelled"
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (paymentId) patch.stripe_payment_id = paymentId;
+  if (status === "completed") patch.completed_at = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("pending_checkout_sessions")
+    .update(patch)
+    .eq("stripe_session_id", sessionId);
+
+  if (error) {
+    console.warn("Pending checkout status update failed:", error);
+  }
+}
+
+async function shouldProcessStripeEvent(supabaseAdmin: any, event: Stripe.Event): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .insert({
+      event_id: event.id,
+      event_type: event.type,
+      stripe_created: event.created ? new Date(event.created * 1000).toISOString() : null,
+      status: "processing",
+    });
+
+  if (!error) return true;
+
+  if (error.code !== "23505") {
+    console.warn("Stripe event idempotency insert failed; continuing with payment_id guard:", error);
+    return true;
+  }
+
+  const { data: existingEvent } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .select("status, attempts")
+    .eq("event_id", event.id)
+    .maybeSingle();
+
+  if (existingEvent?.status === "processed") {
+    console.log(`Stripe event ${event.id} already processed`);
+    return false;
+  }
+
+  await supabaseAdmin
+    .from("stripe_webhook_events")
+    .update({
+      attempts: Number(existingEvent?.attempts || 1) + 1,
+      status: "processing",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("event_id", event.id);
+
+  return true;
+}
+
+async function markStripeEvent(
+  supabaseAdmin: any,
+  eventId: string,
+  status: "processed" | "failed",
+  errorMessage?: string
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .update({
+      status,
+      error: errorMessage || null,
+      updated_at: new Date().toISOString(),
+      processed_at: status === "processed" ? new Date().toISOString() : null,
+    })
+    .eq("event_id", eventId);
+
+  if (error) {
+    console.warn("Stripe event status update failed:", error);
+  }
 }
 
 async function sendTelegramNotification(message: string): Promise<void> {
@@ -84,6 +264,18 @@ async function handleGiftCardPurchase(
 ) {
   const metadata = session.metadata!;
   const amount = parseFloat(metadata.amount);
+  const paymentId = getPaymentId(session);
+
+  const { data: existingGiftCard } = await supabaseAdmin
+    .from('gift_cards')
+    .select('id, code')
+    .or(`stripe_session_id.eq.${session.id},stripe_payment_id.eq.${paymentId}`)
+    .maybeSingle();
+
+  if (existingGiftCard) {
+    console.log(`Gift card ${existingGiftCard.code} already exists for Stripe session ${session.id}`);
+    return;
+  }
   
   // Generate unique code
   let code = generateGiftCardCode();
@@ -125,6 +317,8 @@ async function handleGiftCardPurchase(
       message: metadata.message || null,
       template: metadata.template || 'elegant',
       purchased_by: userId,
+      stripe_session_id: session.id,
+      stripe_payment_id: paymentId,
       purchaser_first_name: profile?.first_name || metadata.senderName.split(' ')[0],
       purchaser_last_name: profile?.last_name || metadata.senderName.split(' ').slice(1).join(' ') || '',
       is_active: true,
@@ -134,6 +328,11 @@ async function handleGiftCardPurchase(
     .single();
 
   if (gcError) {
+    if (gcError.code === '23505') {
+      console.log(`Gift card already inserted concurrently for Stripe session ${session.id}`);
+      return;
+    }
+
     console.error('Gift card creation error:', gcError);
     throw gcError;
   }
@@ -161,7 +360,7 @@ async function handleGiftCardPurchase(
       total: amount,
       shipping_address: { type: 'digital', note: 'Gift Card - Consegna digitale' },
       payment_provider: 'stripe',
-      payment_id: session.payment_intent as string,
+      payment_id: getPaymentId(session),
       payment_status: 'completed',
       notes: `Gift Card per ${metadata.recipientName} (${metadata.recipientEmail})`,
     });
@@ -195,28 +394,69 @@ Deno.serve(async (req: Request) => {
     return new Response("No signature", { status: 400 });
   }
 
+  let supabaseAdmin: any = null;
+  let eventId: string | null = null;
+
   try {
     const body = await req.text();
     const event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+    eventId = event.id;
 
-    const supabaseAdmin = createClient(
+    supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    const shouldProcess = await shouldProcessStripeEvent(supabaseAdmin, event);
+    if (!shouldProcess) {
+      return new Response(JSON.stringify({ received: true, alreadyProcessed: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const eventSession = event.data.object as Stripe.Checkout.Session;
+      const session = await getExpandedSession(eventSession.id);
+      const pendingCheckout = await loadPendingCheckout(supabaseAdmin, session.id);
       
-      const userId = session.metadata?.userId;
+      const userId = session.metadata?.userId || pendingCheckout?.user_id;
       if (!userId) {
         console.error("No userId in session metadata");
+        await markStripeEvent(supabaseAdmin, event.id, "failed", "No userId in session metadata");
         return new Response("No userId", { status: 400 });
       }
 
-      // Check if this is a gift card purchase
-      if (session.metadata?.type === "gift_card") {
+      const paymentId = getPaymentId(session);
+      if (!paymentId) {
+        console.error("No payment intent in session");
+        await markStripeEvent(supabaseAdmin, event.id, "failed", "No payment intent in session");
+        return new Response("No payment intent", { status: 400 });
+      }
+
+      await markPendingCheckout(supabaseAdmin, session.id, paymentId, "paid");
+
+      // Gift cards are idempotent on stripe_session_id/stripe_payment_id; handle before
+      // the generic order lookup so a pre-existing order cannot mask a missing gift card.
+      if (session.metadata?.type === "gift_card" || pendingCheckout?.checkout_type === "gift_card") {
         await handleGiftCardPurchase(supabaseAdmin, session, userId);
+        await markPendingCheckout(supabaseAdmin, session.id, paymentId, "completed");
+        await markStripeEvent(supabaseAdmin, event.id, "processed");
         return new Response(JSON.stringify({ received: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: existingOrder } = await supabaseAdmin
+        .from("orders")
+        .select("id, order_number")
+        .eq("payment_id", paymentId)
+        .maybeSingle();
+
+      if (existingOrder) {
+        console.log(`Order ${existingOrder.order_number} already exists for payment ${paymentId}, skipping webhook side effects`);
+        await markPendingCheckout(supabaseAdmin, session.id, paymentId, "completed");
+        await markStripeEvent(supabaseAdmin, event.id, "processed");
+        return new Response(JSON.stringify({ received: true, alreadyExists: true }), {
           headers: { "Content-Type": "application/json" },
         });
       }
@@ -224,8 +464,14 @@ Deno.serve(async (req: Request) => {
       // Parse items from metadata (compressed format or legacy full format)
       let orderItems: OrderItem[] = [];
       try {
-        if (session.metadata?.itemsCompact) {
-          // New compressed format: {p: productId(8chars), q: quantity, pr: price, w: weight}
+        const pendingItems = orderItemsFromPendingCheckout(pendingCheckout);
+        const expandedItems = orderItemsFromLineItems(session);
+        if (pendingItems.length > 0) {
+          orderItems = pendingItems;
+        } else if (expandedItems.length > 0) {
+          orderItems = expandedItems;
+        } else if (session.metadata?.itemsCompact) {
+          // Legacy compressed format: {p: productId prefix, q: quantity, pr: price, w: weight}
           const compactItems = JSON.parse(session.metadata.itemsCompact);
           // Get full product IDs from line_items or expand from compact
           const lineItems = session.line_items?.data || [];
@@ -253,7 +499,9 @@ Deno.serve(async (req: Request) => {
       // Parse shipping address from metadata (new compressed or legacy format)
       let shippingAddress: Record<string, string> = {};
       try {
-        if (session.metadata?.shipTo) {
+        if (pendingCheckout?.shipping_address) {
+          shippingAddress = pendingCheckout.shipping_address;
+        } else if (session.metadata?.shipTo) {
           // New compressed format: {n: name, a: address, c: city, p: postalCode, pr: province, ph: phone}
           const ship = JSON.parse(session.metadata.shipTo);
           const nameParts = (ship.n || "").split(" ");
@@ -278,12 +526,14 @@ Deno.serve(async (req: Request) => {
       }
 
       // Calculate amounts
-      const subtotal = (session.amount_subtotal || 0) / 100;
-      const total = (session.amount_total || 0) / 100;
-      const shippingCost = (session.shipping_cost?.amount_total || 0) / 100;
-      const discountAmount = parseInt(session.metadata?.discountAmount || "0") / 100;
-      const giftCardAmount = parseInt(session.metadata?.giftCardAmount || "0") / 100;
-      const userCreditAmount = parseInt(session.metadata?.userCreditAmount || "0") / 100;
+      const subtotal = Number(pendingCheckout?.subtotal ?? ((session.amount_subtotal || 0) / 100));
+      const total = Number(pendingCheckout?.total ?? ((session.amount_total || 0) / 100));
+      const shippingCost = Number(pendingCheckout?.shipping_cost ?? ((session.shipping_cost?.amount_total || 0) / 100));
+      const discountAmount = Number(pendingCheckout?.discount_amount ?? (parseInt(session.metadata?.discountAmount || "0") / 100));
+      const giftCardAmount = Number(pendingCheckout?.gift_card_amount ?? (parseInt(session.metadata?.giftCardAmount || "0") / 100));
+      const userCreditAmount = Number(pendingCheckout?.user_credit_amount ?? (parseInt(session.metadata?.userCreditAmount || "0") / 100));
+      const giftCardCode = pendingCheckout?.gift_card_code || session.metadata?.giftCardCode || null;
+      const promotionCode = pendingCheckout?.promotion_code || session.metadata?.promotionCode || null;
 
       const orderNumber = generateOrderNumber();
 
@@ -300,9 +550,9 @@ Deno.serve(async (req: Request) => {
           total: total,
           shipping_address: shippingAddress,
           payment_provider: "stripe",
-          payment_id: session.payment_intent as string,
+          payment_id: paymentId,
           payment_status: "completed",
-          gift_card_code: session.metadata?.giftCardCode || null,
+          gift_card_code: giftCardCode,
           gift_card_amount: giftCardAmount,
           user_credit_amount: userCreditAmount,
         })
@@ -310,7 +560,17 @@ Deno.serve(async (req: Request) => {
         .single();
 
       if (orderError) {
+        if (orderError.code === "23505") {
+          console.log(`Order already inserted concurrently for payment ${paymentId}, skipping webhook side effects`);
+          await markPendingCheckout(supabaseAdmin, session.id, paymentId, "completed");
+          await markStripeEvent(supabaseAdmin, event.id, "processed");
+          return new Response(JSON.stringify({ received: true, alreadyExists: true }), {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         console.error("Order creation error:", orderError);
+        await markStripeEvent(supabaseAdmin, event.id, "failed", orderError.message);
         return new Response("Order creation failed: " + orderError.message, { status: 500 });
       }
 
@@ -338,9 +598,6 @@ Deno.serve(async (req: Request) => {
       }
 
       // Run post-order operations in parallel for better performance
-      const giftCardCode = session.metadata?.giftCardCode;
-      const promotionCode = session.metadata?.promotionCode;
-
       const postOrderOps: Promise<any>[] = [
         // Clear user's cart
         supabaseAdmin.from("cart_items").delete().eq("user_id", userId)
@@ -351,15 +608,24 @@ Deno.serve(async (req: Request) => {
         postOrderOps.push(
           supabaseAdmin
             .from("gift_cards")
-            .select("id, balance")
-            .eq("code", giftCardCode.toUpperCase())
+            .select("id, balance, remaining_balance, amount")
+            .eq("code", giftCardCode.toUpperCase().replace(/-/g, ""))
             .single()
             .then(({ data: gc }) => {
               if (gc) {
-                const newBalance = Math.max(0, gc.balance - giftCardAmount);
+                const currentBalance = Math.min(
+                  Number(gc.remaining_balance ?? gc.balance ?? gc.amount),
+                  Number(gc.balance ?? gc.amount),
+                  Number(gc.amount)
+                );
+                const newBalance = Math.max(0, currentBalance - giftCardAmount);
                 return supabaseAdmin
                   .from("gift_cards")
-                  .update({ balance: newBalance, is_active: newBalance > 0 })
+                  .update({
+                    balance: newBalance,
+                    remaining_balance: newBalance,
+                    is_active: newBalance > 0
+                  })
                   .eq("id", gc.id);
               }
             })
@@ -470,13 +736,23 @@ ${itemsList || 'Nessun dettaglio'}
       sendTelegramNotification(telegramMessage).catch(err => console.error("Telegram error:", err));
 
       console.log(`Order ${orderNumber} created successfully for user ${userId}`);
+      await markPendingCheckout(supabaseAdmin, session.id, paymentId, "completed");
     }
 
+    await markStripeEvent(supabaseAdmin, event.id, "processed");
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Webhook error:", error);
+    if (supabaseAdmin && eventId) {
+      await markStripeEvent(
+        supabaseAdmin,
+        eventId,
+        "failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
     return new Response(`Webhook Error: ${error instanceof Error ? error.message : "Unknown error"}`, { status: 400 });
   }
 });

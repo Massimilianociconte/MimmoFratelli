@@ -3273,6 +3273,12 @@ window.viewOrderDetails = function(orderId) {
     const addr = order.shipping_address || {};
     const items = order.order_items || [];
     const isGiftCard = addr.type === 'digital';
+    const paymentStatus = esc(order.payment_status || 'N/D');
+    const paymentProvider = esc(order.payment_provider?.toUpperCase() || 'N/D');
+    const paymentId = esc(order.payment_id || 'N/D');
+    const orderNumber = esc(order.order_number || order.id || 'N/D');
+    const phoneHref = String(addr.phone || '').replace(/[^\d+]/g, '');
+    const phoneDisplay = esc(addr.phone || 'N/D');
     
     let detailsHtml;
     
@@ -3285,9 +3291,9 @@ window.viewOrderDetails = function(orderId) {
         detailsHtml = `
             <div style="max-width:550px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-                    <h3 style="margin:0;">🎁 Gift Card #${order.order_number}</h3>
+                    <h3 style="margin:0;">🎁 Gift Card #${orderNumber}</h3>
                     <span style="background:${order.payment_status === 'completed' ? '#e8f5e9' : '#fff3e0'};padding:0.3rem 0.8rem;border-radius:20px;font-size:0.85rem;">
-                        ${order.payment_status === 'completed' ? '✅ Pagato' : '⏳ ' + order.payment_status}
+                        ${order.payment_status === 'completed' ? '✅ Pagato' : '⏳ ' + paymentStatus}
                     </span>
                 </div>
                 
@@ -3300,11 +3306,11 @@ window.viewOrderDetails = function(orderId) {
                     <h4 style="margin:0 0 0.75rem 0;font-size:0.9rem;color:#666;">🎯 Destinatario</h4>
                     <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid #eee;">
                         <span style="color:#666;">Nome:</span>
-                        <strong>${recipientName}</strong>
+                        <strong>${esc(recipientName)}</strong>
                     </div>
                     <div style="display:flex;justify-content:space-between;padding:0.4rem 0;">
                         <span style="color:#666;">Email:</span>
-                        <span>${recipientEmail}</span>
+                        <span>${esc(recipientEmail)}</span>
                     </div>
                 </div>
                 
@@ -3325,8 +3331,8 @@ window.viewOrderDetails = function(orderId) {
                 </div>
                 
                 <div style="background:#e3f2fd;padding:0.75rem 1rem;border-radius:8px;font-size:0.9rem;">
-                    <strong>💳 Pagamento:</strong> ${order.payment_provider?.toUpperCase() || 'N/D'}<br>
-                    <small style="color:#666;">ID: ${order.payment_id || 'N/D'}</small>
+                    <strong>💳 Pagamento:</strong> ${paymentProvider}<br>
+                    <small style="color:#666;">ID: ${paymentId}</small>
                 </div>
                 
                 <div style="background:#e8f5e9;padding:0.75rem 1rem;border-radius:8px;margin-top:0.5rem;font-size:0.85rem;text-align:center;">
@@ -3339,8 +3345,8 @@ window.viewOrderDetails = function(orderId) {
         const itemsHtml = items.map(item => `
             <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid #eee;">
                 <div>
-                    <strong>${item.product_name}</strong>
-                    <br><small style="color:#888">Taglia: ${item.size || 'N/D'} | Colore: ${item.color || 'N/D'} | Qtà: ${item.quantity}</small>
+                    <strong>${esc(item.product_name || 'Prodotto')}</strong>
+                    <br><small style="color:#888">Taglia: ${esc(item.size || 'N/D')} | Colore: ${esc(item.color || 'N/D')} | Qtà: ${esc(item.quantity || 0)}</small>
                 </div>
                 <span style="font-weight:600;">€${(item.product_price * item.quantity).toFixed(2)}</span>
             </div>
@@ -3349,19 +3355,19 @@ window.viewOrderDetails = function(orderId) {
         detailsHtml = `
             <div style="max-width:550px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-                    <h3 style="margin:0;">Ordine #${order.order_number}</h3>
+                    <h3 style="margin:0;">Ordine #${orderNumber}</h3>
                     <span style="background:${order.payment_status === 'completed' ? '#e8f5e9' : '#fff3e0'};padding:0.3rem 0.8rem;border-radius:20px;font-size:0.85rem;">
-                        ${order.payment_status === 'completed' ? '✅ Pagato' : '⏳ ' + order.payment_status}
+                        ${order.payment_status === 'completed' ? '✅ Pagato' : '⏳ ' + paymentStatus}
                     </span>
                 </div>
                 
                 <div style="background:#f8f9fa;padding:1rem;border-radius:10px;margin-bottom:1rem;">
                     <h4 style="margin:0 0 0.75rem 0;font-size:0.9rem;color:#666;">📍 Indirizzo di spedizione</h4>
                     <p style="margin:0;line-height:1.7;">
-                        <strong>${addr.firstName || ''} ${addr.lastName || ''}</strong><br>
-                        ${addr.address || ''}<br>
-                        ${addr.postalCode || ''} ${addr.city || ''} (${addr.province || ''})<br>
-                        📞 <a href="tel:${addr.phone}" style="color:inherit;">${addr.phone || 'N/D'}</a>
+                        <strong>${esc(addr.firstName || '')} ${esc(addr.lastName || '')}</strong><br>
+                        ${esc(addr.address || '')}<br>
+                        ${esc(addr.postalCode || '')} ${esc(addr.city || '')} (${esc(addr.province || '')})<br>
+                        📞 <a href="tel:${phoneHref}" style="color:inherit;">${phoneDisplay}</a>
                     </p>
                 </div>
                 
@@ -3380,14 +3386,14 @@ window.viewOrderDetails = function(orderId) {
                 </div>
                 
                 <div style="background:#e3f2fd;padding:0.75rem 1rem;border-radius:8px;font-size:0.9rem;">
-                    <strong>💳 Pagamento:</strong> ${order.payment_provider?.toUpperCase() || 'N/D'}<br>
-                    <small style="color:#666;">ID: ${order.payment_id || 'N/D'}</small>
+                    <strong>💳 Pagamento:</strong> ${paymentProvider}<br>
+                    <small style="color:#666;">ID: ${paymentId}</small>
                 </div>
                 
                 ${order.tracking_number ? `
                 <div style="background:#fff3e0;padding:0.75rem 1rem;border-radius:8px;margin-top:0.5rem;font-size:0.9rem;">
-                    <strong>🚚 Tracking:</strong> ${order.tracking_number}<br>
-                    ${order.courier ? `<small>Corriere: ${order.courier}</small>` : ''}
+                    <strong>🚚 Tracking:</strong> ${esc(order.tracking_number)}<br>
+                    ${order.courier ? `<small>Corriere: ${esc(order.courier)}</small>` : ''}
                 </div>
                 ` : ''}
             </div>

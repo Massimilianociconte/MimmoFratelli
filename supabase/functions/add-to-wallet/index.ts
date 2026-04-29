@@ -12,6 +12,7 @@ import { getCorsHeaders, handleCorsPreflightRequest, createResponse, createError
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 interface WalletRequest {
   giftCardId: string;
@@ -25,12 +26,22 @@ Deno.serve(async (req: Request) => {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseUser = createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }
+    );
     const { giftCardId, walletType }: WalletRequest = await req.json();
 
     console.log("Add to wallet request:", { giftCardId, walletType });
 
     if (!giftCardId || !walletType) {
       return createErrorResponse("giftCardId e walletType sono richiesti", req, 400);
+    }
+
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (!user) {
+      return createErrorResponse("Non autorizzato", req, 401);
     }
 
     // Fetch gift card details
@@ -44,6 +55,17 @@ Deno.serve(async (req: Request) => {
 
     if (fetchError || !giftCard) {
       return createErrorResponse("Gift card non trovata", req, 404);
+    }
+
+    const { data: adminRole } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (giftCard.purchased_by !== user.id && !adminRole) {
+      return createErrorResponse("Non autorizzato", req, 403);
     }
 
     const baseUrl = Deno.env.get("SITE_URL") || "https://www.mimmofratelli.com";

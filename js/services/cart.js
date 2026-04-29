@@ -142,29 +142,31 @@ class CartService {
       const size = item.size || '';
       const color = item.color || 'Fresco';
       
-      // The DB constraint is on (user_id, product_id, size, color) - NOT weight_grams
-      // So we must check by these 4 fields first
-      const { data: existing, error: selectError } = await supabase
+      let existingQuery = supabase
         .from('cart_items')
         .select('id, quantity, weight_grams')
         .eq('user_id', userId)
         .eq('product_id', item.productId)
         .eq('size', size)
-        .eq('color', color)
-        .maybeSingle();
+        .eq('color', color);
+
+      existingQuery = weightGrams === null
+        ? existingQuery.is('weight_grams', null)
+        : existingQuery.eq('weight_grams', weightGrams);
+
+      const { data: existing, error: selectError } = await existingQuery.maybeSingle();
       
       if (selectError) {
         console.error('Select cart item error:', selectError);
       }
       
       if (existing) {
-        // Item exists - update quantity and weight (replace with new weight if different)
+        // Item exists with the same variant and weight - update quantity only.
         const newQty = Math.min(10, existing.quantity + (item.quantity || 1));
         const { error } = await supabase
           .from('cart_items')
           .update({ 
             quantity: newQty, 
-            weight_grams: weightGrams, // Update weight to latest
             updated_at: new Date().toISOString() 
           })
           .eq('id', existing.id);
@@ -192,20 +194,25 @@ class CartService {
           // If conflict (409), try to update instead (race condition)
           if (error.code === '23505') {
             console.log('Duplicate detected, attempting update...');
-            const { data: retryExisting } = await supabase
+            let retryQuery = supabase
               .from('cart_items')
               .select('id, quantity')
               .eq('user_id', userId)
               .eq('product_id', item.productId)
               .eq('size', size)
-              .eq('color', color)
-              .maybeSingle();
+              .eq('color', color);
+
+            retryQuery = weightGrams === null
+              ? retryQuery.is('weight_grams', null)
+              : retryQuery.eq('weight_grams', weightGrams);
+
+            const { data: retryExisting } = await retryQuery.maybeSingle();
               
             if (retryExisting) {
               const newQty = Math.min(10, retryExisting.quantity + (item.quantity || 1));
               await supabase
                 .from('cart_items')
-                .update({ quantity: newQty, weight_grams: weightGrams, updated_at: new Date().toISOString() })
+                .update({ quantity: newQty, updated_at: new Date().toISOString() })
                 .eq('id', retryExisting.id);
               this._notifyListeners();
               return { success: true, error: null };

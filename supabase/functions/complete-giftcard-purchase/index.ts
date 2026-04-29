@@ -47,6 +47,35 @@ function generateOrderNumber(): string {
   return `MF-${timestamp}-${random}`;
 }
 
+function getPaymentId(session: Stripe.Checkout.Session): string | null {
+  if (!session.payment_intent) return null;
+  return typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent.id;
+}
+
+async function markPendingCheckout(
+  supabaseAdmin: any,
+  sessionId: string,
+  paymentId: string | null,
+  status: "paid" | "completed"
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (paymentId) patch.stripe_payment_id = paymentId;
+  if (status === "completed") patch.completed_at = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("pending_checkout_sessions")
+    .update(patch)
+    .eq("stripe_session_id", sessionId);
+
+  if (error) {
+    console.warn("Pending gift card checkout status update failed:", error);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: getCorsHeaders(req) });
@@ -108,7 +137,33 @@ Deno.serve(async (req: Request) => {
     }
 
     // Check if gift card already exists for this payment
-    const paymentIntentId = session.payment_intent as string;
+    const paymentIntentId = getPaymentId(session);
+    if (!paymentIntentId) {
+      return new Response(JSON.stringify({ error: "Payment intent mancante" }), {
+        status: 400,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    await markPendingCheckout(supabaseAdmin, session.id, paymentIntentId, "paid");
+
+    const { data: existingGiftCardByStripe } = await supabaseAdmin
+      .from('gift_cards')
+      .select('*')
+      .or(`stripe_session_id.eq.${session.id},stripe_payment_id.eq.${paymentIntentId}`)
+      .maybeSingle();
+
+    if (existingGiftCardByStripe) {
+      await markPendingCheckout(supabaseAdmin, session.id, paymentIntentId, "completed");
+      return new Response(JSON.stringify({
+        success: true,
+        giftCard: existingGiftCardByStripe,
+        alreadyCreated: true
+      }), {
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     const { data: existingOrder } = await supabaseAdmin
       .from('orders')
       .select('id')
@@ -126,6 +181,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (existingGiftCard) {
+        await markPendingCheckout(supabaseAdmin, session.id, paymentIntentId, "completed");
         return new Response(JSON.stringify({ 
           success: true, 
           giftCard: existingGiftCard,
@@ -180,6 +236,8 @@ Deno.serve(async (req: Request) => {
         message: metadata.message || null,
         template: metadata.template || 'elegant',
         purchased_by: user.id,
+        stripe_session_id: session.id,
+        stripe_payment_id: paymentIntentId,
         purchaser_first_name: profile?.first_name || metadata.senderName.split(' ')[0],
         purchaser_last_name: profile?.last_name || metadata.senderName.split(' ').slice(1).join(' ') || '',
         is_active: true,
@@ -189,6 +247,25 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (gcError) {
+      if (gcError.code === '23505') {
+        const { data: existingGiftCard } = await supabaseAdmin
+          .from('gift_cards')
+          .select('*')
+          .or(`stripe_session_id.eq.${session.id},stripe_payment_id.eq.${paymentIntentId}`)
+          .maybeSingle();
+
+        if (existingGiftCard) {
+          await markPendingCheckout(supabaseAdmin, session.id, paymentIntentId, "completed");
+          return new Response(JSON.stringify({
+            success: true,
+            giftCard: existingGiftCard,
+            alreadyCreated: true
+          }), {
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+      }
+
       console.error('Gift card creation error:', gcError);
       return new Response(JSON.stringify({ error: "Errore nella creazione della gift card" }), {
         status: 500,
@@ -225,6 +302,7 @@ Deno.serve(async (req: Request) => {
     ]);
 
     console.log(`Gift card ${code} created successfully for user ${user.id}, amount: €${amount}`);
+    await markPendingCheckout(supabaseAdmin, session.id, paymentIntentId, "completed");
 
     return new Response(JSON.stringify({ 
       success: true, 

@@ -90,12 +90,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Create Stripe checkout session for gift card
-    // Payment methods: card (includes Apple/Google Pay), klarna, link, satispay
+    // Create Stripe checkout session for gift card.
+    // BNPL methods are intentionally disabled for stored-value products.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: [
         "card",           // Carte + Apple Pay + Google Pay
-        "klarna",         // Pagamento a rate
         "link",           // Stripe Link
         "satispay",       // Italia
       ],
@@ -132,6 +131,46 @@ Deno.serve(async (req: Request) => {
         template: template || "elegant",
       },
     });
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { error: pendingError } = await supabaseAdmin
+      .from("pending_checkout_sessions")
+      .upsert({
+        stripe_session_id: session.id,
+        user_id: user.id,
+        checkout_type: "gift_card",
+        status: "created",
+        customer_email: user.email || recipientEmail,
+        items: [{
+          product_id: null,
+          product_name: "Gift Card Mimmo Fratelli",
+          product_price: amount,
+          quantity: 1,
+          type: "gift_card",
+        }],
+        subtotal: amount,
+        discount_amount: 0,
+        gift_card_amount: 0,
+        user_credit_amount: 0,
+        shipping_cost: 0,
+        total: amount,
+        metadata: {
+          amount,
+          recipientName,
+          recipientEmail,
+          senderName,
+          message: message || "",
+          template: template || "elegant",
+        },
+      }, { onConflict: "stripe_session_id" });
+
+    if (pendingError) {
+      console.warn("Pending gift card checkout snapshot failed; continuing with Stripe metadata fallback:", pendingError);
+    }
 
     return new Response(JSON.stringify({ 
       sessionId: session.id, 

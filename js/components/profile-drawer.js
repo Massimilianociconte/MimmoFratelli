@@ -16,6 +16,16 @@ class ProfileDrawer {
     this.user = null;
   }
 
+  _escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
   /**
    * Initialize the drawer
    */
@@ -636,7 +646,12 @@ class ProfileDrawer {
    */
   async _showGiftCardSuccess(giftCard) {
     const { giftCardService } = await import('../services/giftcard.js');
-    const qrUrl = giftCardService.getQRCodeUrl(giftCard.qr_code_token, 180);
+    const qrUrl = this._escapeHtml(giftCardService.getQRCodeUrl(giftCard.qr_code_token, 180));
+    const giftCardId = this._escapeHtml(giftCard.id);
+    const giftCardCode = this._escapeHtml(giftCard.code);
+    const recipientName = this._escapeHtml(giftCard.recipient_name);
+    const recipientEmail = this._escapeHtml(giftCard.recipient_email);
+    const senderName = this._escapeHtml(giftCard.sender_name);
     
     const modal = document.getElementById('giftCardCreatorModal');
     modal.querySelector('.gc-modal-body').innerHTML = `
@@ -661,7 +676,7 @@ class ProfileDrawer {
                       <div class="gc-amount">€${giftCard.amount}</div>
                       <div class="gc-recipient">
                         <span class="gc-label">Per</span>
-                        <span class="gc-name">${giftCard.recipient_name}</span>
+                        <span class="gc-name">${recipientName}</span>
                       </div>
                       <div class="gc-qr-front">
                         <img src="${qrUrl}" alt="QR Code">
@@ -669,9 +684,9 @@ class ProfileDrawer {
                       <div class="gc-footer-right">
                         <div class="gc-from">
                           <span class="gc-label">Da</span>
-                          <span>${giftCard.sender_name}</span>
+                          <span>${senderName}</span>
                         </div>
-                        <div class="gc-code">${giftCard.code}</div>
+                        <div class="gc-code">${giftCardCode}</div>
                       </div>
                     </div>
                   </div>
@@ -693,7 +708,7 @@ class ProfileDrawer {
               <div class="gc-details-box">
                 <div class="gc-detail-item">
                   <span class="gc-label">Codice</span>
-                  <span class="gc-value gc-mono">${giftCard.code}</span>
+                  <span class="gc-value gc-mono">${giftCardCode}</span>
                 </div>
                 <div class="gc-detail-item">
                   <span class="gc-label">Importo</span>
@@ -701,11 +716,11 @@ class ProfileDrawer {
                 </div>
                 <div class="gc-detail-item">
                   <span class="gc-label">Destinatario</span>
-                  <span class="gc-value">${giftCard.recipient_name}</span>
+                  <span class="gc-value">${recipientName}</span>
                 </div>
                 <div class="gc-detail-item">
                   <span class="gc-label">Email</span>
-                  <span class="gc-value gc-email">${giftCard.recipient_email}</span>
+                  <span class="gc-value gc-email">${recipientEmail}</span>
                 </div>
               </div>
             </div>
@@ -716,13 +731,13 @@ class ProfileDrawer {
             <div class="gc-wallet-section">
               <div class="gc-wallet-title">Salva nel Wallet</div>
               <div class="gc-wallet-buttons">
-                <button class="gc-wallet-btn gc-wallet-google" data-giftcard-id="${giftCard.id}" onclick="window.addGiftCardToGoogleWallet('${giftCard.id}')">
+                <button class="gc-wallet-btn gc-wallet-google" data-giftcard-id="${giftCardId}" onclick="window.addGiftCardToGoogleWallet('${giftCardId}')">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   </svg>
                   Google Wallet
                 </button>
-                <button class="gc-wallet-btn gc-wallet-apple" data-giftcard-id="${giftCard.id}" onclick="window.addGiftCardToAppleWallet('${giftCard.id}')">
+                <button class="gc-wallet-btn gc-wallet-apple" data-giftcard-id="${giftCardId}" onclick="window.addGiftCardToAppleWallet('${giftCardId}')">
                   <svg viewBox="0 0 384 512" fill="currentColor" width="16" height="20">
                     <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
                   </svg>
@@ -836,7 +851,10 @@ class ProfileDrawer {
       giftCards.forEach(gc => {
         const status = gc.is_redeemed ? 'Riscattata' : gc.is_active ? 'Attiva' : 'In attesa';
         const statusClass = gc.is_redeemed ? 'redeemed' : gc.is_active ? 'active' : 'pending';
-        const qrUrl = giftCardService.getQRCodeUrl(gc.qr_code_token, 80);
+        const qrUrl = this._escapeHtml(giftCardService.getQRCodeUrl(gc.qr_code_token, 80));
+        const giftCardId = this._escapeHtml(gc.id);
+        const giftCardCode = this._escapeHtml(gc.code);
+        const recipientName = this._escapeHtml(gc.recipient_name);
         content += `
           <div class="my-gc-item" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; background: #f8f9fa; border-radius: 12px; margin-bottom: 0.75rem;">
             <div style="display: flex; gap: 1rem; align-items: center;">
@@ -846,16 +864,16 @@ class ProfileDrawer {
                   <span class="my-gc-amount" style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">€${gc.amount}</span>
                   <span class="my-gc-status ${statusClass}" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: ${statusClass === 'active' ? '#d4edda' : statusClass === 'pending' ? '#fff3cd' : '#f8d7da'}; color: ${statusClass === 'active' ? '#155724' : statusClass === 'pending' ? '#856404' : '#721c24'};">${status.toUpperCase()}</span>
                 </div>
-                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Per: ${gc.recipient_name}</div>
-                <div class="my-gc-code" style="font-family: monospace; font-size: 0.75rem; color: #999;">${gc.code}</div>
+                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Per: ${recipientName}</div>
+                <div class="my-gc-code" style="font-family: monospace; font-size: 0.75rem; color: #999;">${giftCardCode}</div>
               </div>
             </div>
             <div class="my-gc-wallet-btns" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-              <button class="my-gc-wallet-btn" data-wallet="google" data-gc-id="${gc.id}" style="display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s;">
+              <button class="my-gc-wallet-btn" data-wallet="google" data-gc-id="${giftCardId}" style="display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s;">
                 <svg viewBox="0 0 24 24" fill="#4285f4" width="14" height="14"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34a853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fbbc05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#ea4335"/></svg>
                 Google
               </button>
-              <button class="my-gc-wallet-btn" data-wallet="apple" data-gc-id="${gc.id}" style="display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s;">
+              <button class="my-gc-wallet-btn" data-wallet="apple" data-gc-id="${giftCardId}" style="display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s;">
                 <svg viewBox="0 0 384 512" fill="#000" width="12" height="14"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
                 Apple
               </button>

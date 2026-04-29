@@ -16,6 +16,25 @@ class CartDrawer {
     this.discount = 0;
   }
 
+  _escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
+  _safeImageUrl(value) {
+    try {
+      const url = new URL(value, window.location.origin);
+      return ['http:', 'https:', 'data:'].includes(url.protocol) ? url.href : 'data:image/svg+xml,...';
+    } catch {
+      return 'data:image/svg+xml,...';
+    }
+  }
+
   init() {
     this._createDrawer();
     this._attachEventListeners();
@@ -292,7 +311,11 @@ class CartDrawer {
 
     container.innerHTML = items.map(item => {
       const weightGrams = item.weight_grams || null;
-      const weightAttr = weightGrams ? `data-weight="${weightGrams}"` : '';
+      const weightAttr = weightGrams ? `data-weight="${this._escapeHtml(weightGrams)}"` : '';
+      const safeImage = this._escapeHtml(this._safeImageUrl(item.image));
+      const safeName = this._escapeHtml(item.name || 'Prodotto');
+      const safeSize = this._escapeHtml(item.size || '');
+      const safeColor = this._escapeHtml(item.color || '');
       
       // Show unit price for weight-based items
       let priceDisplay = `€ ${item.price?.toFixed(2) || '0.00'}`;
@@ -301,13 +324,13 @@ class CartDrawer {
       }
       
       return `
-        <div class="cart-item" data-product-id="${item.productId}" data-size="${item.size}" data-color="${item.color}" ${weightAttr}>
+        <div class="cart-item" data-product-id="${this._escapeHtml(item.productId)}" data-size="${safeSize}" data-color="${safeColor}" ${weightAttr}>
           <div class="cart-item-image">
-            <img src="${item.image || 'data:image/svg+xml,...'}" alt="${item.name}" onerror="this.src='data:image/svg+xml,...'">
+            <img src="${safeImage}" alt="${safeName}" onerror="this.src='data:image/svg+xml,...'">
           </div>
           <div class="cart-item-details">
-            <h4 class="cart-item-name">${item.name}</h4>
-            <p class="cart-item-variant">${item.size} / ${item.color}</p>
+            <h4 class="cart-item-name">${safeName}</h4>
+            <p class="cart-item-variant">${safeSize} / ${safeColor}</p>
             <p class="cart-item-price">${priceDisplay}</p>
             <div class="cart-item-quantity">
               <button class="qty-btn minus" data-action="decrease">−</button>

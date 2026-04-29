@@ -65,6 +65,98 @@ interface CheckoutRequest {
   userCredit?: number; // Credito utente da utilizzare (in euro)
 }
 
+interface ProductRecord {
+  id: string;
+  name: string;
+  price: number | string;
+  sale_price: number | string | null;
+  images: string[] | null;
+  is_active: boolean;
+  category_id: string | null;
+}
+
+function jsonResponse(req: Request, status: number, payload: Record<string, unknown>) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+  });
+}
+
+function toCents(amount: number): number {
+  return Math.round(Number(amount || 0) * 100);
+}
+
+function normalizeCode(code?: string): string {
+  return (code || "").trim().toUpperCase();
+}
+
+async function buildServerPricedItems(
+  supabaseAdmin: any,
+  rawItems: CartItem[]
+): Promise<{ items?: CartItem[]; error?: string }> {
+  const productIds = [...new Set(rawItems.map((item) => item.productId).filter(Boolean))];
+
+  if (productIds.length !== rawItems.length && productIds.length === 0) {
+    return { error: "Prodotti non validi" };
+  }
+
+  const { data: products, error } = await supabaseAdmin
+    .from("products")
+    .select("id, name, price, sale_price, images, is_active, category_id")
+    .in("id", productIds);
+
+  if (error) {
+    console.error("Product repricing error:", error);
+    return { error: "Errore nella verifica dei prodotti" };
+  }
+
+  const productMap = new Map<string, ProductRecord>(
+    (products || []).map((product: ProductRecord) => [product.id, product])
+  );
+
+  const serverItems: CartItem[] = [];
+
+  for (const item of rawItems) {
+    const product = productMap.get(item.productId);
+    const quantity = Number(item.quantity);
+    const weightGrams = item.weight_grams ? Number(item.weight_grams) : null;
+
+    if (!product || !product.is_active) {
+      return { error: "Uno o più prodotti non sono più disponibili" };
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+      return { error: "Quantità prodotto non valida" };
+    }
+
+    if (weightGrams !== null && (!Number.isInteger(weightGrams) || weightGrams <= 0)) {
+      return { error: "Formato peso prodotto non valido" };
+    }
+
+    const basePrice = Number(product.sale_price ?? product.price ?? 0);
+    const unitAmount = weightGrams ? (basePrice * weightGrams) / 1000 : basePrice;
+    const unitAmountCents = toCents(unitAmount);
+
+    if (unitAmountCents <= 0) {
+      return { error: "Prezzo prodotto non valido" };
+    }
+
+    serverItems.push({
+      productId: product.id,
+      name: product.name,
+      price: unitAmountCents / 100,
+      unitPrice: basePrice,
+      quantity,
+      size: item.size || "Standard",
+      color: item.color || "Fresco",
+      image: Array.isArray(product.images) ? product.images[0] || "" : "",
+      weight_grams: weightGrams,
+    });
+  }
+
+  return { items: serverItems };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: getCorsHeaders(req) });
@@ -104,31 +196,38 @@ Deno.serve(async (req: Request) => {
     }: CheckoutRequest = body;
 
     if (!items || items.length === 0) {
-      return new Response(JSON.stringify({ error: "Carrello vuoto" }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
+      return jsonResponse(req, 400, { error: "Carrello vuoto" });
     }
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const pricedItemsResult = await buildServerPricedItems(supabaseAdmin, items);
+    if (pricedItemsResult.error || !pricedItemsResult.items) {
+      return jsonResponse(req, 400, { error: pricedItemsResult.error || "Carrello non valido" });
+    }
+
+    const checkoutItems = pricedItemsResult.items;
+
     // Calculate subtotal in cents
-    const subtotal = items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0);
+    const subtotal = checkoutItems.reduce((sum, item) => sum + toCents(item.price) * item.quantity, 0);
     
     // Fetch promotion and gift card in parallel for better performance
     const [promoResult, giftCardResult] = await Promise.all([
       promotionCode 
-        ? supabaseClient
+        ? supabaseAdmin
             .from("promotions")
-            .select("discount_type, discount_value")
-            .eq("code", promotionCode.toUpperCase())
-            .eq("is_active", true)
+            .select("code, discount_type, discount_value, min_purchase, max_discount, usage_limit, usage_count, applies_to, applies_to_ids, starts_at, ends_at, is_active, user_id, is_first_order_code")
+            .eq("code", normalizeCode(promotionCode))
             .maybeSingle()
         : Promise.resolve({ data: null }),
       giftCardCode
-        ? supabaseClient
+        ? supabaseAdmin
             .from("gift_cards")
-            .select("balance")
-            .eq("code", giftCardCode.toUpperCase())
-            .eq("is_active", true)
+            .select("amount, balance, remaining_balance, is_active, is_redeemed, expires_at")
+            .eq("code", normalizeCode(giftCardCode).replace(/-/g, ""))
             .maybeSingle()
         : Promise.resolve({ data: null })
     ]);
@@ -136,19 +235,97 @@ Deno.serve(async (req: Request) => {
     // Calculate discount from promotion
     let discountAmount = 0;
     const promo = promoResult.data;
+    if (promotionCode && !promo) {
+      return jsonResponse(req, 400, { error: "Codice promozionale non valido" });
+    }
+
     if (promo) {
-      if (promo.discount_type === "percentage") {
-        discountAmount = Math.round((subtotal * promo.discount_value) / 100);
-      } else {
-        discountAmount = Math.round(promo.discount_value * 100);
+      const now = Date.now();
+      const promoStarts = promo.starts_at ? new Date(promo.starts_at).getTime() : 0;
+      const promoEnds = promo.ends_at ? new Date(promo.ends_at).getTime() : 0;
+
+      if (!promo.is_active || now < promoStarts || now > promoEnds) {
+        return jsonResponse(req, 400, { error: "Codice promozionale scaduto o non attivo" });
       }
+
+      if (promo.usage_limit && Number(promo.usage_count || 0) >= Number(promo.usage_limit)) {
+        return jsonResponse(req, 400, { error: "Codice promozionale esaurito" });
+      }
+
+      if (promo.min_purchase && subtotal < toCents(Number(promo.min_purchase))) {
+        return jsonResponse(req, 400, { error: `Importo minimo €${Number(promo.min_purchase).toFixed(2)}` });
+      }
+
+      if (promo.is_first_order_code) {
+        if (promo.user_id && promo.user_id !== user.id) {
+          return jsonResponse(req, 400, { error: "Codice promozionale non associato a questo account" });
+        }
+
+        const { count: completedOrders } = await supabaseAdmin
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("payment_status", "completed");
+
+        if ((completedOrders || 0) > 0) {
+          return jsonResponse(req, 400, { error: "Codice valido solo per il primo ordine" });
+        }
+      }
+
+      let eligibleSubtotal = subtotal;
+      const appliesToIds = Array.isArray(promo.applies_to_ids) ? promo.applies_to_ids : [];
+      if (promo.applies_to === "product" && appliesToIds.length > 0) {
+        eligibleSubtotal = checkoutItems
+          .filter((item) => appliesToIds.includes(item.productId))
+          .reduce((sum, item) => sum + toCents(item.price) * item.quantity, 0);
+      } else if (promo.applies_to === "category" && appliesToIds.length > 0) {
+        const { data: eligibleProducts } = await supabaseAdmin
+          .from("products")
+          .select("id")
+          .in("id", checkoutItems.map((item) => item.productId))
+          .in("category_id", appliesToIds);
+        const eligibleProductIds = new Set((eligibleProducts || []).map((product: { id: string }) => product.id));
+        eligibleSubtotal = checkoutItems
+          .filter((item) => eligibleProductIds.has(item.productId))
+          .reduce((sum, item) => sum + toCents(item.price) * item.quantity, 0);
+      }
+
+      if (eligibleSubtotal <= 0) {
+        return jsonResponse(req, 400, { error: "Codice promozionale non applicabile a questi prodotti" });
+      }
+
+      if (promo.discount_type === "percentage") {
+        discountAmount = Math.round((eligibleSubtotal * Number(promo.discount_value)) / 100);
+        if (promo.max_discount) {
+          discountAmount = Math.min(discountAmount, toCents(Number(promo.max_discount)));
+        }
+      } else {
+        discountAmount = toCents(Number(promo.discount_value));
+      }
+      discountAmount = Math.min(discountAmount, eligibleSubtotal);
     }
 
     // Calculate gift card discount
     let giftCardAmount = 0;
     const giftCard = giftCardResult.data;
-    if (giftCard && giftCard.balance > 0) {
-      giftCardAmount = Math.min(Math.round(giftCard.balance * 100), subtotal - discountAmount);
+    if (giftCardCode && !giftCard) {
+      return jsonResponse(req, 400, { error: "Gift card non valida" });
+    }
+
+    if (giftCard) {
+      const giftCardBalance = Math.max(
+        0,
+        Math.min(
+          Number(giftCard.remaining_balance ?? giftCard.balance ?? giftCard.amount),
+          Number(giftCard.balance ?? giftCard.amount),
+          Number(giftCard.amount)
+        )
+      );
+      const isExpired = giftCard.expires_at && new Date(giftCard.expires_at).getTime() < Date.now();
+      if (!giftCard.is_active || giftCard.is_redeemed || isExpired || giftCardBalance <= 0) {
+        return jsonResponse(req, 400, { error: "Gift card non valida o esaurita" });
+      }
+      giftCardAmount = Math.min(toCents(giftCardBalance), subtotal - discountAmount);
     }
 
     // Calculate base shipping (free over €50)
@@ -208,7 +385,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Build line items with price_data (dynamic products)
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => {
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = checkoutItems.map((item) => {
       // Build product name with weight info if applicable
       let productName = item.name;
       if (item.weight_grams) {
@@ -231,7 +408,7 @@ Deno.serve(async (req: Request) => {
               weight_grams: item.weight_grams?.toString() || "",
             },
           },
-          unit_amount: Math.round(item.price * 100),
+          unit_amount: toCents(item.price),
         },
         quantity: item.quantity,
       };
@@ -286,15 +463,9 @@ Deno.serve(async (req: Request) => {
           pr: shippingAddress.province,
           ph: shippingAddress.phone
         }) : "",
-        // Compressed items: only productId, quantity, price, weight - max 500 chars
-        itemsCompact: JSON.stringify(items.map(i => ({
-          p: i.productId.slice(0, 8), // Short product ID (first 8 chars)
-          q: i.quantity,
-          pr: i.price,
-          w: i.weight_grams || 0
-        }))),
-        // Store full item count for reference
-        itemCount: items.length.toString(),
+        // Full cart snapshot is stored in pending_checkout_sessions.
+        // Stripe line item product metadata also carries the full productId.
+        itemCount: checkoutItems.length.toString(),
       },
     };
 
@@ -328,6 +499,51 @@ Deno.serve(async (req: Request) => {
     console.log("Creating Stripe session...");
     const session = await stripe.checkout.sessions.create(sessionConfig);
     console.log("Session created:", session.id);
+
+    const totalAmount = Math.max(
+      0,
+      subtotal + shipping - discountAmount - giftCardAmount - userCreditAmount
+    );
+
+    const { error: pendingError } = await supabaseAdmin
+      .from("pending_checkout_sessions")
+      .upsert({
+        stripe_session_id: session.id,
+        user_id: user.id,
+        checkout_type: "order",
+        status: "created",
+        customer_email: customerEmail,
+        items: checkoutItems.map((item) => ({
+          product_id: item.productId,
+          product_name: item.name,
+          product_price: item.price,
+          unit_price: item.unitPrice ?? item.price,
+          quantity: item.quantity,
+          size: item.size || "Standard",
+          color: item.color || "Fresco",
+          image: item.image || "",
+          weight_grams: item.weight_grams || null,
+          unit_measure: item.weight_grams ? "kg" : "pz",
+        })),
+        shipping_address: shippingAddress || null,
+        subtotal: subtotal / 100,
+        discount_amount: discountAmount / 100,
+        gift_card_amount: giftCardAmount / 100,
+        user_credit_amount: userCreditAmount / 100,
+        shipping_cost: shipping / 100,
+        total: totalAmount / 100,
+        promotion_code: promotionCode ? normalizeCode(promotionCode) : null,
+        gift_card_code: giftCardCode ? normalizeCode(giftCardCode).replace(/-/g, "") : null,
+        metadata: {
+          creditForProducts: creditForProducts / 100,
+          creditForShipping: creditForShipping / 100,
+          stripeSessionUrl: session.url,
+        },
+      }, { onConflict: "stripe_session_id" });
+
+    if (pendingError) {
+      console.warn("Pending checkout snapshot failed; continuing with Stripe metadata fallback:", pendingError);
+    }
 
     return new Response(JSON.stringify({ 
       sessionId: session.id, 

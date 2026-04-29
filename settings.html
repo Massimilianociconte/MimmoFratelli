@@ -798,6 +798,16 @@
                 }
             });
         });
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
         
         // Show gift card after successful purchase
         async function showPurchasedGiftCard() {
@@ -834,8 +844,14 @@
         // Show gift card success modal
         function showGiftCardSuccessModal(giftCard) {
             const { giftCardService } = window._giftCardServiceRef || {};
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + '/redeem.html?token=' + giftCard.qr_code_token)}&format=png&margin=10`;
-            const style = giftCard.template || 'elegant';
+            const qrUrl = escapeHtml(`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + '/redeem.html?token=' + giftCard.qr_code_token)}&format=png&margin=10`);
+            const allowedStyles = ['elegant', 'avenue', 'minimal', 'festive'];
+            const style = allowedStyles.includes(giftCard.template) ? giftCard.template : 'elegant';
+            const giftCardCode = escapeHtml(giftCard.code);
+            const recipientName = escapeHtml(giftCard.recipient_name);
+            const recipientEmail = escapeHtml(giftCard.recipient_email);
+            const senderName = escapeHtml(giftCard.sender_name);
+            const message = escapeHtml(giftCard.message);
             
             // Create modal
             const modalHTML = `
@@ -860,15 +876,15 @@
                                     <div class="gc-amount">€${giftCard.amount}</div>
                                     <div class="gc-recipient">
                                         <span class="gc-label">Per</span>
-                                        <span class="gc-name">${giftCard.recipient_name}</span>
+                                        <span class="gc-name">${recipientName}</span>
                                     </div>
-                                    ${giftCard.message ? `<div class="gc-message">"${giftCard.message}"</div>` : ''}
+                                    ${giftCard.message ? `<div class="gc-message">"${message}"</div>` : ''}
                                     <div class="gc-footer">
                                         <div class="gc-from">
                                             <span class="gc-label">Da</span>
-                                            <span>${giftCard.sender_name}</span>
+                                            <span>${senderName}</span>
                                         </div>
-                                        <div class="gc-code">${giftCard.code}</div>
+                                        <div class="gc-code">${giftCardCode}</div>
                                     </div>
                                 </div>
                             </div>
@@ -882,7 +898,7 @@
                                 <div class="gc-details">
                                     <div class="gc-detail-row">
                                         <span>Codice</span>
-                                        <strong>${giftCard.code}</strong>
+                                        <strong>${giftCardCode}</strong>
                                     </div>
                                     <div class="gc-detail-row">
                                         <span>Importo</span>
@@ -890,11 +906,11 @@
                                     </div>
                                     <div class="gc-detail-row">
                                         <span>Destinatario</span>
-                                        <span>${giftCard.recipient_name}</span>
+                                        <span>${recipientName}</span>
                                     </div>
                                     <div class="gc-detail-row">
                                         <span>Email</span>
-                                        <span style="font-size: 0.85rem;">${giftCard.recipient_email}</span>
+                                        <span style="font-size: 0.85rem;">${recipientEmail}</span>
                                     </div>
                                 </div>
                                 
@@ -1145,35 +1161,39 @@
         
         // Push notifications integration
         async function initPushNotifications() {
-            const { notificationService } = await import('./js/services/notifications.js');
+            const { fcmNotifications } = await import('./js/services/firebase-notifications.js');
             
             const statusEl = document.getElementById('pushStatus');
             const actionBtn = document.getElementById('pushActionBtn');
             
-            if (!notificationService.isSupported) {
+            if (!fcmNotifications.isSupported()) {
                 statusEl.textContent = 'Le notifiche push non sono supportate dal tuo browser';
                 return;
             }
             
-            await notificationService.init();
+            const initialized = await fcmNotifications.init();
             
-            // Check if VAPID is configured
-            if (!notificationService.isConfigured()) {
+            if (!initialized) {
                 statusEl.textContent = 'Le notifiche push saranno disponibili prossimamente';
                 statusEl.className = '';
                 actionBtn.style.display = 'none';
                 return;
             }
+
+            const hasActiveToken = async () => {
+                if (Notification.permission !== 'granted') return false;
+                return await fcmNotifications.checkExistingToken();
+            };
             
             const updatePushUI = async () => {
-                if (notificationService.isBlocked()) {
+                if (fcmNotifications.isBlocked()) {
                     statusEl.textContent = 'Notifiche bloccate. Abilitale dalle impostazioni del browser.';
                     statusEl.className = 'push-status-blocked';
                     actionBtn.style.display = 'inline-block';
                     actionBtn.textContent = 'Bloccato';
                     actionBtn.className = 'push-action-btn blocked';
                     actionBtn.disabled = true;
-                } else if (notificationService.isEnabled() && await notificationService.hasSubscription()) {
+                } else if (await hasActiveToken()) {
                     statusEl.textContent = '✓ Notifiche push attive';
                     statusEl.className = 'push-status-success';
                     actionBtn.style.display = 'inline-block';
@@ -1192,15 +1212,15 @@
             
             await updatePushUI();
             
-            actionBtn.addEventListener('click', async () => {
-                if (notificationService.isBlocked()) return;
+            actionBtn.onclick = async () => {
+                if (fcmNotifications.isBlocked()) return;
                 
                 actionBtn.disabled = true;
                 
-                if (notificationService.isEnabled() && await notificationService.hasSubscription()) {
+                if (await hasActiveToken()) {
                     // Unsubscribe
                     actionBtn.textContent = 'Disattivazione...';
-                    const result = await notificationService.unsubscribe();
+                    const result = await fcmNotifications.unsubscribe();
                     if (result.success) {
                         showMessage('notificationsMessage', 'Notifiche push disattivate', 'success');
                     } else {
@@ -1209,7 +1229,7 @@
                 } else {
                     // Subscribe
                     actionBtn.textContent = 'Attivazione...';
-                    const result = await notificationService.subscribe();
+                    const result = await fcmNotifications.requestPermission();
                     if (result.success) {
                         showMessage('notificationsMessage', 'Notifiche push attivate! 🎉', 'success');
                     } else {
@@ -1218,7 +1238,7 @@
                 }
                 
                 await updatePushUI();
-            });
+            };
         }
     </script>
 </body>

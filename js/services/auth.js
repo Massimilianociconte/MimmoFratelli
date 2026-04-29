@@ -110,7 +110,12 @@ class AuthService {
         await this._createProfile(data.user.id, metadata);
 
         // Call handle-signup Edge Function to create referral code and first-order discount
-        const signupData = await this._processSignup(data.user.id, email, metadata.referralCode);
+        const signupData = await this._processSignup(
+          data.user.id,
+          email,
+          metadata.referralCode,
+          data.session?.access_token || null
+        );
         return { user: data.user, error: null, signupData };
       }
 
@@ -126,7 +131,7 @@ class AuthService {
    * Creates referral code and first-order discount
    * @private
    */
-  async _processSignup(userId, email, referralCode = null) {
+  async _processSignup(userId, email, referralCode = null, accessToken = null) {
     try {
       // Get stored referral code from localStorage if not provided
       const storedRefCode = referralCode || localStorage.getItem('mimmo_referral_code');
@@ -135,7 +140,7 @@ class AuthService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${window.AVENUE_CONFIG?.SUPABASE_ANON_KEY || ''}`
+          'Authorization': `Bearer ${accessToken || window.AVENUE_CONFIG?.SUPABASE_ANON_KEY || ''}`
         },
         body: JSON.stringify({
           userId,

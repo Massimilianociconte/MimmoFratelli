@@ -20,6 +20,16 @@ class NotificationCenter {
         this._scrollPosition = 0;
     }
 
+    escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
+
     /**
      * Initialize the notification center
      */
@@ -399,7 +409,7 @@ class NotificationCenter {
             
             if (dateStr !== currentDate) {
                 currentDate = dateStr;
-                html += `<div class="notif-date-separator">${dateStr}</div>`;
+                html += `<div class="notif-date-separator">${this.escapeHtml(dateStr)}</div>`;
             }
 
             const icon = notif.type === 'new_product' ? '🆕' : 
@@ -417,9 +427,9 @@ class NotificationCenter {
                      onclick="window.notificationCenter?.handleNotificationClick('${notif.id}')">
                     <div class="notif-item-icon ${iconClass}">${icon}</div>
                     <div class="notif-item-content">
-                        <div class="notif-item-title">${notif.title}</div>
-                        <div class="notif-item-message">${notif.message}</div>
-                        <div class="notif-item-time">🕐 ${this.formatTime(notif.timestamp)} · ${this.formatRelativeTime(notif.timestamp)}</div>
+                        <div class="notif-item-title">${this.escapeHtml(notif.title)}</div>
+                        <div class="notif-item-message">${this.escapeHtml(notif.message)}</div>
+                        <div class="notif-item-time">🕐 ${this.escapeHtml(this.formatTime(notif.timestamp))} · ${this.escapeHtml(this.formatRelativeTime(notif.timestamp))}</div>
                     </div>
                 </div>
             `;

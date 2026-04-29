@@ -253,6 +253,25 @@
             }
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function safeUrl(value) {
+            try {
+                const url = new URL(value, window.location.origin);
+                return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+            } catch {
+                return '';
+            }
+        }
+
         // Load user orders
         async function loadUserOrders() {
             const loadingEl = document.getElementById('ordersLoading');
@@ -328,14 +347,15 @@
 
                 const status = statusConfig[order.status] || statusConfig['pending'];
                 const itemCount = order.order_items?.length || 0;
-                const itemsPreview = (order.order_items || []).slice(0, 2).map(i => i.product_name).join(', ');
-                const moreItems = itemCount > 2 ? ` +${itemCount - 2} altri` : '';
+                const itemsPreview = escapeHtml((order.order_items || []).slice(0, 2).map(i => i.product_name).join(', '));
+                const moreItems = itemCount > 2 ? ` +${escapeHtml(itemCount - 2)} altri` : '';
+                const orderId = escapeHtml(order.id);
 
                 return `
-                <div class="order-card" data-order-id="${order.id}">
+                <div class="order-card" data-order-id="${orderId}">
                     <div class="order-header">
                         <div class="order-info">
-                            <span class="order-number">#${order.order_number}</span>
+                            <span class="order-number">#${escapeHtml(order.order_number)}</span>
                             <span class="order-date">${date}</span>
                         </div>
                         <span class="order-status ${status.class}">${status.icon} ${status.label}</span>
@@ -349,10 +369,10 @@
                     <div class="order-footer">
                         <span class="order-total">€${parseFloat(order.total).toFixed(2)}</span>
                         <div class="order-actions">
-                            <button class="btn-reorder" onclick="reorderItems('${order.id}')" title="Aggiungi al carrello">
+                            <button class="btn-reorder" onclick="reorderItems('${orderId}')" title="Aggiungi al carrello">
                                 🔄 Riordina
                             </button>
-                            <button class="btn-view-order" onclick="viewOrderDetail('${order.id}')">
+                            <button class="btn-view-order" onclick="viewOrderDetail('${orderId}')">
                                 Dettagli →
                             </button>
                         </div>
@@ -416,6 +436,7 @@
             const status = statusConfig[order.status] || statusConfig['pending'];
             const addr = order.shipping_address || {};
             const items = order.order_items || [];
+            const trackingUrl = safeUrl(order.tracking_url);
 
             const date = new Date(order.created_at).toLocaleDateString('it-IT', {
                 day: '2-digit',
@@ -427,7 +448,7 @@
 
             body.innerHTML = `
                 <div class="order-detail-header">
-                    <h2>Ordine #${order.order_number}</h2>
+                    <h2>Ordine #${escapeHtml(order.order_number)}</h2>
                     <span class="order-status ${status.class}">${status.icon} ${status.label}</span>
                 </div>
                 
@@ -435,18 +456,18 @@
                 
                 ${order.tracking_number ? `
                 <div class="order-tracking">
-                    <strong>🚚 Tracking:</strong> ${order.tracking_number}
-                    ${order.tracking_url ? `<a href="${order.tracking_url}" target="_blank" class="tracking-link">Traccia spedizione →</a>` : ''}
+                    <strong>🚚 Tracking:</strong> ${escapeHtml(order.tracking_number)}
+                    ${trackingUrl ? `<a href="${escapeHtml(trackingUrl)}" target="_blank" rel="noopener noreferrer" class="tracking-link">Traccia spedizione →</a>` : ''}
                 </div>
                 ` : ''}
                 
                 <div class="order-detail-section">
                     <h3>📍 Indirizzo di consegna</h3>
                     <p>
-                        ${addr.firstName || ''} ${addr.lastName || ''}<br>
-                        ${addr.address || ''}<br>
-                        ${addr.postalCode || ''} ${addr.city || ''} (${addr.province || ''})<br>
-                        📞 ${addr.phone || 'N/D'}
+                        ${escapeHtml(addr.firstName || '')} ${escapeHtml(addr.lastName || '')}<br>
+                        ${escapeHtml(addr.address || '')}<br>
+                        ${escapeHtml(addr.postalCode || '')} ${escapeHtml(addr.city || '')} (${escapeHtml(addr.province || '')})<br>
+                        📞 ${escapeHtml(addr.phone || 'N/D')}
                     </p>
                 </div>
                 
@@ -456,8 +477,8 @@
                         ${items.map(item => `
                             <div class="order-item-row">
                                 <div class="item-info">
-                                    <span class="item-name">${item.product_name}</span>
-                                    <span class="item-details">Taglia: ${item.size || 'N/D'} • Qtà: ${item.quantity}</span>
+                                    <span class="item-name">${escapeHtml(item.product_name || 'Prodotto')}</span>
+                                    <span class="item-details">Taglia: ${escapeHtml(item.size || 'N/D')} • Qtà: ${escapeHtml(item.quantity || 0)}</span>
                                 </div>
                                 <span class="item-price">€${(item.product_price * item.quantity).toFixed(2)}</span>
                             </div>
@@ -474,13 +495,13 @@
                 </div>
                 
                 <div class="order-payment-info">
-                    ✅ Pagamento completato via ${order.payment_provider?.toUpperCase() || 'N/D'}
+                    ✅ Pagamento completato via ${escapeHtml(order.payment_provider?.toUpperCase() || 'N/D')}
                     ${parseFloat(order.gift_card_amount) > 0 && parseFloat(order.total) === 0 ? '<br><small>💳 Pagato interamente con Gift Card</small>' : ''}
                 </div>
                 
                 ${order.payment_provider === 'stripe' && order.payment_status === 'completed' && order.payment_id ? `
                 <div class="order-receipt-section">
-                    <button class="btn-download-receipt" onclick="downloadReceipt('${order.id}')" id="receiptBtn-${order.id}">
+                    <button class="btn-download-receipt" onclick="downloadReceipt('${escapeHtml(order.id)}')" id="receiptBtn-${escapeHtml(order.id)}">
                         🧾 Scarica Ricevuta
                     </button>
                 </div>

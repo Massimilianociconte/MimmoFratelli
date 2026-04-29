@@ -32,6 +32,25 @@ class CollectionPage {
     this.categorySlugFromUrl = null;
   }
 
+  _escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
+  _safeImageUrl(value) {
+    try {
+      const url = new URL(value, window.location.origin);
+      return ['http:', 'https:', 'data:'].includes(url.protocol) ? url.href : this._getPlaceholderImage();
+    } catch {
+      return this._getPlaceholderImage();
+    }
+  }
+
   /**
    * Initialize the collection page
    */
@@ -374,7 +393,7 @@ class CollectionPage {
 
     // Get images array or use placeholder
     const images = product.images?.length > 0 
-      ? product.images 
+      ? product.images.map((image) => this._safeImageUrl(image))
       : [this._getPlaceholderImage()];
 
     const isFav = wishlistService?.isFavorite(product.id) || false;
@@ -383,15 +402,15 @@ class CollectionPage {
 
     card.innerHTML = `
       <div class="card-image-wrapper">
-        <div class="carousel-container" id="carousel-${product.id}">
+        <div class="carousel-container" id="carousel-${this._escapeHtml(product.id)}">
           ${images.map((img, idx) => `
-            <img src="${img}" class="carousel-img ${idx === 0 ? 'active' : ''}" 
-                 data-index="${idx}" loading="lazy" 
-                 onerror="this.src='${this._getPlaceholderImage()}'">
+            <img src="${this._escapeHtml(img)}" class="carousel-img ${idx === 0 ? 'active' : ''}"
+                 data-index="${idx}" loading="lazy"
+                 onerror="this.onerror=null;this.src='${this._escapeHtml(this._getPlaceholderImage())}'">
           `).join('')}
         </div>
         <div class="card-overlay">
-          <button class="quick-view-btn" onclick="collectionPage.openQuickView('${product.id}', event)">
+          <button class="quick-view-btn" onclick="collectionPage.openQuickView('${this._escapeHtml(product.id)}', event)">
             <span>Vista Rapida</span>
           </button>
         </div>
@@ -399,7 +418,7 @@ class CollectionPage {
           <div class="carousel-dots">
             ${images.map((_, idx) => `
               <span class="dot ${idx === 0 ? 'active' : ''}" 
-                    onclick="collectionPage.goToImage(event, '${product.id}', ${idx})"></span>
+                    onclick="collectionPage.goToImage(event, '${this._escapeHtml(product.id)}', ${idx})"></span>
             `).join('')}
           </div>
         ` : ''}
@@ -407,8 +426,8 @@ class CollectionPage {
       </div>
       <div class="card-info">
         <div class="card-header">
-          <h3 class="card-name">${product.name}</h3>
-          <button class="card-favorite ${isFav ? 'active' : ''}" data-product-id="${product.id}">
+          <h3 class="card-name">${this._escapeHtml(product.name)}</h3>
+          <button class="card-favorite ${isFav ? 'active' : ''}" data-product-id="${this._escapeHtml(product.id)}">
             <span class="heart-icon">${isFav ? '♥' : '♡'}</span>
           </button>
         </div>
@@ -416,7 +435,7 @@ class CollectionPage {
           ${hasDiscount ? `<span class="original-price">€ ${product.price.toFixed(2)}</span>` : ''}
           € ${displayPrice.toFixed(2)}
         </p>
-        <button class="card-cta" onclick="collectionPage.goToProduct('${product.id}')">Scopri</button>
+        <button class="card-cta" onclick="collectionPage.goToProduct('${this._escapeHtml(product.id)}')">Scopri</button>
       </div>
     `;
 
