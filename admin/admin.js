@@ -658,6 +658,12 @@ function openProductModal(product = null) {
         document.getElementById('productAllergens').value = product.allergens || '';
         document.getElementById('productOrigin').value = product.origin_country || '';
         document.getElementById('productStorage').value = product.storage_instructions || '';
+        document.getElementById('productNetQuantity').value = product.net_quantity_label || '';
+        document.getElementById('productFoodOperator').value = product.food_operator_name_address || '';
+        document.getElementById('productUsageInstructions').value = product.usage_instructions || '';
+        document.getElementById('productNutritionDeclaration').value = product.nutrition_declaration || '';
+        document.getElementById('productFoodInfoRequired').checked = product.food_information_required === true;
+        document.getElementById('productFoodInfoVerified').checked = Boolean(product.food_information_verified_at);
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productSalePrice').value = product.sale_price || '';
         document.getElementById('productGender').value = product.gender || '';
@@ -720,6 +726,11 @@ function openProductModal(product = null) {
     
     // Set handler directly to avoid duplicate listeners on repeated modal opens
     document.getElementById('productSeasonal').onchange = updateSeasonalNotificationPanel;
+    document.getElementById('productGender').onchange = (event) => {
+        if (['conserve', 'secchi-estratti'].includes(event.target.value)) {
+            document.getElementById('productFoodInfoRequired').checked = true;
+        }
+    };
 
     modal.classList.add('active');
     
@@ -1376,6 +1387,19 @@ async function handleProductSubmit(e) {
     const price = parseFloat(document.getElementById('productPrice').value);
     const salePriceRaw = document.getElementById('productSalePrice').value;
     const salePrice = salePriceRaw ? parseFloat(salePriceRaw) : null;
+    const gender = document.getElementById('productGender').value || null;
+    const foodInfoRequired = document.getElementById('productFoodInfoRequired').checked;
+    const foodInfoVerified = document.getElementById('productFoodInfoVerified').checked;
+    const foodInfo = {
+        ingredients: document.getElementById('productIngredients').value.trim(),
+        allergens: document.getElementById('productAllergens').value.trim(),
+        originCountry: document.getElementById('productOrigin').value.trim(),
+        storageInstructions: document.getElementById('productStorage').value.trim(),
+        netQuantityLabel: document.getElementById('productNetQuantity').value.trim(),
+        foodOperator: document.getElementById('productFoodOperator').value.trim(),
+        usageInstructions: document.getElementById('productUsageInstructions').value.trim(),
+        nutritionDeclaration: document.getElementById('productNutritionDeclaration').value.trim()
+    };
     
     // --- Client-side validation ---
     if (!name) { errorEl.textContent = 'Il nome del prodotto è obbligatorio.'; return; }
@@ -1393,18 +1417,50 @@ async function handleProductSubmit(e) {
         errorEl.textContent = `Il prezzo saldo (€${salePrice}) deve essere inferiore al prezzo di listino (€${price}).`;
         return;
     }
+    if (['conserve', 'secchi-estratti'].includes(gender) && !foodInfoRequired) {
+        errorEl.textContent = 'I prodotti preparati o conservati devono avere le informazioni alimentari abilitate.';
+        return;
+    }
+    if (foodInfoVerified && !foodInfoRequired) {
+        errorEl.textContent = 'Abilita prima le informazioni alimentari, poi confermane la verifica.';
+        return;
+    }
+    if (foodInfoVerified) {
+        const requiredFoodFields = [
+            ['ingredienti', foodInfo.ingredients],
+            ['allergeni', foodInfo.allergens],
+            ['quantità netta', foodInfo.netQuantityLabel],
+            ['conservazione', foodInfo.storageInstructions],
+            ['operatore alimentare responsabile', foodInfo.foodOperator],
+            ['dichiarazione nutrizionale o motivazione dell’esenzione', foodInfo.nutritionDeclaration]
+        ];
+        const missingFoodFields = requiredFoodFields
+            .filter(([, value]) => !value)
+            .map(([label]) => label);
+        if (missingFoodFields.length > 0) {
+            errorEl.textContent =
+                `Prima della verifica completa: ${missingFoodFields.join(', ')}.`;
+            return;
+        }
+    }
     
     const productData = {
         name: name,
         slug: slug,
         description: document.getElementById('productDescription').value.trim() || null,
-        ingredients: document.getElementById('productIngredients').value.trim() || null,
-        allergens: document.getElementById('productAllergens').value.trim() || null,
-        origin_country: document.getElementById('productOrigin').value.trim() || null,
-        storage_instructions: document.getElementById('productStorage').value.trim() || null,
+        ingredients: foodInfo.ingredients || null,
+        allergens: foodInfo.allergens || null,
+        origin_country: foodInfo.originCountry || null,
+        storage_instructions: foodInfo.storageInstructions || null,
+        net_quantity_label: foodInfo.netQuantityLabel || null,
+        food_operator_name_address: foodInfo.foodOperator || null,
+        usage_instructions: foodInfo.usageInstructions || null,
+        nutrition_declaration: foodInfo.nutritionDeclaration || null,
+        food_information_required: foodInfoRequired,
+        food_information_verified_at: foodInfoVerified ? new Date().toISOString() : null,
         price: price,
         sale_price: salePrice,
-        gender: document.getElementById('productGender').value || null,
+        gender: gender,
         page_type: document.getElementById('productPageType').value || null,
         category_id: document.getElementById('productCategory').value || null,
         inventory: totalQty,

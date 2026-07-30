@@ -19,7 +19,7 @@ Lo stato verificato al 30 luglio 2026 è:
 | Supply chain | completata | Stripe SDK `20.4.1`, API nel codice `2026-02-25.clover`, `npm audit` senza vulnerabilità note |
 | Configurazione Stripe live | completata in produzione | nuovo endpoint, nuovo signing secret, API `2026-02-25.clover` e sei eventi verificati |
 | Configurazione Stripe sandbox | completata | endpoint test legacy disabilitato e non eliminato, per rollback |
-| Profilo pubblico Stripe | Dashboard-only, da finalizzare | Support URL assente e descrittore non riconoscibile; l’API Stripe vieta la modifica del proprio account Standard |
+| Profilo pubblico Stripe | Dashboard-only, da finalizzare | sito, email e Support URL sono corretti; restano nome pubblico, URL privacy/termini, descrittore e riconciliazione degli indirizzi |
 | E2E con denaro reale | non eseguita intenzionalmente | nessun addebito o rimborso reale senza autorizzazione esplicita |
 
 L’endpoint webhook live è ora allineato al codice e copre pagamenti completati,
@@ -56,11 +56,15 @@ Come richiesto, **non è stato usato Codex Security Report**. Sono stati usati:
 9. smoke test HTTP sui confini JWT e sulla firma webhook;
 10. confronto con la documentazione ufficiale Stripe e Supabase.
 
-Nessun valore segreto è stato mostrato, registrato o salvato nel repository: la
-rotazione è avvenuta in memoria e il nuovo signing secret è stato trasferito
-direttamente da Stripe a Supabase. Prima delle migrazioni è stato acquisito un
-dump **solo schema**, senza dati cliente, con hash SHA-256 conservato nel log
-operativo della sessione.
+Il signing secret Stripe non è stato mostrato né salvato nel repository: la
+rotazione è avvenuta in memoria e il valore è stato trasferito direttamente da
+Stripe a Supabase. Il controllo successivo ha però individuato un vecchio PAT
+Supabase in una configurazione IDE già presente nella cronologia Git pubblica.
+Il token storico risponde `403` ed è quindi inattivo; la configurazione corrente
+usa `${SUPABASE_ACCESS_TOKEN}`, è limitata al solo progetto e non approva
+automaticamente strumenti di scrittura. Il nuovo token locale non è mai entrato
+in un commit. Prima delle migrazioni è stato acquisito un dump **solo schema**,
+senza dati cliente, con hash SHA-256 conservato nel log operativo della sessione.
 
 ## Architettura di fiducia risultante
 
@@ -228,16 +232,59 @@ eliminato. Non può modificare la produzione: il runtime ha
 rifiuta eventi non live anche se correttamente firmati.
 
 Il profilo pubblico dell’account è abilitato per addebiti e payout e non presenta
-requisiti `currently_due`, `eventually_due` o `past_due`. Restano da correggere
-nel Dashboard, perché Stripe vieta di aggiornare via API il proprio account
-Standard:
+requisiti `currently_due`, `eventually_due` o `past_due`. Sono ora corretti e
+verificati:
 
-- nome cliente: `Mimmo Fratelli`;
 - sito: `https://www.mimmofratelli.com/`;
-- Support URL: `https://www.mimmofratelli.com/contacts.html` (verificato `200`);
-- descrittore estratto conto: `MIMMO FRATELLI`.
+- email assistenza: `mimmofratelli1996@gmail.com`;
+- Support URL: `https://www.mimmofratelli.com/contacts.html` (verificato `200`).
+
+Restano da finalizzare nel Dashboard:
+
+- nome pubblico/commerciale: `Mimmo Fratelli`;
+- Privacy URL: `https://www.mimmofratelli.com/privacy-policy.html`;
+- Terms URL: `https://www.mimmofratelli.com/termini-servizio.html`;
+- descrittore estratto conto: `MIMMO FRATELLI`;
+- descrizione dell’attività e indirizzi, oggi discordanti tra Via Marconi 38,
+  Via Luigi Brioschi 9 e Via Enrico Falck 53.
+
+L’identità legale/KYC deve restare il nominativo della persona fisica titolare
+della ditta individuale. Il nome commerciale non deve sostituirla nei campi
+fiscali o di verifica.
 
 Il recapito telefonico pubblico già presente non deve essere modificato.
+
+La chiave limitata configurata per la CLI permette la lettura dell’account ma,
+alla verifica del 30 luglio 2026, non possiede il permesso di scrittura
+`Checkout Sessions`: per questo non è stato possibile creare e scadere una
+sessione live non pagante che validasse automaticamente l’URL dei Termini.
+
+## Aggiornamento conformità legale e catalogo
+
+Sono state pubblicate e rese raggiungibili senza JavaScript:
+
+- `https://www.mimmofratelli.com/privacy-policy.html`;
+- `https://www.mimmofratelli.com/termini-servizio.html`;
+- `https://www.mimmofratelli.com/trasparenza-ai.html`.
+
+Le pagine hanno canonical, meta robots `index,follow`, JSON-LD `WebPage`,
+collegamenti reciproci e presenza in `sitemap.xml`, `robots.txt` e `llms.txt`.
+L’informativa AI distingue correttamente entrata in vigore dell’AI Act,
+applicazione generale dal 2 agosto 2026, assenza di decisioni automatizzate e
+revisione umana delle bozze CaricoFacile.
+
+Il checkout ora richiede il consenso Stripe ai Termini e registra nel database
+solo prova minima e versionata dell’accettazione. Il token QR delle gift card non
+viene più inviato a un generatore pubblico: il QR è creato da una Edge Function
+autenticata, autorizzata e `no-store`.
+
+Per i sette prodotti preparati o conservati presenti nel catalogo non esiste
+una fonte affidabile nel database per ingredienti, allergeni e altre
+informazioni obbligatorie. Non sono stati inventati dati: il sistema li marca
+come soggetti a informazione alimentare, li mantiene visibili e ne blocca
+l’acquisto sia nell’interfaccia sia nella Edge Function finché un amministratore
+non trascrive e verifica i dati dall’etichetta o dalla scheda ufficiale del
+produttore.
 
 ## Validazioni eseguite
 
@@ -252,7 +299,8 @@ Il recapito telefonico pubblico già presente non deve essere modificato.
 | Smoke workflow nel DB di produzione | superato; dati sintetici annullati nella subtransazione |
 | Vincoli economici in produzione | cinque su cinque validati |
 | Job cron e launcher | due job attivi; launcher attivo |
-| Test applicativi Vitest | 101/101 |
+| Test applicativi Vitest | 114/114 |
+| Test legali/crawler/consenso/QR/informazioni alimentari | 13/13 inclusi nei 114 |
 | Test Deno pagamento | 8/8 |
 | Type-check Edge Functions | superato |
 | `npm audit --omit=dev` | 0 vulnerabilità note |

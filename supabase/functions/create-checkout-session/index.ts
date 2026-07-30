@@ -75,6 +75,8 @@ interface ProductRecord {
   is_active: boolean;
   category_id: string | null;
   num_items: number | null;
+  food_information_required: boolean;
+  food_information_verified_at: string | null;
 }
 
 function jsonResponse(req: Request, status: number, payload: Record<string, unknown>) {
@@ -108,7 +110,10 @@ async function buildServerPricedItems(
 
   const { data: products, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, price, sale_price, images, is_active, category_id, num_items")
+    .select(
+      "id, name, price, sale_price, images, is_active, category_id, num_items, " +
+      "food_information_required, food_information_verified_at"
+    )
     .in("id", productIds);
 
   if (error) {
@@ -151,6 +156,14 @@ async function buildServerPricedItems(
 
     if (!product || !product.is_active) {
       return { error: "Uno o più prodotti non sono più disponibili" };
+    }
+
+    if (product.food_information_required && !product.food_information_verified_at) {
+      return {
+        error:
+          `"${product.name}" non è ancora acquistabile online: ` +
+          "le informazioni alimentari obbligatorie devono essere verificate",
+      };
     }
 
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {

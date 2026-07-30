@@ -12,26 +12,16 @@
       ]
     },
     "MimmoFratelli": {
-      "url": "https://mcp.supabase.com/mcp",
+      "url": "https://mcp.supabase.com/mcp?project_ref=onvufwqybriaoadsdjyk&features=docs%2Cdatabase%2Cdebugging%2Cfunctions",
       "headers": {
-        "Authorization": "Bearer sbp_98565c9e6d1670f27400cfa7610d15a75b6a5212"
+        "Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"
       },
       "disabled": false,
       "autoApprove": [
-        "execute_sql",
-        "list_projects",
         "list_tables",
         "get_logs",
-        "get_cost",
-        "list_organizations",
-        "confirm_cost",
-        "create_project",
         "list_migrations",
-        "apply_migration",
         "get_project_url",
-        "get_anon_key",
-        "deploy_edge_function",
-        "deploy_edge_function",
         "list_edge_functions",
         "get_edge_function",
         "get_project",

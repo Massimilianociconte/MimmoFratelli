@@ -119,3 +119,54 @@ describe('Stripe terms acceptance evidence', () => {
     expect(migration).toContain('ON DELETE SET NULL');
   });
 });
+
+describe('food information and advertised-price safeguards', () => {
+  it('blocks prepared foods until mandatory information is human-verified', () => {
+    const migration = read(
+      'supabase/migrations/20260731000000_omnibus_food_info_compliance.sql',
+    );
+    const checkout = read('supabase/functions/create-checkout-session/index.ts');
+    const product = read('product.html');
+
+    expect(migration).toContain('food_information_required');
+    expect(migration).toContain('food_information_verified_at');
+    expect(migration).toContain('products_verified_food_information_complete');
+    expect(migration).toContain('products_prepared_food_requires_information');
+    expect(migration).toContain("gender IN ('conserve', 'secchi-estratti')");
+    expect(checkout).toContain(
+      'product.food_information_required && !product.food_information_verified_at',
+    );
+    expect(product).toContain('isFoodInformationBlocked');
+    expect(product).toContain('Temporaneamente non acquistabile');
+  });
+
+  it('provides an admin verification workflow without inventing product data', () => {
+    const admin = read('admin/index.html');
+    const adminLogic = read('admin/admin.js');
+
+    for (const field of [
+      'productIngredients',
+      'productAllergens',
+      'productNetQuantity',
+      'productFoodOperator',
+      'productStorage',
+      'productNutritionDeclaration',
+      'productFoodInfoVerified',
+    ]) {
+      expect(admin).toContain(`id="${field}"`);
+    }
+    expect(adminLogic).toContain('food_information_verified_at');
+    expect(adminLogic).toContain('new Date().toISOString()');
+  });
+
+  it('records the prior 30-day price for announced discounts', () => {
+    const migration = read(
+      'supabase/migrations/20260731000000_omnibus_food_info_compliance.sql',
+    );
+
+    expect(migration).toContain('product_price_history');
+    expect(migration).toContain('set_omnibus_reference_price');
+    expect(migration).toContain('lowest_price_30d');
+    expect(read('product.html')).toContain('Prezzo più basso negli ultimi 30 giorni');
+  });
+});

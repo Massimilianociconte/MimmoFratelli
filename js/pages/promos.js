@@ -274,6 +274,8 @@ class PromosPage {
     const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
     const productUrl = `product.html?id=${product.id}`;
     const img = product.images?.[0] || '';
+    const foodInfoBlocked =
+      product.food_information_required && !product.food_information_verified_at;
 
     return `
       <div class="product-card-small" data-product-id="${product.id}">
@@ -292,7 +294,9 @@ class PromosPage {
             €${product.sale_price.toFixed(2)}
           </p>
           <p class="omnibus-price">Prezzo più basso 30 gg: €${(product.lowest_price_30d || product.price).toFixed(2)}</p>
-          <button class="add-cart-btn-small" onclick="window.addToCartFromPromos('${product.id}')">+ Carrello</button>
+          ${foodInfoBlocked
+            ? `<a class="add-cart-btn-small" href="${productUrl}">Informazioni in verifica</a>`
+            : `<button class="add-cart-btn-small" onclick="window.addToCartFromPromos('${product.id}')">+ Carrello</button>`}
         </div>
       </div>
     `;
@@ -412,6 +416,10 @@ class PromosPage {
   async addToCart(productId) {
     const product = this.discountedProducts.find(p => p.id === productId);
     if (!product) return;
+    if (product.food_information_required && !product.food_information_verified_at) {
+      window.location.href = `product.html?id=${encodeURIComponent(product.id)}`;
+      return;
+    }
 
     await cartService.addItem({
       id: product.id,

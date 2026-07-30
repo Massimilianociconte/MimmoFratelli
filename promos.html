@@ -384,6 +384,10 @@
             if (!product) return;
 
             const btn = document.querySelector(`.card-quick-add[data-product-id="${productId}"]`);
+            if (product.food_information_required && !product.food_information_verified_at) {
+                window.location.href = `product.html?id=${encodeURIComponent(product.id)}`;
+                return;
+            }
             if (btn) btn.classList.add('adding');
 
             try {

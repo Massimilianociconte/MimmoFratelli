@@ -114,6 +114,13 @@ class QuickViewModal {
     this.modal.querySelector('.quick-view-description').textContent = p.description || '';
     this.modal.querySelector('.quick-view-link').href = `product.html?id=${p.id}`;
     this.modal.querySelector('.qty-input').value = 1;
+    const addButton = this.modal.querySelector('.quick-view-add-cart');
+    const foodInfoBlocked =
+      p.food_information_required && !p.food_information_verified_at;
+    addButton.disabled = foodInfoBlocked;
+    addButton.textContent = foodInfoBlocked
+      ? 'Informazioni alimentari in verifica'
+      : 'Aggiungi al Carrello';
     
     // Render thumbnails
     const thumbsContainer = this.modal.querySelector('.quick-view-thumbnails');
@@ -183,6 +190,13 @@ class QuickViewModal {
   }
 
   async addToCart() {
+    if (
+      this.currentProduct?.food_information_required &&
+      !this.currentProduct?.food_information_verified_at
+    ) {
+      return;
+    }
+
     if (!this.selectedSize) {
       alert('Seleziona una taglia');
       return;

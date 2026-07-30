@@ -1021,6 +1021,13 @@
             if (!product) return;
 
             const btn = document.querySelector(`.card-quick-add[data-product-id="${productId}"]`);
+            if (product.food_information_required && !product.food_information_verified_at) {
+                showQuickAddError(btn, 'Informazioni alimentari in verifica');
+                setTimeout(() => {
+                    window.location.href = `product.html?id=${productId}&gender=${product.gender || 'altro'}`;
+                }, 1200);
+                return;
+            }
             if (btn) {
                 btn.classList.add('adding');
             }

@@ -740,26 +740,67 @@
                     <textarea id="productDescription" rows="3" placeholder="Descrizione del prodotto"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label for="productIngredients">Ingredienti (obbligatorio per confezionati — Reg. UE 1169/2011)</label>
-                    <textarea id="productIngredients" rows="2" placeholder="Es. Pomodori (95%), sale, basilico"></textarea>
-                </div>
+                <fieldset class="form-group food-compliance-fields">
+                    <legend>Informazioni alimentari (Reg. UE 1169/2011)</legend>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productFoodInfoRequired">
+                        <span class="checkbox-text">Questo prodotto richiede informazioni alimentari prima dell’acquisto</span>
+                    </label>
+                    <p class="form-hint">
+                        Trascrivi i dati da etichetta o scheda ufficiale. Il prodotto resta non acquistabile finché
+                        la verifica non viene confermata.
+                    </p>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="productAllergens">Allergeni</label>
-                        <input type="text" id="productAllergens" placeholder="Es. Può contenere frutta a guscio">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productIngredients">Ingredienti</label>
+                            <textarea id="productIngredients" rows="3" placeholder="Elenco completo nell’ordine indicato in etichetta"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="productAllergens">Allergeni</label>
+                            <textarea id="productAllergens" rows="3" placeholder="Allergeni evidenziati e possibili contaminazioni indicate"></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="productOrigin">Origine</label>
-                        <input type="text" id="productOrigin" placeholder="Es. Italia">
-                    </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="productStorage">Conservazione</label>
-                    <input type="text" id="productStorage" placeholder="Es. Conservare in luogo fresco e asciutto">
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productNetQuantity">Quantità netta</label>
+                            <input type="text" id="productNetQuantity" placeholder="Es. 250 g, 1 L, venduto a peso">
+                        </div>
+                        <div class="form-group">
+                            <label for="productOrigin">Origine / provenienza</label>
+                            <input type="text" id="productOrigin" placeholder="Quando obbligatoria o dichiarata">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productFoodOperator">Operatore alimentare responsabile</label>
+                        <textarea id="productFoodOperator" rows="2" placeholder="Nome o ragione sociale e indirizzo riportati in etichetta"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productStorage">Conservazione</label>
+                            <textarea id="productStorage" rows="2" placeholder="Temperature, tempi dopo l’apertura e altre condizioni"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="productUsageInstructions">Istruzioni per l’uso</label>
+                            <textarea id="productUsageInstructions" rows="2" placeholder="Quando necessarie"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productNutritionDeclaration">Dichiarazione nutrizionale</label>
+                        <textarea id="productNutritionDeclaration" rows="3" placeholder="Valori per 100 g/100 ml oppure motivazione documentata dell’esenzione"></textarea>
+                    </div>
+
+                    <label class="checkbox-label food-verification-check">
+                        <input type="checkbox" id="productFoodInfoVerified">
+                        <span class="checkbox-text">
+                            Ho verificato questi dati rispetto all’etichetta o alla scheda ufficiale del produttore
+                        </span>
+                    </label>
+                </fieldset>
 
                 <div class="form-row">
                     <div class="form-group">

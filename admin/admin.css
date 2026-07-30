@@ -5786,3 +5786,32 @@ body {
         display: none;
     }
 }
+
+/* Reg. UE 1169/2011: revisione documentale prima della vendita online */
+.food-compliance-fields {
+    margin: 1.25rem 0;
+    padding: 1rem;
+    border: 1px solid rgba(47, 107, 79, 0.24);
+    border-radius: 12px;
+    background: rgba(238, 245, 237, 0.55);
+}
+
+.food-compliance-fields legend {
+    padding: 0 0.45rem;
+    color: #1f4b38;
+    font-weight: 700;
+}
+
+.food-compliance-fields > .form-hint {
+    margin: 0.55rem 0 1rem;
+    color: #5f6f67;
+    line-height: 1.5;
+}
+
+.food-verification-check {
+    margin-top: 0.75rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(47, 107, 79, 0.28);
+    border-radius: 9px;
+    background: #fff;
+}

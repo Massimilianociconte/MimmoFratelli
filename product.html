@@ -273,6 +273,15 @@
             const availabilityEl = document.getElementById('weightAvailability');
             const addToCartBtn = document.getElementById('addToCartBtn');
 
+            if (isFoodInformationBlocked()) {
+                availabilityEl.innerHTML =
+                    '<span class="availability-warning">⚠️ Informazioni alimentari in verifica</span>';
+                addToCartBtn.disabled = true;
+                addToCartBtn.classList.add('btn-disabled');
+                addToCartBtn.textContent = 'Temporaneamente non acquistabile';
+                return;
+            }
+
             if (currentWeightGrams === 0) {
                 availabilityEl.innerHTML = '<span class="availability-warning">⚠️ Seleziona un peso</span>';
                 addToCartBtn.disabled = true;
@@ -461,6 +470,9 @@
 
             document.getElementById('addToCartBtn').addEventListener('click', async () => {
                 if (!currentProduct) return;
+                if (isFoodInformationBlocked(currentProduct)) {
+                    return;
+                }
 
                 const unitMeasure = currentProduct.unit_measure || 'kg';
                 const isPieceBased = unitMeasure === 'pz';
@@ -635,17 +647,28 @@
             ldScript.textContent = JSON.stringify(jsonLd);
         }
 
+        function isFoodInformationBlocked(product = currentProduct) {
+            return Boolean(
+                product?.food_information_required &&
+                !product?.food_information_verified_at
+            );
+        }
+
         // Reg. (UE) 1169/2011: informazioni alimentari mostrate prima dell'acquisto
         function renderFoodInfo(product) {
             const rows = [
                 ['Ingredienti', product.ingredients],
                 ['Allergeni', product.allergens],
                 ['Origine', product.origin_country],
-                ['Conservazione', product.storage_instructions]
+                ['Quantità netta', product.net_quantity_label],
+                ['Conservazione', product.storage_instructions],
+                ['Operatore responsabile', product.food_operator_name_address],
+                ['Istruzioni per l’uso', product.usage_instructions],
+                ['Dichiarazione nutrizionale', product.nutrition_declaration]
             ].filter(([, value]) => value && String(value).trim());
 
             let foodEl = document.getElementById('pdFoodInfo');
-            if (rows.length === 0) {
+            if (rows.length === 0 && !product.food_information_required) {
                 if (foodEl) foodEl.remove();
                 return;
             }
@@ -659,6 +682,13 @@
             }
 
             foodEl.innerHTML = '<h3>Informazioni alimentari</h3>';
+            if (isFoodInformationBlocked(product)) {
+                const warning = document.createElement('p');
+                warning.className = 'food-info-verification-warning';
+                warning.textContent =
+                    'I dati obbligatori sono in verifica: il prodotto è visibile ma non acquistabile online.';
+                foodEl.appendChild(warning);
+            }
             const dl = document.createElement('dl');
             rows.forEach(([label, value]) => {
                 const dt = document.createElement('dt');
@@ -703,6 +733,25 @@
             }
 
             renderFoodInfo(product);
+
+            const existingFoodBanner = document.getElementById('foodInfoBlockedBanner');
+            if (isFoodInformationBlocked(product)) {
+                const addToCartBtn = document.getElementById('addToCartBtn');
+                addToCartBtn.textContent = 'Temporaneamente non acquistabile';
+                addToCartBtn.disabled = true;
+                addToCartBtn.classList.add('btn-disabled');
+
+                if (!existingFoodBanner) {
+                    const banner = document.createElement('div');
+                    banner.id = 'foodInfoBlockedBanner';
+                    banner.className = 'food-info-blocked-banner';
+                    banner.textContent =
+                        'Le informazioni alimentari obbligatorie sono ancora in verifica. Contatta l’assistenza per dettagli.';
+                    document.getElementById('pdFoodInfo')?.insertAdjacentElement('beforebegin', banner);
+                }
+            } else if (existingFoodBanner) {
+                existingFoodBanner.remove();
+            }
 
             document.title = `${product.name} | Mimmo Fratelli`;
 

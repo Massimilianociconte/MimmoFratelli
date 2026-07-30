@@ -63,6 +63,12 @@ ALTER TABLE public.products
       AND NULLIF(BTRIM(food_operator_name_address), '') IS NOT NULL
       AND NULLIF(BTRIM(nutrition_declaration), '') IS NOT NULL
     )
+  ) NOT VALID,
+  DROP CONSTRAINT IF EXISTS products_prepared_food_requires_information,
+  ADD CONSTRAINT products_prepared_food_requires_information
+  CHECK (
+    gender NOT IN ('conserve', 'secchi-estratti')
+    OR food_information_required
   ) NOT VALID;
 
 CREATE INDEX IF NOT EXISTS idx_products_food_information_pending

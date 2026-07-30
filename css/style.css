@@ -950,6 +950,29 @@ body.menu-open {
     color: #666;
 }
 
+.food-info-verification-warning,
+.food-info-blocked-banner {
+    color: #7a4d00;
+    border: 1px solid rgba(180, 112, 0, 0.28);
+    border-radius: 10px;
+    background: #fff8e8;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+}
+
+.food-info-verification-warning {
+    margin: 0 0 0.75rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.76rem;
+}
+
+.food-info-blocked-banner {
+    margin: 1rem 0;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
 /* Nota ordine con obbligo di pagamento (art. 51 Cod. Consumo) */
 .payment-obligation-note {
     font-size: 0.72rem;
