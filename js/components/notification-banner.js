@@ -165,7 +165,7 @@ class NotificationBanner {
     banner.innerHTML = `
       <div class="notification-banner-content">
         <div class="notification-banner-icon">
-          <img src="${BANNER_ICON}" alt="" class="notification-banner-image" loading="lazy">
+          <img src="${BANNER_ICON}" alt="" class="notification-banner-image">
           <span class="notification-banner-badge">🍅</span>
         </div>
         <div class="notification-banner-text">
@@ -192,6 +192,12 @@ class NotificationBanner {
       this.enable();
     });
 
+    // Fallback: se il PNG non carica, mostra la campanella emoji al suo posto
+    banner.querySelector('.notification-banner-image').addEventListener('error', (e) => {
+      e.target.remove();
+      banner.querySelector('.notification-banner-icon')?.classList.add('image-failed');
+    });
+
     banner.querySelector('.notification-banner-later').addEventListener('click', () => {
       this.hide(true);
     });
@@ -214,7 +220,7 @@ class NotificationBanner {
 
     content.innerHTML = `
       <div class="notification-banner-icon success">
-        <img src="${BANNER_ICON}" alt="" class="notification-banner-image" loading="lazy">
+        <img src="${BANNER_ICON}" alt="" class="notification-banner-image">
         <span class="notification-banner-badge">✓</span>
       </div>
       <div class="notification-banner-text">
@@ -286,6 +292,13 @@ const styles = `
 
 .notification-banner-icon.success {
   animation: none;
+}
+
+/* Fallback emoji se l'immagine PNG non è disponibile */
+.notification-banner-icon.image-failed::before {
+  content: '🔔';
+  font-size: 28px;
+  line-height: 1;
 }
 
 .notification-banner-image {
