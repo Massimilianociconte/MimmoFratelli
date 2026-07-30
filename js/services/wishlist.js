@@ -286,9 +286,10 @@ class WishlistService {
           product_id: productId
         }));
 
+        // Upsert idempotente: ignora i duplicati creati da merge concorrenti
         const { error } = await supabase
           .from('wishlist_items')
-          .insert(insertData);
+          .upsert(insertData, { onConflict: 'user_id,product_id', ignoreDuplicates: true });
 
         if (error) {
           console.error('Merge error:', error);

@@ -1,0 +1,64 @@
+{
+  "public": {
+    "slug": "mimmo",
+    "appName": "CaricoFacile",
+    "storeName": "Mimmo Fratelli",
+    "supabaseUrl": "https://your-project.supabase.co",
+    "anonKey": "your-public-anon-key",
+    "accentColor": "#1a7f4e",
+    "categories": [
+      { "slug": "frutta-fresca", "name": "Frutta Fresca", "emoji": "🍎" },
+      { "slug": "verdura-fresca", "name": "Verdura Fresca", "emoji": "🥬" },
+      { "slug": "agrumi", "name": "Agrumi", "emoji": "🍊" },
+      { "slug": "cassette-miste", "name": "Cassette Miste", "emoji": "📦" },
+      { "slug": "formaggi", "name": "Formaggi", "emoji": "🧀" },
+      { "slug": "salumi", "name": "Salumi", "emoji": "🥩" },
+      { "slug": "olive-sottoli", "name": "Olive e Sottoli", "emoji": "🫒" },
+      { "slug": "insalate-pronte", "name": "Insalate Pronte", "emoji": "🥗" },
+      { "slug": "piatti-pronti", "name": "Piatti Pronti", "emoji": "🍽️" },
+      { "slug": "contorni", "name": "Contorni", "emoji": "🍲" },
+      { "slug": "frutta-secca", "name": "Frutta Secca", "emoji": "🥜" },
+      { "slug": "frutta-disidratata", "name": "Frutta Disidratata", "emoji": "🍇" },
+      { "slug": "frutta-esotica", "name": "Frutta Esotica", "emoji": "🥭" },
+      { "slug": "frutta-biologica", "name": "Frutta Biologica", "emoji": "🌱" },
+      { "slug": "ortaggi", "name": "Ortaggi", "emoji": "🥕" },
+      { "slug": "insalate", "name": "Insalate", "emoji": "🥗" },
+      { "slug": "verdura-biologica", "name": "Verdura Biologica", "emoji": "🌿" },
+      { "slug": "legumi-freschi", "name": "Legumi Freschi", "emoji": "🫛" },
+      { "slug": "erbe-aromatiche", "name": "Erbe Aromatiche", "emoji": "🌿" },
+      { "slug": "sottoli", "name": "Sott'oli", "emoji": "🫙" },
+      { "slug": "sottaceti", "name": "Sott'aceti", "emoji": "🫙" },
+      { "slug": "marmellate-confetture", "name": "Marmellate e Confetture", "emoji": "🍯" },
+      { "slug": "salse-sughi", "name": "Salse e Sughi", "emoji": "🥫" },
+      { "slug": "conserve-pomodoro", "name": "Conserve di Pomodoro", "emoji": "🍅" },
+      { "slug": "oli", "name": "Oli", "emoji": "🫒" },
+      { "slug": "succhi-spremute", "name": "Succhi e Spremute", "emoji": "🧃" },
+      { "slug": "legumi-secchi", "name": "Legumi Secchi", "emoji": "🫘" },
+      { "slug": "spezie-aromi", "name": "Spezie e Aromi", "emoji": "🌶️" },
+      { "slug": "farine-cereali", "name": "Farine e Cereali", "emoji": "🌾" }
+    ],
+    "productTypes": [
+      { "value": "frutta", "label": "Frutta" },
+      { "value": "verdura", "label": "Verdura" },
+      { "value": "conserve", "label": "Conserve e preparati" },
+      { "value": "secchi-estratti", "label": "Prodotti secchi ed estratti" },
+      { "value": "altro", "label": "Altro" }
+    ],
+    "aiLevel": "free",
+    "adminUrl": "https://www.mimmofratelli.com/admin/",
+    "siteUrl": "https://www.mimmofratelli.com/",
+    "storageBucket": "product-photos",
+    "locale": "it-IT",
+    "currency": "EUR",
+    "productSchema": {
+      "priceStorage": "decimal-euros",
+      "productTypeColumn": "gender",
+      "categoryReference": "category_id"
+    }
+  },
+  "allowedOrigins": [
+    "http://localhost:5173",
+    "https://caricofacile-mimmo.pages.dev"
+  ],
+  "aiDailyLimit": 100
+}

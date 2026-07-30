@@ -5,7 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prodotto | Mimmo Fratelli</title>
-    <meta name="description" content="Scopri i dettagli del prodotto fresco di Mimmo Fratelli.">
+    <meta name="description" content="Scopri i dettagli del prodotto fresco di Mimmo Fratelli. Frutta e verdura di stagione con consegna a domicilio a Bresso e Milano.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://www.mimmofratelli.com/product.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="Mimmo Fratelli">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:title" content="Prodotto | Mimmo Fratelli">
+    <meta property="og:description" content="Frutta e verdura fresca di stagione con consegna a domicilio a Bresso e Milano.">
+    <meta property="og:url" content="https://www.mimmofratelli.com/product.html">
+    <meta property="og:image" content="https://www.mimmofratelli.com/Images/logo_mimmofratelli_verde.png">
+    <meta name="twitter:card" content="summary_large_image">
 
     <!-- Favicon & Theme -->
     <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32x32.png">
@@ -566,6 +578,63 @@
             addToCartBtn.parentNode.insertBefore(alertBtn, addToCartBtn.nextSibling);
         }
 
+        function updateProductSeo(product, hasDiscount, unit) {
+            const effectivePrice = hasDiscount ? product.sale_price : product.price;
+            const seoDesc = product.description
+                ? product.description.slice(0, 155)
+                : `${product.name} fresco di stagione da Mimmo Fratelli. Ordina online con consegna a domicilio a Bresso e Milano.`;
+            const canonicalUrl = product.slug
+                ? `https://www.mimmofratelli.com/product.html?slug=${encodeURIComponent(product.slug)}`
+                : `https://www.mimmofratelli.com/product.html?id=${encodeURIComponent(product.id)}`;
+            const imageUrl = product.images?.length > 0
+                ? product.images[0]
+                : 'https://www.mimmofratelli.com/Images/logo_mimmofratelli_verde.png';
+
+            document.querySelector('meta[name="description"]')?.setAttribute('content', seoDesc);
+            document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+            document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${product.name} | Mimmo Fratelli`);
+            document.querySelector('meta[property="og:description"]')?.setAttribute('content', seoDesc);
+            document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+            document.querySelector('meta[property="og:image"]')?.setAttribute('content', imageUrl);
+
+            // JSON-LD Product per rich results e motori AI
+            const jsonLd = {
+                '@context': 'https://schema.org',
+                '@type': 'Product',
+                name: product.name,
+                description: seoDesc,
+                image: product.images?.length > 0 ? product.images : [imageUrl],
+                url: canonicalUrl,
+                brand: { '@type': 'Brand', name: 'Mimmo Fratelli' },
+                offers: {
+                    '@type': 'Offer',
+                    url: canonicalUrl,
+                    priceCurrency: 'EUR',
+                    price: typeof effectivePrice === 'number' ? effectivePrice.toFixed(2) : String(effectivePrice),
+                    availability: (product.is_active === false)
+                        ? 'https://schema.org/OutOfStock'
+                        : 'https://schema.org/InStock',
+                    seller: { '@type': 'Organization', name: 'Mimmo Fratelli' }
+                }
+            };
+            if (unit) {
+                jsonLd.offers.priceSpecification = {
+                    '@type': 'UnitPriceSpecification',
+                    price: typeof effectivePrice === 'number' ? effectivePrice.toFixed(2) : String(effectivePrice),
+                    priceCurrency: 'EUR',
+                    referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: unit }
+                };
+            }
+            let ldScript = document.getElementById('productJsonLd');
+            if (!ldScript) {
+                ldScript = document.createElement('script');
+                ldScript.type = 'application/ld+json';
+                ldScript.id = 'productJsonLd';
+                document.head.appendChild(ldScript);
+            }
+            ldScript.textContent = JSON.stringify(jsonLd);
+        }
+
         async function renderProduct(product) {
             const isUnavailable = !product.is_active && product.is_active !== undefined;
             const hasDiscount = product.sale_price && product.sale_price < product.price;
@@ -596,6 +665,9 @@
             }
 
             document.title = `${product.name} | Mimmo Fratelli`;
+
+            // --- SEO dinamico prodotto (meta, OG, canonical, JSON-LD) ---
+            updateProductSeo(product, hasDiscount, unit);
 
             // Show appropriate selector based on unit measure
             const weightSelector = document.getElementById('weightSelector');
@@ -690,6 +762,9 @@
                 <a href="promos.html">Offerte</a>
                 <a href="about.html">Chi Siamo</a>
                 <a href="contacts.html">Contatti</a>
+                <a href="privacy-policy.html">Privacy</a>
+                <a href="termini-servizio.html">Termini di Servizio</a>
+                <a href="trasparenza-ai.html">Trasparenza AI</a>
             </div>
             <div class="footer-payments">
                 <p class="footer-payments-label">Metodi di pagamento accettati</p>

@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "caricofacile-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      // Local development points at the isolated staging namespace.
+      "id": "3c8b402eb8dc4c57a35cab5d43ddceae"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true
+    }
+  },
+  "env": {
+    "staging": {
+      "name": "caricofacile-api-staging",
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "3c8b402eb8dc4c57a35cab5d43ddceae"
+        }
+      ]
+    },
+    "production": {
+      "name": "caricofacile-api",
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "78f890c39cee4259bb0d31a5242582ec"
+        }
+      ]
+    }
+  }
+}

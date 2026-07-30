@@ -1,0 +1,66 @@
+.footer-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 1rem;
+  margin: 0.8rem 0 0;
+  font-size: 0.78rem;
+}
+
+.footer-legal-links a {
+  color: inherit;
+  opacity: 0.88;
+  text-underline-offset: 0.18em;
+}
+
+.footer-legal-links a:hover,
+.footer-legal-links a:focus-visible {
+  opacity: 1;
+}
+
+.footer-legal-identity {
+  max-width: 850px;
+  margin: 0.65rem auto 0;
+  color: inherit;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  opacity: 0.72;
+  text-align: center;
+}
+
+.checkout-legal-note,
+.auth-legal-notice {
+  margin: 0.75rem 0 0;
+  color: #5f6f67;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.checkout-legal-note a,
+.auth-legal-notice a {
+  color: #1f4b38;
+  font-weight: 600;
+  text-underline-offset: 0.15em;
+}
+
+.payment-method-text-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.payment-method-text-badges span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.25rem 0.55rem;
+  color: #2d3c34;
+  border: 1px solid rgba(47, 107, 79, 0.22);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}

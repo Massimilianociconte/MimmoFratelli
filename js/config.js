@@ -52,3 +52,28 @@ window.AVENUE_CONFIG = {
 
 // Freeze config to prevent modifications
 Object.freeze(window.AVENUE_CONFIG);
+
+// Load the shared legal navigation from the site root. Deriving the root from
+// this script keeps the component working on both root pages and /admin/.
+(function loadLegalNavigation() {
+  const configSource = document.currentScript?.src;
+  if (!configSource) return;
+
+  const siteRoot = new URL('../', configSource);
+  const stylesheetUrl = new URL('css/legal-navigation.css', siteRoot).href;
+  const scriptUrl = new URL('js/components/legal-navigation.js', siteRoot).href;
+
+  if (!document.querySelector(`link[href="${stylesheetUrl}"]`)) {
+    const stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = stylesheetUrl;
+    document.head.append(stylesheet);
+  }
+
+  if (!document.querySelector(`script[src="${scriptUrl}"]`)) {
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    script.defer = true;
+    document.head.append(script);
+  }
+})();

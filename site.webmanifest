@@ -1,0 +1,44 @@
+{
+  "name": "Mimmo Fratelli - Frutta e Verdura Fresca",
+  "short_name": "Mimmo Fratelli",
+  "description": "Frutta e verdura fresca di stagione a Bresso e Milano. Consegna a domicilio, qualità dal produttore alla tua tavola.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fdf5",
+  "theme_color": "#f8fdf5",
+  "lang": "it",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Images/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Images/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["food", "shopping"],
+  "shortcuts": [
+    {
+      "name": "Frutta",
+      "url": "/collection.html?gender=frutta",
+      "description": "Frutta fresca di stagione"
+    },
+    {
+      "name": "Verdura",
+      "url": "/collection.html?gender=verdura",
+      "description": "Ortaggi selezionati"
+    },
+    {
+      "name": "Offerte",
+      "url": "/promos.html",
+      "description": "Promozioni attive"
+    }
+  ]
+}

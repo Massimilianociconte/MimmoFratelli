@@ -17,14 +17,16 @@ Lo stato verificato al 30 luglio 2026 è:
 | Edge Functions | completata in produzione | otto funzioni distribuite e attive |
 | Cleanup operativo | completata in produzione | due job `pg_cron` attivi e privilegi client revocati |
 | Supply chain | completata | Stripe SDK `20.4.1`, API nel codice `2026-02-25.clover`, `npm audit` senza vulnerabilità note |
-| Configurazione Dashboard Stripe | **bloccata da autenticazione provider** | chiave CLI di sola lettura; nessuna modifica parziale eseguita |
+| Configurazione Stripe live | completata in produzione | nuovo endpoint, nuovo signing secret, API `2026-02-25.clover` e sei eventi verificati |
+| Configurazione Stripe sandbox | completata | endpoint test legacy disabilitato e non eliminato, per rollback |
+| Profilo pubblico Stripe | Dashboard-only, da finalizzare | Support URL assente e descrittore non riconoscibile; l’API Stripe vieta la modifica del proprio account Standard |
 | E2E con denaro reale | non eseguita intenzionalmente | nessun addebito o rimborso reale senza autorizzazione esplicita |
 
-La parte ancora aperta non è nel codice né nel database: gli endpoint webhook
-Stripe test/live devono essere riallineati dal Dashboard autenticato. La
-produzione resta protetta da `STRIPE_ALLOW_TEST_MODE=false`, ma la copertura
-completa degli eventi asincroni, delle scadenze e dei rimborsi richiede la
-modifica provider descritta più avanti.
+L’endpoint webhook live è ora allineato al codice e copre pagamenti completati,
+pagamenti asincroni, scadenze, rimborsi e fallimenti. Anche l’endpoint sandbox
+legacy è disabilitato. La produzione resta protetta da
+`STRIPE_ALLOW_TEST_MODE=false` e non possiede più né il vecchio signing secret
+generico né un signing secret test.
 
 ## Perimetro e metodo
 
@@ -54,9 +56,11 @@ Come richiesto, **non è stato usato Codex Security Report**. Sono stati usati:
 9. smoke test HTTP sui confini JWT e sulla firma webhook;
 10. confronto con la documentazione ufficiale Stripe e Supabase.
 
-Non sono stati letti, copiati o registrati valori di segreti. Prima delle
-migrazioni è stato acquisito un dump **solo schema**, senza dati cliente, con
-hash SHA-256 conservato nel log operativo della sessione.
+Nessun valore segreto è stato mostrato, registrato o salvato nel repository: la
+rotazione è avvenuta in memoria e il nuovo signing secret è stato trasferito
+direttamente da Stripe a Supabase. Prima delle migrazioni è stato acquisito un
+dump **solo schema**, senza dati cliente, con hash SHA-256 conservato nel log
+operativo della sessione.
 
 ## Architettura di fiducia risultante
 
@@ -183,42 +187,57 @@ I segreti operativi impostati senza esporne i valori includono:
 - l’endpoint webhook non firmato risponde `400`;
 - le sette funzioni protette senza JWT rispondono `401`.
 
-### Configurazione provider ancora da applicare
+### Configurazione provider applicata
 
-Endpoint osservati in sola lettura:
+Endpoint live autorevole:
 
-- test `we_1SZV6NFNqazzxXHE3MUrzxbn`;
-- live `we_1Sd87xFNqazzxXHEtmezegws`.
+- ID `we_1Tz0PfFNqazzxXHEz5BEN6nY`;
+- stato `enabled`;
+- API `2026-02-25.clover`;
+- URL
+  `https://onvufwqybriaoadsdjyk.supabase.co/functions/v1/stripe-webhook`;
+- eventi:
+  - `checkout.session.completed`;
+  - `checkout.session.async_payment_succeeded`;
+  - `checkout.session.async_payment_failed`;
+  - `checkout.session.expired`;
+  - `charge.refunded`;
+  - `payment_intent.payment_failed`.
 
-Entrambi puntano alla funzione di produzione e usano ancora la versione
-`2025-11-17.clover`. La sottoscrizione test contiene soltanto
-`checkout.session.completed`; quella live contiene anche
-`payment_intent.succeeded` e `payment_intent.payment_failed`.
+Il vecchio endpoint live `we_1Sd87xFNqazzxXHEtmezegws`, con API
+`2025-11-17.clover` e l’evento inutilizzato `payment_intent.succeeded`, è stato
+disabilitato ma non eliminato. Questo mantiene una possibilità di rollback
+esplicita senza produrre doppie consegne.
 
-Configurazione target:
+La rotazione è stata eseguita con la sequenza:
 
-1. creare un nuovo endpoint live con un nuovo signing secret;
-2. salvare il nuovo secret in Supabase senza stamparlo;
-3. sottoscrivere:
-   - `checkout.session.completed`;
-   - `checkout.session.async_payment_succeeded`;
-   - `checkout.session.async_payment_failed`;
-   - `checkout.session.expired`;
-   - `charge.refunded`;
-   - `payment_intent.payment_failed`;
-4. rimuovere `payment_intent.succeeded`, non usato dal fulfillment;
-5. impostare l’endpoint su `2026-02-25.clover`;
-6. eseguire un evento firmato di prova;
-7. disabilitare, senza eliminare immediatamente, i vecchi endpoint;
-8. destinare gli eventi test esclusivamente a uno staging isolato.
+1. creazione idempotente del nuovo endpoint;
+2. disabilitazione preventiva;
+3. trasferimento diretto del nuovo `whsec_…` a
+   `STRIPE_WEBHOOK_SECRET_LIVE`;
+4. deploy della Edge Function;
+5. verifica crittografica firmata;
+6. abilitazione del nuovo endpoint;
+7. disabilitazione del vecchio endpoint;
+8. rimozione del vecchio `STRIPE_WEBHOOK_SECRET` generico;
+9. seconda verifica firmata post-rotazione.
 
-La chiave Stripe disponibile alla CLI è ristretta e non autorizza
-creazione/aggiornamento degli endpoint. Il browser disponibile non era
-autenticato al Dashboard: per evitare configurazioni parziali non è stato
-modificato alcun endpoint né ruotato alcun signing secret.
+L’endpoint sandbox `we_1SZV6NFNqazzxXHE3MUrzxbn` è stato disabilitato ma non
+eliminato. Non può modificare la produzione: il runtime ha
+`STRIPE_ALLOW_TEST_MODE=false`, non conserva `STRIPE_WEBHOOK_SECRET_TEST` e
+rifiuta eventi non live anche se correttamente firmati.
 
-Support URL, branding e prefisso descrittore restano attività operative da
-completare con i dati legali/commerciali definitivi.
+Il profilo pubblico dell’account è abilitato per addebiti e payout e non presenta
+requisiti `currently_due`, `eventually_due` o `past_due`. Restano da correggere
+nel Dashboard, perché Stripe vieta di aggiornare via API il proprio account
+Standard:
+
+- nome cliente: `Mimmo Fratelli`;
+- sito: `https://www.mimmofratelli.com/`;
+- Support URL: `https://www.mimmofratelli.com/contacts.html` (verificato `200`);
+- descrittore estratto conto: `MIMMO FRATELLI`.
+
+Il recapito telefonico pubblico già presente non deve essere modificato.
 
 ## Validazioni eseguite
 
@@ -238,6 +257,10 @@ completare con i dati legali/commerciali definitivi.
 | Type-check Edge Functions | superato |
 | `npm audit --omit=dev` | 0 vulnerabilità note |
 | Endpoint webhook senza firma | `400` |
+| Firma con il nuovo secret live dopo rimozione del secret legacy | `200`, evento test ignorato intenzionalmente |
+| Endpoint live Stripe | nuovo `enabled`, vecchio `disabled` |
+| Endpoint sandbox Stripe | legacy `disabled` |
+| Secret webhook Supabase | solo `STRIPE_WEBHOOK_SECRET_LIVE` |
 | Funzioni protette senza JWT | sette su sette `401` |
 | Lock/query lunghe live | nessun blocco applicativo |
 | Cache hit tabelle/indici live | 1,00 / 1,00 |
@@ -265,6 +288,9 @@ piccolo quel dato non dimostra inutilità futura.
 
 ## Limiti operativi e rischi residui
 
+- Il profilo pubblico e il descrittore dell’account Stripe Standard richiedono
+  una modifica autenticata nel Dashboard; l’API pubblica consente di modificare
+  soltanto account connessi.
 - Non esiste un progetto Supabase di staging separato. Crearlo può generare
   costi e richiede una decisione dell’account.
 - Le API del progetto non espongono backup recenti né PITR attivo. L’attivazione

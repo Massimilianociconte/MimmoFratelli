@@ -2,29 +2,96 @@
  * Notification Banner Component
  * Mimmo Fratelli E-commerce Platform
  * 
- * Beautiful reminder banner for enabling push notifications
+ * Reminder banner for enabling Firebase push notifications
  */
 
-import { notificationService } from '../services/notifications.js';
+import { fcmNotifications } from '../services/firebase-notifications.js';
+
+const DISMISS_STORAGE_KEY = 'mimmo_notifications_dismissed';
+// Legacy key usata dal vecchio notification-prompt (componente fuso in questo banner)
+const LEGACY_PROMPT_DISMISS_KEY = 'mimmo_notification_prompt_dismissed';
+const REMINDER_INTERVAL_DAYS = 7;
+const SHOW_DELAY = 3000;
+const BANNER_ICON = '/Images/notification-fresh-bell.png';
 
 class NotificationBanner {
   constructor() {
     this.banner = null;
     this.isVisible = false;
+    this.isInitialized = false;
   }
 
   /**
    * Initialize and show banner if needed
    */
   async init() {
-    await notificationService.init();
-    
-    // Delay showing banner for better UX
-    setTimeout(() => {
-      if (notificationService.shouldShowReminder()) {
+    if (this.isInitialized) return;
+    this.isInitialized = true;
+
+    if (!fcmNotifications.isSupported() || fcmNotifications.isBlocked()) {
+      return;
+    }
+
+    const initialized = await fcmNotifications.init();
+    if (!initialized) {
+      return;
+    }
+
+    setTimeout(async () => {
+      if (await this.shouldShowReminder()) {
         this.show();
       }
-    }, 3000);
+    }, SHOW_DELAY);
+  }
+
+  /**
+   * Check if the central banner should be shown.
+   */
+  async shouldShowReminder() {
+    if (!fcmNotifications.isSupported()) return false;
+    if (fcmNotifications.isBlocked()) return false;
+    if (this.wasRecentlyDismissed()) return false;
+
+    if (Notification.permission === 'granted') {
+      const hasToken = await fcmNotifications.checkExistingToken();
+      return !hasToken;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if the reminder was snoozed recently.
+   * Rispetta anche la chiave legacy del vecchio prompt, così chi lo aveva
+   * chiuso non viene ridisturbato prima dell'intervallo.
+   */
+  wasRecentlyDismissed() {
+    const dismissed = localStorage.getItem(DISMISS_STORAGE_KEY);
+    const legacyDismissed = localStorage.getItem(LEGACY_PROMPT_DISMISS_KEY);
+
+    // Migra la chiave legacy sulla chiave corrente, poi rimuovila
+    if (legacyDismissed) {
+      const current = parseInt(dismissed || '0', 10);
+      const legacy = parseInt(legacyDismissed, 10);
+      if (legacy > current) {
+        localStorage.setItem(DISMISS_STORAGE_KEY, legacyDismissed);
+      }
+      localStorage.removeItem(LEGACY_PROMPT_DISMISS_KEY);
+    }
+
+    const effective = localStorage.getItem(DISMISS_STORAGE_KEY);
+    if (!effective) return false;
+
+    const dismissedDate = new Date(parseInt(effective, 10));
+    const daysSince = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince < REMINDER_INTERVAL_DAYS;
+  }
+
+  /**
+   * Snooze the reminder.
+   */
+  dismissReminder() {
+    localStorage.setItem(DISMISS_STORAGE_KEY, Date.now().toString());
   }
 
   /**
@@ -51,7 +118,7 @@ class NotificationBanner {
     if (!this.banner || !this.isVisible) return;
 
     if (remember) {
-      notificationService.dismissReminder();
+      this.dismissReminder();
     }
 
     this.banner.classList.remove('visible');
@@ -70,22 +137,17 @@ class NotificationBanner {
     const enableBtn = this.banner?.querySelector('.notification-banner-enable');
     if (enableBtn) {
       enableBtn.disabled = true;
-      enableBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Attivazione...';
+      enableBtn.textContent = 'Attivazione...';
     }
 
-    const result = await notificationService.subscribe();
+    const result = await fcmNotifications.requestPermission();
     
     if (result.success) {
-      // Show success notification
-      await notificationService.showLocalNotification('🎉 Notifiche Attivate!', {
-        body: 'Ti avviseremo quando arrivano nuovi prodotti di stagione.',
-        tag: 'welcome'
-      });
-      this.hide(true);
+      this.showSuccess();
     } else {
       if (enableBtn) {
         enableBtn.disabled = false;
-        enableBtn.innerHTML = '<i class="bi bi-bell-fill"></i> Attiva Notifiche';
+        enableBtn.textContent = 'Attiva Notifiche';
       }
       
       // Show error message
@@ -103,19 +165,22 @@ class NotificationBanner {
     banner.innerHTML = `
       <div class="notification-banner-content">
         <div class="notification-banner-icon">
-          <i class="bi bi-bell-fill"></i>
+          <img src="${BANNER_ICON}" alt="" class="notification-banner-image" loading="lazy">
           <span class="notification-banner-badge">🍅</span>
         </div>
         <div class="notification-banner-text">
           <h4>Non perderti le novità!</h4>
-          <p>Ricevi notifiche quando arrivano prodotti freschi di stagione 🍋🥕🍇</p>
+          <p>Ricevi notifiche su prodotti freschi di stagione e offerte speciali 🍋🥕🍇</p>
         </div>
         <div class="notification-banner-actions">
           <button class="notification-banner-enable">
-            <i class="bi bi-bell-fill"></i> Attiva Notifiche
+            Attiva Notifiche
+          </button>
+          <button class="notification-banner-later">
+            Non ora
           </button>
           <button class="notification-banner-close" aria-label="Chiudi">
-            <i class="bi bi-x-lg"></i>
+            <span aria-hidden="true">×</span>
           </button>
         </div>
       </div>
@@ -127,11 +192,38 @@ class NotificationBanner {
       this.enable();
     });
 
+    banner.querySelector('.notification-banner-later').addEventListener('click', () => {
+      this.hide(true);
+    });
+
     banner.querySelector('.notification-banner-close').addEventListener('click', () => {
       this.hide(true);
     });
 
     return banner;
+  }
+
+  /**
+   * Show success state before hiding the banner.
+   */
+  showSuccess() {
+    if (!this.banner) return;
+
+    const content = this.banner.querySelector('.notification-banner-content');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="notification-banner-icon success">
+        <img src="${BANNER_ICON}" alt="" class="notification-banner-image" loading="lazy">
+        <span class="notification-banner-badge">✓</span>
+      </div>
+      <div class="notification-banner-text">
+        <h4>Notifiche attivate!</h4>
+        <p>Ti avviseremo quando arrivano nuovi prodotti di stagione.</p>
+      </div>
+    `;
+
+    setTimeout(() => this.hide(true), 2200);
   }
 
   /**
@@ -192,9 +284,16 @@ const styles = `
   animation: bell-ring 2s infinite;
 }
 
-.notification-banner-icon i {
-  font-size: 24px;
-  color: #fff;
+.notification-banner-icon.success {
+  animation: none;
+}
+
+.notification-banner-image {
+  width: 82%;
+  height: 82%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.22));
 }
 
 .notification-banner-badge {
@@ -203,6 +302,20 @@ const styles = `
   right: -2px;
   font-size: 16px;
   animation: bounce 1s infinite;
+}
+
+.notification-banner-icon.success .notification-banner-badge {
+  top: -3px;
+  right: -3px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #2d5016;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 @keyframes bell-ring {
@@ -277,6 +390,24 @@ const styles = `
   cursor: wait;
 }
 
+.notification-banner-later {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.notification-banner-later:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
 .notification-banner-close {
   width: 36px;
   height: 36px;
@@ -289,6 +420,8 @@ const styles = `
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  font-size: 24px;
+  line-height: 1;
 }
 
 .notification-banner-close:hover {
@@ -321,8 +454,9 @@ const styles = `
     height: 44px;
   }
 
-  .notification-banner-icon i {
-    font-size: 20px;
+  .notification-banner-image {
+    width: 84%;
+    height: 84%;
   }
 
   .notification-banner-text {
@@ -344,8 +478,13 @@ const styles = `
   }
 
   .notification-banner-enable {
-    flex: 1;
+    flex: 1.4;
     justify-content: center;
+  }
+
+  .notification-banner-later {
+    flex: 1;
+    text-align: center;
   }
 
   .notification-banner-close {

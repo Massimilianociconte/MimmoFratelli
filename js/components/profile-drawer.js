@@ -289,7 +289,7 @@ class ProfileDrawer {
     const initials = this._getInitials(fullName);
     const avatar = document.getElementById('profileAvatar');
     if (initials) {
-      avatar.innerHTML = `<span class="avatar-initials">${initials}</span>`;
+      avatar.innerHTML = `<span class="avatar-initials">${this._escapeHtml(initials)}</span>`;
     }
 
     // Update stats

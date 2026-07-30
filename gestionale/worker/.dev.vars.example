@@ -1,0 +1,2 @@
+# Copy to .dev.vars for local development only. The real file is ignored by git.
+GEMINI_API_KEY=replace-with-local-development-key

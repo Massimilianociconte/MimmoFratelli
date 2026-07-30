@@ -28,3 +28,12 @@ supabase/.temp/
 
 # Personal info (already in folder name but just in case)
 info-personali*/
+
+# Agent worktrees
+.claude/
+
+# Supabase branches
+supabase/.branches/
+
+# MCP config con token personali
+.vscode/mcp.json

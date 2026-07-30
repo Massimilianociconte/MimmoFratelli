@@ -1,0 +1,53 @@
+# robots.txt - Mimmo Fratelli
+# https://www.mimmofratelli.com
+
+User-agent: *
+Allow: /
+# Pagine private / transazionali (no valore SEO)
+Disallow: /admin/
+Disallow: /checkout.html
+Disallow: /checkout-success.html
+Disallow: /checkout-cancel.html
+Disallow: /orders.html
+Disallow: /settings.html
+Disallow: /wishlist.html
+Disallow: /redeem.html
+Disallow: /reset-password.html
+
+# Crawler AI (GEO - Generative Engine Optimization): accesso consentito
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /checkout.html
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+Sitemap: https://www.mimmofratelli.com/sitemap.xml

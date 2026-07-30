@@ -163,10 +163,12 @@ Deno.serve(async (req: Request) => {
           })
           .eq("id", orderId);
 
-        // Log audit entry
+        // Log audit entry (colonne allineate allo schema audit_log)
         await supabaseAdmin.from("audit_log").insert({
           action: "order_shipped",
-          details: { orderId, courier, trackingNumber: result.trackingNumber },
+          table_name: "orders",
+          record_id: orderId,
+          new_data: { courier, trackingNumber: result.trackingNumber },
         });
 
         return new Response(JSON.stringify({ 

@@ -29,6 +29,10 @@ class FirebaseNotificationService {
    * Initialize Firebase and FCM
    */
   async init() {
+    if (this.isInitialized && this.messaging) {
+      return true;
+    }
+
     const config = getFirebaseConfig();
     
     if (!config || !config.apiKey) {

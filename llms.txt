@@ -1,0 +1,34 @@
+# Mimmo Fratelli
+
+> Mimmo Fratelli è un negozio di frutta e verdura fresca di stagione con sede a Bresso (Milano), attivo dal 1996. Vende online e in negozio frutta, verdura, conserve artigianali, prodotti secchi ed estratti, con consegna a domicilio. Qualità dal produttore alla tavola, presenza nei mercati rionali di Milano.
+
+## Informazioni essenziali
+
+- Sito web: https://www.mimmofratelli.com
+- Negozio fisico: Via Marconi 38, 20091 Bresso (MI), Italia — aperto tutti i giorni 8:00-20:00 (orario continuato)
+- Mercati rionali a Milano (8:00-14:00): Piazza Bonola (martedì, sabato), Via Val di Ledro, Via Macedonia Meloni
+- Telefono: +39 320 886 7172 / +39 380 683 0026
+- Email: mimmofratelli1996@gmail.com
+- Spedizione: €2,90 standard, gratuita sopra i €50
+- Pagamenti: Stripe (carte, Google Pay), gift card digitali con QR code e Google Wallet
+
+## Cosa vendiamo
+
+- [Frutta fresca di stagione](https://www.mimmofratelli.com/collection.html?gender=frutta): frutta selezionata quotidianamente, venduta a peso (kg) o al pezzo
+- [Verdura e ortaggi](https://www.mimmofratelli.com/collection.html?gender=verdura): ortaggi freschi selezionati
+- [Conserve e preparati](https://www.mimmofratelli.com/collection.html?gender=conserve): sott'oli, marmellate e salse artigianali
+- [Prodotti secchi ed estratti](https://www.mimmofratelli.com/collection.html?gender=secchi-estratti): oli, succhi e frutta secca
+
+## Pagine principali
+
+- [Home](https://www.mimmofratelli.com/): panoramica delle categorie e offerte
+- [Chi siamo](https://www.mimmofratelli.com/about.html): storia dell'azienda familiare dal 1996
+- [Contatti e orari](https://www.mimmofratelli.com/contacts.html): indirizzi, orari negozio e mercati, modulo di contatto
+- [Offerte](https://www.mimmofratelli.com/promos.html): promozioni attive su frutta e verdura
+
+## Servizi
+
+- E-commerce con consegna a domicilio nella zona di Milano e provincia
+- Gift card digitali acquistabili e riscattabili online
+- Programma referral: invita un amico e ricevi credito
+- Notifiche sui prodotti di stagione appena disponibili

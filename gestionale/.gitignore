@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.dev.vars
+.wrangler/
+worker/config/*.local.json

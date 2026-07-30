@@ -1,0 +1,23 @@
+{
+  "name": "caricofacile-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local --persist-to .wrangler/state",
+    "deploy": "wrangler deploy --env production",
+    "deploy:staging": "wrangler deploy --env staging",
+    "types": "wrangler types",
+    "check": "wrangler deploy --env production --dry-run --outdir dist",
+    "test": "vitest run",
+    "tenant:mimmo:render": "node scripts/render-mimmo-tenant.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260728.1",
+    "vitest": "^3.2.7",
+    "wrangler": "^4.115.0"
+  }
+}
