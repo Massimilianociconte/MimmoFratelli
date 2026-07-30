@@ -367,6 +367,7 @@
                 <a href="trasparenza-ai.html">Trasparenza AI</a>
             </div>
             <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:mimmofratelli1996@gmail.com">mimmofratelli1996@gmail.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -843,13 +844,13 @@
             }
             
             // Show the gift card modal using profile drawer's method
-            showGiftCardSuccessModal(giftCard);
+            await showGiftCardSuccessModal(giftCard);
         }
         
         // Show gift card success modal
-        function showGiftCardSuccessModal(giftCard) {
-            const { giftCardService } = window._giftCardServiceRef || {};
-            const qrUrl = escapeHtml(`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + '/redeem.html?token=' + giftCard.qr_code_token)}&format=png&margin=10`);
+        async function showGiftCardSuccessModal(giftCard) {
+            const { giftCardService } = await import('./js/services/giftcard.js');
+            const qrUrl = escapeHtml(await giftCardService.getQRCodeDataUrl(giftCard.qr_code_token, 180));
             const allowedStyles = ['elegant', 'avenue', 'minimal', 'festive'];
             const style = allowedStyles.includes(giftCard.template) ? giftCard.template : 'elegant';
             const giftCardCode = escapeHtml(giftCard.code);

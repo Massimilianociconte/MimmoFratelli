@@ -26,19 +26,26 @@ function siteUrl(relativePath) {
   return new URL(relativePath, SITE_ROOT).href;
 }
 
-function createLegalLinks() {
+function hasFooterLink(footer, path) {
+  const expected = siteUrl(path);
+  return [...footer.querySelectorAll('a[href]')].some((anchor) => anchor.href === expected);
+}
+
+function createLegalLinks(footer) {
   const wrapper = document.createElement('nav');
   wrapper.className = 'footer-legal-links';
   wrapper.setAttribute('aria-label', 'Informazioni legali');
 
   for (const [label, path] of LEGAL_LINKS) {
+    if (hasFooterLink(footer, path)) continue;
+
     const anchor = document.createElement('a');
     anchor.href = siteUrl(path);
     anchor.textContent = label;
     wrapper.append(anchor);
   }
 
-  return wrapper;
+  return wrapper.childElementCount ? wrapper : null;
 }
 
 function installFooterLinks() {
@@ -46,7 +53,7 @@ function installFooterLinks() {
     if (footer.querySelector('.footer-legal-links')) return;
 
     const copy = footer.querySelector('.footer-copy');
-    const links = createLegalLinks();
+    const links = createLegalLinks(footer);
     const identity = document.createElement('p');
     identity.className = 'footer-legal-identity';
     identity.textContent =
@@ -54,11 +61,12 @@ function installFooterLinks() {
       `impresa individuale · P. IVA ${VAT_NUMBER}.`;
 
     if (copy) {
-      copy.insertAdjacentElement('afterend', links);
-      links.insertAdjacentElement('afterend', identity);
+      copy.insertAdjacentElement('afterend', identity);
+      if (links) identity.insertAdjacentElement('beforebegin', links);
       copy.textContent = `© ${new Date().getFullYear()} Mimmo Fratelli. Tutti i diritti riservati.`;
     } else {
-      footer.append(links, identity);
+      if (links) footer.append(links);
+      footer.append(identity);
     }
   });
 }

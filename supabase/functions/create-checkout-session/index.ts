@@ -18,6 +18,9 @@ import {
 } from "../_shared/payment.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
+const TERMS_VERSION = "2026-07-30";
+const PRIVACY_VERSION = "2026-07-30";
+
 /**
  * Builds a short, deterministic idempotency key from the request payload plus a
  * coarse (per-minute) time bucket. Dedupes rapid double-clicks / network retries
@@ -526,6 +529,9 @@ Deno.serve(async (req: Request) => {
       client_reference_id: checkoutReservationId,
       locale: "it",
       expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_TTL_SECONDS,
+      consent_collection: {
+        terms_of_service: "required",
+      },
       shipping_options: [
         {
           shipping_rate_data: {
@@ -551,6 +557,8 @@ Deno.serve(async (req: Request) => {
         giftCardAmount: giftCardAmount.toString(),
         discountAmount: discountAmount.toString(),
         userCreditAmount: userCreditAmount.toString(),
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
         // Full cart snapshot is stored in pending_checkout_sessions.
         // Stripe line item product metadata also carries the full productId.
         itemCount: checkoutItems.length.toString(),

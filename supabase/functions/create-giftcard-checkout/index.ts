@@ -19,6 +19,9 @@ import {
 } from "../_shared/payment.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
+const TERMS_VERSION = "2026-07-30";
+const PRIVACY_VERSION = "2026-07-30";
+
 /**
  * Deterministic idempotency key from the request payload plus a coarse
  * (per-minute) time bucket. Dedupes double-clicks / network retries of the SAME
@@ -122,6 +125,9 @@ Deno.serve(async (req: Request) => {
       customer_email: user.email,
       locale: "it",
       expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_TTL_SECONDS,
+      consent_collection: {
+        terms_of_service: "required",
+      },
       client_reference_id: idempotencyKey,
       payment_intent_data: {
         metadata: {
@@ -134,6 +140,8 @@ Deno.serve(async (req: Request) => {
         userId: user.id,
         amount: amount.toString(),
         template,
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
       },
     };
 

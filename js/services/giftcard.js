@@ -377,12 +377,23 @@ class GiftCardService {
     }
 
     /**
-     * Generate QR code URL for a gift card
+     * Generate a first-party QR data URL after server-side ownership checks.
+     * The redeem token never appears in a third-party request or image URL.
      */
-    getQRCodeUrl(qrToken, size = 200) {
-        const redeemUrl = this._getPageUrl(`redeem.html?token=${qrToken}`);
-        // Using QR Server API (free, no API key needed)
-        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(redeemUrl)}&format=png&margin=10`;
+    async getQRCodeDataUrl(qrToken, size = 200) {
+        if (!isSupabaseConfigured()) {
+            throw new Error('Database non configurato');
+        }
+
+        const { data, error } = await supabase.functions.invoke('generate-giftcard-qr', {
+            body: { qrToken, size }
+        });
+        if (error) throw error;
+        if (!data?.svg || typeof data.svg !== 'string') {
+            throw new Error('QR non generato');
+        }
+
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.svg)}`;
     }
 
     /**

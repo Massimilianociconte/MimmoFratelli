@@ -71,11 +71,12 @@ class PresenceService {
     if (!isSupabaseConfigured()) return;
 
     try {
+      // Minimizzazione dati (art. 5 GDPR): niente user agent, solo
+      // session id casuale e pagina corrente per il conteggio presenze
       const { error } = await supabase
         .rpc('update_user_presence', {
           p_session_id: this.sessionId,
-          p_page_url: window.location.pathname,
-          p_user_agent: navigator.userAgent?.substring(0, 255) || null
+          p_page_url: window.location.pathname
         });
       
       // Silently ignore errors - table might not exist yet

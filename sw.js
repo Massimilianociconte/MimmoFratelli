@@ -3,7 +3,7 @@
  * Handles push notifications and offline caching
  */
 
-const CACHE_NAME = 'mimmo-fratelli-v2';
+const CACHE_NAME = 'mimmo-fratelli-v3';
 
 // Get base path dynamically
 const getBasePath = () => {
@@ -21,7 +21,12 @@ self.addEventListener('install', (event) => {
     `${basePath}/`,
     `${basePath}/index.html`,
     `${basePath}/collection.html`,
-    `${basePath}/css/style.css`
+    `${basePath}/privacy-policy.html`,
+    `${basePath}/termini-servizio.html`,
+    `${basePath}/trasparenza-ai.html`,
+    `${basePath}/css/style.css`,
+    `${basePath}/css/legal.css`,
+    `${basePath}/css/legal-navigation.css`
   ];
   
   event.waitUntil(

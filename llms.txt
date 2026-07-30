@@ -26,6 +26,22 @@
 - [Contatti e orari](https://www.mimmofratelli.com/contacts.html): indirizzi, orari negozio e mercati, modulo di contatto
 - [Offerte](https://www.mimmofratelli.com/promos.html): promozioni attive su frutta e verdura
 
+## Informazioni legali e di trasparenza
+
+- [Privacy Policy e Cookie](https://www.mimmofratelli.com/privacy-policy.html): titolare, dati trattati, basi giuridiche, conservazione, pagamenti Stripe, fornitori, diritti GDPR e strumenti tecnici
+- [Termini di servizio e vendita](https://www.mimmofratelli.com/termini-servizio.html): identità del venditore, procedura d'ordine, prezzi, pagamenti, consegna, prodotti deperibili, recesso, garanzia e gift card
+- [Trasparenza sull'intelligenza artificiale](https://www.mimmofratelli.com/trasparenza-ai.html): uso interno dell'AI, input, output, supervisione umana, limiti, AI literacy e canale di segnalazione
+- Professionista: ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale
+- Nome commerciale: Mimmo Fratelli
+- Partita IVA: 10580930963
+
+## Uso dell'intelligenza artificiale
+
+- Il sito pubblico non usa chatbot AI e non adotta decisioni automatizzate sui clienti.
+- L'eventuale AI assiste esclusivamente il personale nella preparazione di bozze di schede prodotto.
+- Nessuna bozza viene pubblicata automaticamente: è richiesta revisione e approvazione umana.
+- Prezzi, pagamenti, rimborsi, ordini e diritti dei clienti non sono determinati dall'AI.
+
 ## Servizi
 
 - E-commerce con consegna a domicilio nella zona di Milano e provincia

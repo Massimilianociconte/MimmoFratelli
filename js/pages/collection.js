@@ -435,6 +435,7 @@ class CollectionPage {
           ${hasDiscount ? `<span class="original-price">€ ${product.price.toFixed(2)}</span>` : ''}
           € ${displayPrice.toFixed(2)}
         </p>
+        ${hasDiscount ? `<p class="omnibus-price">Prezzo più basso 30 gg: € ${(product.lowest_price_30d || product.price).toFixed(2)}</p>` : ''}
         <button class="card-cta" onclick="collectionPage.goToProduct('${this._escapeHtml(product.id)}')">Scopri</button>
       </div>
     `;

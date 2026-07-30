@@ -659,7 +659,7 @@
             document.querySelector('.checkout-result-content').style.display = 'none';
             
             if (giftCard) {
-                showGiftCardModal(giftCard);
+                await showGiftCardModal(giftCard);
             } else {
                 // Show processing state with auto-redirect
                 document.querySelector('.checkout-result-content').style.display = 'block';
@@ -679,10 +679,11 @@
             }
         }
         
-        function showGiftCardModal(giftCard) {
+        async function showGiftCardModal(giftCard) {
             const allowedStyles = ['elegant', 'avenue', 'minimal', 'festive'];
             const style = allowedStyles.includes(giftCard.template) ? giftCard.template : 'elegant';
-            const qrUrl = escapeHtml(`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + '/redeem.html?token=' + giftCard.qr_code_token)}&format=png&margin=10`);
+            const { giftCardService } = await import('./js/services/giftcard.js');
+            const qrUrl = escapeHtml(await giftCardService.getQRCodeDataUrl(giftCard.qr_code_token, 180));
             const giftCardId = escapeHtml(giftCard.id);
             const giftCardCode = escapeHtml(giftCard.code);
             const recipientName = escapeHtml(giftCard.recipient_name);

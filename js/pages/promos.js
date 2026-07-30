@@ -291,6 +291,7 @@ class PromosPage {
             <span class="original-price">€${product.price.toFixed(2)}</span>
             €${product.sale_price.toFixed(2)}
           </p>
+          <p class="omnibus-price">Prezzo più basso 30 gg: €${(product.lowest_price_30d || product.price).toFixed(2)}</p>
           <button class="add-cart-btn-small" onclick="window.addToCartFromPromos('${product.id}')">+ Carrello</button>
         </div>
       </div>

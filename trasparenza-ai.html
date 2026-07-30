@@ -1,429 +1,293 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trasparenza AI - Come usiamo l'Intelligenza Artificiale | Mimmo Fratelli</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trasparenza sull’Intelligenza Artificiale | Mimmo Fratelli</title>
     <meta name="description"
-        content="Informativa di trasparenza sull'uso dell'intelligenza artificiale da parte di Mimmo Fratelli, in conformità al Regolamento UE 2024/1689 (AI Act).">
-    <meta name="robots" content="index, follow">
+        content="Come Mimmo Fratelli usa l’intelligenza artificiale: ambito interno, dati trattati, supervisione umana, limiti, AI literacy e trasparenza secondo l’AI Act UE.">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+    <meta name="author" content="Mimmo Fratelli">
+    <meta name="theme-color" content="#1f4b38">
     <link rel="canonical" href="https://www.mimmofratelli.com/trasparenza-ai.html">
-
-    <!-- Open Graph -->
+    <link rel="stylesheet" href="css/legal.css">
+    <link rel="icon" type="image/png" href="Images/logo_mimmofratelli_verde.png">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Mimmo Fratelli">
     <meta property="og:locale" content="it_IT">
-    <meta property="og:title" content="Trasparenza AI | Mimmo Fratelli">
-    <meta property="og:description" content="Come usiamo (e non usiamo) l'intelligenza artificiale, in conformità all'AI Act europeo.">
+    <meta property="og:site_name" content="Mimmo Fratelli">
+    <meta property="og:title" content="Trasparenza sull’Intelligenza Artificiale | Mimmo Fratelli">
+    <meta property="og:description"
+        content="Informazioni comprensibili sull’uso interno e controllato dell’AI per preparare bozze di schede prodotto.">
     <meta property="og:url" content="https://www.mimmofratelli.com/trasparenza-ai.html">
-    <meta property="og:image" content="https://www.mimmofratelli.com/Images/logo_mimmofratelli_verde.png">
-    <meta name="twitter:card" content="summary">
-
-    <!-- JSON-LD WebPage -->
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": "Trasparenza AI - Mimmo Fratelli",
-        "url": "https://www.mimmofratelli.com/trasparenza-ai.html",
-        "inLanguage": "it-IT",
-        "description": "Informativa di trasparenza sull'uso dell'intelligenza artificiale ai sensi del Regolamento UE 2024/1689 (AI Act).",
-        "breadcrumb": {
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.mimmofratelli.com/" },
-                { "@type": "ListItem", "position": 2, "name": "Trasparenza AI", "item": "https://www.mimmofratelli.com/trasparenza-ai.html" }
-            ]
-        }
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Trasparenza sull’intelligenza artificiale di Mimmo Fratelli",
+      "url": "https://www.mimmofratelli.com/trasparenza-ai.html",
+      "dateModified": "2026-07-30",
+      "inLanguage": "it-IT",
+      "about": [
+        "Regolamento europeo sull’intelligenza artificiale",
+        "Supervisione umana",
+        "AI literacy",
+        "Trasparenza dei sistemi AI"
+      ],
+      "publisher": {
+        "@type": "LocalBusiness",
+        "name": "Mimmo Fratelli",
+        "legalName": "ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY",
+        "taxID": "10580930963"
+      }
     }
     </script>
-    <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="Images/apple-touch-icon.png">
-    <link rel="shortcut icon" href="favicon.ico">
-    <meta name="theme-color" content="#f8fdf5">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
-    <nav class="nav-on-green" id="mainNav">
-        <div class="logo"><a href="index.html#categorie"><img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli"
-                    class="logo-img logo-img-white"><img src="Images/logo_mimmofratelli_verde.png" alt="Mimmo Fratelli"
-                    class="logo-img logo-img-green"></a></div>
-        <div class="nav-actions">
-            <button class="nav-icon-btn" id="authBtn" title="Account">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                </svg>
-            </button>
-            <a href="wishlist.html" class="nav-icon-btn" id="wishlistBtn" title="Preferiti">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-                <span class="badge" id="wishlistBadge" style="display:none;">0</span>
+<body class="legal-page">
+    <a class="legal-skip-link" href="#contenuto">Vai al contenuto</a>
+
+    <header class="legal-site-header">
+        <div class="legal-header-inner">
+            <a class="legal-brand" href="index.html" aria-label="Mimmo Fratelli, torna alla home">
+                <img src="Images/logo_mimmofratelli_verde.png" alt="Mimmo Fratelli" width="188" height="46">
             </a>
-            <button class="nav-icon-btn" id="cartBtn" title="Carrello">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="9" cy="21" r="1" />
-                    <circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                </svg>
-                <span class="badge" id="cartBadge" style="display:none;">0</span>
-            </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <nav class="legal-main-nav" aria-label="Navigazione principale">
+                <a href="index.html">Home</a>
+                <a href="collection.html">Prodotti</a>
+                <a class="legal-nav-contact" href="contacts.html">Contatti</a>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <!-- Full Screen Overlay Menu -->
-    <div class="menu-overlay" id="menuOverlay">
-        <div class="menu-content">
-            <ul class="menu-links">
-                <li><a href="index.html">🏠 Home</a></li>
-                <li class="menu-category">
-                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
-                    <ul class="menu-subcategories" data-gender="frutta"></ul>
-                </li>
-                <li class="menu-category">
-                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
-                    <ul class="menu-subcategories" data-gender="verdura"></ul>
-                </li>
-                <li class="menu-category">
-                    <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
-                    <ul class="menu-subcategories" data-gender="conserve"></ul>
-                </li>
-                <li class="menu-category">
-                    <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e
-                        Estratti</a>
-                    <ul class="menu-subcategories" data-gender="secchi-estratti"></ul>
-                </li>
-                <li><a href="promos.html">🏷️ Offerte</a></li>
-                <li><a href="about.html">ℹ️ Chi Siamo</a></li>
-                <li><a href="contacts.html">📞 Contatti</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <main class="about-page-premium">
-        <!-- Hero Section -->
-        <section class="about-hero-premium">
-            <div class="about-hero-inner">
-                <span class="about-hero-label">Trasparenza</span>
-                <h1 class="about-hero-title">Intelligenza Artificiale</h1>
-                <p class="about-hero-subtitle">Come usiamo (e non usiamo) l'AI, in conformità al Regolamento UE 2024/1689</p>
-                <div class="about-hero-line"></div>
-            </div>
-        </section>
-
-        <!-- Intro Section -->
-        <section class="about-intro">
-            <div class="about-intro-content">
-                <p class="about-intro-text">
-                    Crediamo nella trasparenza, anche digitale. Questa pagina descrive in modo semplice
-                    se e come utilizziamo sistemi di intelligenza artificiale sul nostro sito, in linea con
-                    gli obblighi di trasparenza dell'articolo 50 del Regolamento europeo
-                    sull'intelligenza artificiale (AI&nbsp;Act), applicabili dal 2 agosto 2026.
+    <main id="contenuto">
+        <section class="legal-hero">
+            <div class="legal-container">
+                <nav class="legal-breadcrumbs" aria-label="Percorso">
+                    <a href="index.html">Home</a>
+                    <span aria-hidden="true">/</span>
+                    <span aria-current="page">Trasparenza AI</span>
+                </nav>
+                <span class="legal-eyebrow">AI Act UE e supervisione umana</span>
+                <h1>Come utilizziamo l’intelligenza artificiale</h1>
+                <p class="legal-hero-lead">
+                    L’AI non vende, non decide e non parla con i clienti: può aiutare il personale a preparare una
+                    bozza di scheda prodotto, che viene pubblicata solo dopo verifica umana.
                 </p>
-            </div>
-        </section>
-
-        <!-- Current Status Section -->
-        <section class="about-values">
-            <div class="about-values-content">
-                <div class="about-section-header">
-                    <span class="section-label">Situazione Attuale</span>
-                    <h2>Cosa Devi Sapere</h2>
+                <div class="legal-version">
+                    <span><strong>Ultimo aggiornamento:</strong> 30 luglio 2026</span>
+                    <span><strong>Versione:</strong> 2026-07-30</span>
                 </div>
-                <div class="values-grid">
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                            </svg>
-                        </div>
-                        <h3>Contenuti creati da persone</h3>
-                        <p>Le descrizioni dei prodotti, le fotografie e i testi presenti sul sito sono creati
-                            dal nostro team. Se in futuro un contenuto sarà generato o modificato in modo
-                            significativo con l'AI, lo indicheremo chiaramente con un'etichetta.</p>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                            </svg>
-                        </div>
-                        <h3>Nessun chatbot AI</h3>
-                        <p>Sul sito non ci sono assistenti virtuali o chatbot basati su intelligenza artificiale.
-                            Quando ci contatti, rispondiamo sempre noi, in persona.</p>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M9 12l2 2 4-4" />
-                            </svg>
-                        </div>
-                        <h3>Regole chiare, non algoritmi opachi</h3>
-                        <p>Sconti, promozioni, programma di invito e avvisi di disponibilità funzionano con
-                            regole fisse e trasparenti (es. "spendi 35€ e chi ti ha invitato riceve 5€").
-                            Nessuna profilazione basata su AI decide prezzi o offerte per te.</p>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
-                        </div>
-                        <h3>Nessun riconoscimento biometrico</h3>
-                        <p>Non utilizziamo sistemi di riconoscimento delle emozioni, riconoscimento facciale
-                            o categorizzazione biometrica, né sul sito né nei nostri strumenti interni.</p>
-                    </div>
+                <div class="legal-summary-grid" aria-label="Sintesi">
+                    <article class="legal-summary-card">
+                        <strong>Nessuna AI rivolta al cliente</strong>
+                        <p>Niente chatbot, riconoscimento biometrico, social scoring o valutazioni automatiche del
+                            cliente.</p>
+                    </article>
+                    <article class="legal-summary-card">
+                        <strong>Bozza, non pubblicazione</strong>
+                        <p>L’output entra in una coda di revisione: il personale controlla testo, prezzo e dati prima
+                            della pubblicazione.</p>
+                    </article>
+                    <article class="legal-summary-card">
+                        <strong>Canale di segnalazione</strong>
+                        <p>Chi rileva un’informazione inesatta o potenzialmente generata con assistenza AI può contattare
+                            l’assistenza.</p>
+                    </article>
                 </div>
             </div>
         </section>
 
-        <!-- Future Use Section -->
-        <section class="about-story-premium">
-            <div class="about-story-content">
-                <div class="about-section-header">
-                    <span class="section-label">Uso Futuro dell'AI</span>
-                    <h2>I Nostri Impegni</h2>
-                </div>
-                <div class="timeline-premium">
-                    <div class="timeline-item-premium">
-                        <div class="timeline-marker">
-                            <span class="timeline-year-premium">1</span>
-                        </div>
-                        <div class="timeline-content-premium">
-                            <h3>Etichettatura dei contenuti AI</h3>
-                            <p>Se utilizzeremo l'AI per generare o migliorare descrizioni o fotografie dei prodotti,
-                                questi contenuti saranno etichettati in modo visibile (es. "Immagine migliorata con AI")
-                                e marcati in formato leggibile dalle macchine, come richiesto dall'art. 50 dell'AI Act.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item-premium">
-                        <div class="timeline-marker">
-                            <span class="timeline-year-premium">2</span>
-                        </div>
-                        <div class="timeline-content-premium">
-                            <h3>Supervisione umana sempre</h3>
-                            <p>Qualsiasi contenuto assistito dall'AI viene rivisto e approvato da una persona
-                                prima della pubblicazione. L'AI non stabilisce mai i prezzi dei prodotti.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item-premium">
-                        <div class="timeline-marker">
-                            <span class="timeline-year-premium">3</span>
-                        </div>
-                        <div class="timeline-content-premium">
-                            <h3>Comunicazione chiara</h3>
-                            <p>Se introdurremo strumenti che interagiscono direttamente con te tramite AI
-                                (es. un assistente per gli ordini), te lo diremo in modo esplicito fin dal
-                                primo utilizzo. Questa pagina sarà sempre aggiornata.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="legal-container legal-layout">
+            <nav class="legal-toc" aria-label="Indice della trasparenza AI">
+                <h2>In questa pagina</h2>
+                <ol>
+                    <li><a href="#quadro">1. Quadro normativo</a></li>
+                    <li><a href="#sistema">2. Sistema e finalità</a></li>
+                    <li><a href="#input-output">3. Input e output</a></li>
+                    <li><a href="#controlli">4. Controlli umani</a></li>
+                    <li><a href="#esclusioni">5. Ciò che l’AI non fa</a></li>
+                    <li><a href="#dati">6. Dati e fornitori</a></li>
+                    <li><a href="#literacy">7. AI literacy</a></li>
+                    <li><a href="#segnalazioni">8. Segnalazioni</a></li>
+                    <li><a href="#aggiornamenti">9. Aggiornamenti</a></li>
+                </ol>
+            </nav>
 
-        <!-- CTA Section -->
-        <section class="about-cta-premium">
-            <div class="about-cta-content">
-                <span class="section-label">Domande?</span>
-                <h2>Parliamone</h2>
-                <p>Per qualsiasi domanda sull'uso dell'intelligenza artificiale o sul trattamento dei tuoi dati, contattaci: rispondiamo noi, non un robot.</p>
-                <div class="cta-buttons-premium">
-                    <a href="contacts.html" class="btn-premium btn-primary-premium">Contattaci</a>
-                    <a href="about.html" class="btn-premium btn-secondary-premium">Chi Siamo</a>
-                </div>
-                <p style="margin-top: 24px; font-size: 0.8rem; opacity: 0.7;">Ultimo aggiornamento: 28 luglio 2026 · Riferimento normativo: Regolamento (UE) 2024/1689, art. 50</p>
-            </div>
-        </section>
+            <article class="legal-document">
+                <section class="legal-section" id="quadro">
+                    <h2>1. Quadro normativo e calendario corretto</h2>
+                    <p>
+                        Il Regolamento (UE) 2024/1689, noto come <strong>AI Act</strong>, è entrato in vigore il
+                        1° agosto 2024. Non “entra in vigore” il 2 agosto 2026: quella è la data di applicazione generale
+                        di gran parte delle disposizioni e degli obblighi di trasparenza dell’articolo 50. Alcune regole
+                        sono già applicabili, tra cui l’obbligo di adottare misure per un adeguato livello di
+                        alfabetizzazione AI (“AI literacy”) dal 2 febbraio 2025.
+                    </p>
+                    <p>
+                        L’uso descritto in questa pagina è un’assistenza amministrativa a basso impatto per preparare
+                        informazioni di catalogo. Non rientra, per finalità e funzionamento attuali, tra i sistemi ad
+                        alto rischio elencati dall’AI Act. La valutazione viene riesaminata se cambiano funzione,
+                        destinatari o livello di automazione.
+                    </p>
+                    <div class="legal-callout">
+                        <p>
+                            Pubblicare questa informativa è una misura di trasparenza volontaria e di buona governance;
+                            non significa attribuire al sistema una classificazione “ad alto rischio”.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="legal-section" id="sistema">
+                    <h2>2. Sistema utilizzato e finalità</h2>
+                    <p>
+                        Il personale può usare la PWA interna <strong>CaricoFacile</strong> per raccogliere dati di un
+                        prodotto e creare una bozza strutturata. La funzione AI, quando configurata, è raggiunta tramite
+                        un Cloudflare Worker autenticato e può utilizzare un modello Google Gemini.
+                    </p>
+                    <p>Le finalità ammesse sono limitate a:</p>
+                    <ul>
+                        <li>estrarre una possibile denominazione e descrizione da note o fotografie del prodotto;</li>
+                        <li>organizzare dati ricevuti in testo, CSV, codice a barre o trascrizione vocale;</li>
+                        <li>proporre campi della bozza, evidenziando quelli incerti o mancanti;</li>
+                        <li>ridurre il lavoro manuale di inserimento, senza sostituire il responsabile del catalogo.</li>
+                    </ul>
+                </section>
+
+                <section class="legal-section" id="input-output">
+                    <h2>3. Input, output e limiti di accuratezza</h2>
+                    <h3>Input previsti</h3>
+                    <ul>
+                        <li>nome e caratteristiche del prodotto;</li>
+                        <li>fotografie dell’articolo o dell’etichetta, prive di persone e dati non necessari;</li>
+                        <li>codice a barre e dati eventualmente reperiti da Open Food Facts;</li>
+                        <li>file CSV di catalogo, testo o trascrizione di una nota vocale del personale.</li>
+                    </ul>
+                    <h3>Output</h3>
+                    <p>
+                        L’output è una bozza modificabile. Un modello generativo può sbagliare, omettere informazioni,
+                        confondere varietà, origine, ingredienti o unità di misura. Per questo un output AI non costituisce
+                        una fonte documentale e non deve prevalere su etichetta, scheda del produttore o verifica diretta.
+                    </p>
+                    <p>
+                        Il sistema è istruito a non inventare prezzi e a non completare informazioni obbligatorie
+                        mancanti come se fossero certe. Un campo incerto deve essere verificato o lasciato non
+                        pubblicabile.
+                    </p>
+                </section>
+
+                <section class="legal-section" id="controlli">
+                    <h2>4. Supervisione umana e controlli prima della pubblicazione</h2>
+                    <ol>
+                        <li>L’utente della PWA deve essere autenticato e avere ruolo amministrativo.</li>
+                        <li>Gli input sono limitati per tipo, dimensione e frequenza.</li>
+                        <li>La risposta viene validata rispetto a uno schema di campi ammessi.</li>
+                        <li>La bozza è salvata separatamente dal catalogo pubblico.</li>
+                        <li>Un operatore controlla corrispondenza con prodotto, etichetta e documentazione disponibile.</li>
+                        <li>La pubblicazione richiede un’azione umana separata, autorizzata e tracciabile.</li>
+                    </ol>
+                    <p>
+                        Informazioni con impatto su sicurezza alimentare, allergeni, ingredienti, origine, quantità,
+                        scadenza e conservazione richiedono una fonte affidabile e non devono essere confermate sulla
+                        sola base dell’AI.
+                    </p>
+                </section>
+
+                <section class="legal-section" id="esclusioni">
+                    <h2>5. Ciò che l’AI non fa</h2>
+                    <ul>
+                        <li>non interagisce direttamente con i visitatori o i clienti;</li>
+                        <li>non decide se accettare un ordine o un pagamento;</li>
+                        <li>non definisce automaticamente prezzi, sconti o condizioni contrattuali;</li>
+                        <li>non decide rimborsi, reclami, blocchi account o accesso a promozioni;</li>
+                        <li>non effettua profilazione, scoring, riconoscimento delle emozioni o biometrico;</li>
+                        <li>non produce decisioni unicamente automatizzate con effetti giuridici o analogamente
+                            significativi;</li>
+                        <li>non autorizza da sola la pubblicazione di contenuti sul catalogo.</li>
+                    </ul>
+                </section>
+
+                <section class="legal-section" id="dati">
+                    <h2>6. Dati, fornitori e protezione</h2>
+                    <p>
+                        Per minimizzare i dati, il personale deve usare soltanto informazioni sul prodotto. È vietato
+                        inviare al sistema AI documenti di identità, dati sanitari, dati di pagamento, credenziali,
+                        immagini di persone, conversazioni dei clienti o informazioni confidenziali non necessarie.
+                    </p>
+                    <p>
+                        Quando la funzione è abilitata, l’input può transitare attraverso Cloudflare e Google Gemini.
+                        Autenticazione, quote, validazione e log tecnici servono a prevenire uso non autorizzato e
+                        diagnosticare errori. Tempi di conservazione e trasferimenti sono gestiti secondo i contratti e
+                        le garanzie descritte nella <a href="privacy-policy.html">Privacy Policy</a>.
+                    </p>
+                    <p>
+                        Open Food Facts, quando consultato tramite codice a barre, è una fonte esterna collaborativa:
+                        i relativi dati devono essere verificati sull’etichetta o presso il produttore.
+                    </p>
+                </section>
+
+                <section class="legal-section" id="literacy">
+                    <h2>7. AI literacy del personale</h2>
+                    <p>
+                        In applicazione dell’articolo 4 AI Act, gli operatori devono ricevere istruzioni proporzionate
+                        su funzionamento e limiti dello strumento, protezione dei dati, qualità delle fonti, rischi di
+                        allucinazione, verifica degli output, sicurezza alimentare, segnalazione degli incidenti e
+                        responsabilità della decisione finale.
+                    </p>
+                    <p>
+                        L’accesso amministrativo non equivale automaticamente a competenza: l’abilitazione all’uso
+                        dell’AI va accompagnata da una procedura interna, esempi di errori e aggiornamenti periodici.
+                    </p>
+                </section>
+
+                <section class="legal-section" id="segnalazioni">
+                    <h2>8. Segnalare un’informazione errata o chiedere chiarimenti</h2>
+                    <p>
+                        Se una scheda prodotto contiene un dato inesatto, ambiguo o potenzialmente generato con
+                        assistenza AI, puoi chiedere verifica e correzione indicando URL e informazione contestata. La
+                        segnalazione sarà valutata da una persona.
+                    </p>
+                    <div class="legal-contact-card">
+                        <p><strong>Segnala un contenuto</strong><br>Indica il prodotto e la correzione richiesta.</p>
+                        <a class="legal-contact-button"
+                            href="mailto:mimmofratelli1996@gmail.com?subject=Segnalazione%20contenuto%20AI">Invia una
+                            segnalazione</a>
+                    </div>
+                </section>
+
+                <section class="legal-section" id="aggiornamenti">
+                    <h2>9. Aggiornamenti e fonti ufficiali</h2>
+                    <p>
+                        Questa informativa viene aggiornata se cambiano modello, finalità, grado di autonomia,
+                        categorie di dati o obblighi normativi. L’uso di un nuovo sistema rivolto ai clienti richiederà
+                        una valutazione distinta e, quando applicabile, un avviso chiaro nel punto di interazione.
+                    </p>
+                    <ul class="legal-source-list">
+                        <li><a href="https://eur-lex.europa.eu/legal-content/IT/TXT/?uri=CELEX:32024R1689"
+                                rel="external noopener">Regolamento (UE) 2024/1689 — AI Act</a></li>
+                        <li><a href="https://digital-strategy.ec.europa.eu/en/policies/artificial-intelligence"
+                                rel="external noopener">Commissione europea — politica e calendario dell’AI Act</a></li>
+                        <li><a href="https://digital-strategy.ec.europa.eu/en/factpages/quick-facts-transparency-rules-ai-systems"
+                                rel="external noopener">Commissione europea — obblighi di trasparenza</a></li>
+                    </ul>
+                </section>
+            </article>
+        </div>
     </main>
 
-    <footer class="site-footer">
-        <div class="footer-content">
-            <div class="footer-brand"><img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli"
-                    class="footer-brand-img"></div>
-            <p class="footer-tagline">Freschezza, qualità e natura 🌿</p>
-            <div class="footer-links">
-                <a href="collection.html?gender=frutta">Frutta</a>
-                <a href="collection.html?gender=verdura">Verdura</a>
-                <a href="promos.html">Offerte</a>
-                <a href="about.html">Chi Siamo</a>
-                <a href="contacts.html">Contatti</a>
-                <a href="privacy-policy.html">Privacy</a>
-                <a href="termini-servizio.html">Termini di Servizio</a>
-                <a href="trasparenza-ai.html">Trasparenza AI</a>
-            </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
-            <div class="footer-credit">
-                <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer" class="footer-credit-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                        <path d="M2 17l10 5 10-5" />
-                        <path d="M2 12l10 5 10-5" />
-                    </svg>
-                    Creato da Web Novis
-                </a>
-            </div>
+    <footer class="legal-footer">
+        <div class="legal-footer-inner">
+            <nav class="legal-footer-links" aria-label="Pagine legali">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="termini-servizio.html">Termini di servizio</a>
+                <a href="trasparenza-ai.html" aria-current="page">Trasparenza AI</a>
+                <a href="contacts.html">Contatti e assistenza</a>
+            </nav>
+            <p><strong>Mimmo Fratelli</strong> è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL
+                ABDELMOTY, impresa individuale · P. IVA 10580930963.</p>
+            <p>Informativa pubblicata per trasparenza, supervisione umana e uso responsabile dell’AI.</p>
         </div>
     </footer>
-
-    <script type="module">
-        import { authService } from './js/services/auth.js';
-        import { authModal } from './js/components/auth-modal.js';
-        import { profileDrawer } from './js/components/profile-drawer.js';
-        import { cartService } from './js/services/cart.js';
-        import { cartDrawer } from './js/components/cart-drawer.js';
-        import { wishlistService } from './js/services/wishlist.js';
-        import { notificationCenter } from './js/components/notification-center.js';
-        import { globalSearch } from './js/components/global-search.js';
-        import './js/components/dynamic-menu.js';
-
-        // Initialize notification center
-        notificationCenter.init();
-
-        // Initialize global search
-        globalSearch.init();
-
-        // --- STABLE VIEWPORT HEIGHT FOR MOBILE ---
-        function setVH() {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
-        setVH();
-        window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
-
-        // Menu toggle
-        let menuScrollY = 0;
-        window.toggleMenu = function () {
-            const menuOverlay = document.getElementById('menuOverlay');
-            const menuBtn = document.querySelector('.menu-btn');
-            const isOpen = menuOverlay.classList.contains('active');
-            const isMobile = window.innerWidth <= 768;
-
-            if (!isOpen) {
-                if (isMobile) {
-                    menuScrollY = window.scrollY;
-                    document.body.style.top = `-${menuScrollY}px`;
-                }
-            } else {
-                if (isMobile) {
-                    document.body.style.top = '';
-                    window.scrollTo(0, menuScrollY);
-                }
-            }
-
-            menuOverlay.classList.toggle('active', !isOpen);
-            document.body.classList.toggle('menu-open', !isOpen);
-            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
-            if (isOpen) {
-                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
-            }
-        };
-
-        // Menu category toggle (Mobile)
-        document.querySelectorAll('.menu-category-title').forEach(title => {
-            title.addEventListener('click', (e) => {
-                if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    const category = title.closest('.menu-category');
-                    document.querySelectorAll('.menu-category').forEach(cat => {
-                        if (cat !== category) cat.classList.remove('open');
-                    });
-                    category.classList.toggle('open');
-                }
-            });
-        });
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            await authService.init();
-            authModal.init();
-            profileDrawer.init();
-            cartDrawer.init();
-
-            // Navbar scroll effect
-            const nav = document.getElementById('mainNav');
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 50) {
-                    nav.classList.add('scrolled');
-                } else {
-                    nav.classList.remove('scrolled');
-                }
-            });
-
-            // Auth button
-            document.getElementById('authBtn').addEventListener('click', async () => {
-                const isAuth = await authService.isAuthenticated();
-                if (isAuth) {
-                    profileDrawer.show();
-                } else {
-                    authModal.show('login');
-                }
-            });
-
-            // Cart button
-            document.getElementById('cartBtn').addEventListener('click', () => {
-                cartDrawer.show();
-            });
-
-            // Update badges
-            updateCartBadge();
-            updateWishlistBadge();
-            cartService.onChange(() => updateCartBadge());
-            wishlistService.onChange(() => updateWishlistBadge());
-
-            // Close menu with ESC key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    if (document.getElementById('menuOverlay').classList.contains('active')) {
-                        toggleMenu();
-                    }
-                }
-            });
-
-            // Close menu on overlay click
-            document.getElementById('menuOverlay').addEventListener('click', (e) => {
-                if (e.target.id === 'menuOverlay' || e.target.classList.contains('menu-content')) {
-                    toggleMenu();
-                }
-            });
-        });
-
-        async function updateCartBadge() {
-            const count = await cartService.getCount();
-            const badge = document.getElementById('cartBadge');
-            if (badge) {
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'flex' : 'none';
-            }
-        }
-
-        async function updateWishlistBadge() {
-            const { items } = await wishlistService.getAllFavorites();
-            const badge = document.getElementById('wishlistBadge');
-            if (badge) {
-                const count = items ? items.length : 0;
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'flex' : 'none';
-            }
-        }
-    </script>
 </body>
 
 </html>

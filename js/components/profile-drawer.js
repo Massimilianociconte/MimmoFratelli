@@ -646,7 +646,7 @@ class ProfileDrawer {
    */
   async _showGiftCardSuccess(giftCard) {
     const { giftCardService } = await import('../services/giftcard.js');
-    const qrUrl = this._escapeHtml(giftCardService.getQRCodeUrl(giftCard.qr_code_token, 180));
+    const qrUrl = this._escapeHtml(await giftCardService.getQRCodeDataUrl(giftCard.qr_code_token, 180));
     const giftCardId = this._escapeHtml(giftCard.id);
     const giftCardCode = this._escapeHtml(giftCard.code);
     const recipientName = this._escapeHtml(giftCard.recipient_name);
@@ -848,10 +848,14 @@ class ProfileDrawer {
       content += '<p style="color: #888; text-align: center; padding: 2rem;">Non hai ancora creato gift card.</p>';
     } else {
       content += '<div class="my-giftcards-list">';
-      giftCards.forEach(gc => {
+      const cardsWithQr = await Promise.all(giftCards.map(async (gc) => ({
+        gc,
+        qrUrl: await giftCardService.getQRCodeDataUrl(gc.qr_code_token, 80)
+      })));
+      cardsWithQr.forEach(({ gc, qrUrl: rawQrUrl }) => {
         const status = gc.is_redeemed ? 'Riscattata' : gc.is_active ? 'Attiva' : 'In attesa';
         const statusClass = gc.is_redeemed ? 'redeemed' : gc.is_active ? 'active' : 'pending';
-        const qrUrl = this._escapeHtml(giftCardService.getQRCodeUrl(gc.qr_code_token, 80));
+        const qrUrl = this._escapeHtml(rawQrUrl);
         const giftCardId = this._escapeHtml(gc.id);
         const giftCardCode = this._escapeHtml(gc.code);
         const recipientName = this._escapeHtml(gc.recipient_name);

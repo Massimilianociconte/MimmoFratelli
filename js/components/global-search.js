@@ -456,7 +456,8 @@ class GlobalSearch {
                     <div class="result-price">
                         ${hasDiscount 
                             ? `<span class="price-sale">€${parseFloat(product.sale_price).toFixed(2)}</span>
-                               <span class="price-original">€${parseFloat(product.price).toFixed(2)}</span>`
+                               <span class="price-original">€${parseFloat(product.price).toFixed(2)}</span>
+                               <span class="omnibus-price">Min. 30 gg: €${parseFloat(product.lowest_price_30d || product.price).toFixed(2)}</span>`
                             : `<span class="price">€${parseFloat(product.price).toFixed(2)}</span>`
                         }
                     </div>

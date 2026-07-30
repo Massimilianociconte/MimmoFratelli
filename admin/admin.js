@@ -654,6 +654,10 @@ function openProductModal(product = null) {
         document.getElementById('productName').value = product.name;
         document.getElementById('productSlug').value = product.slug;
         document.getElementById('productDescription').value = product.description || '';
+        document.getElementById('productIngredients').value = product.ingredients || '';
+        document.getElementById('productAllergens').value = product.allergens || '';
+        document.getElementById('productOrigin').value = product.origin_country || '';
+        document.getElementById('productStorage').value = product.storage_instructions || '';
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productSalePrice').value = product.sale_price || '';
         document.getElementById('productGender').value = product.gender || '';
@@ -1394,6 +1398,10 @@ async function handleProductSubmit(e) {
         name: name,
         slug: slug,
         description: document.getElementById('productDescription').value.trim() || null,
+        ingredients: document.getElementById('productIngredients').value.trim() || null,
+        allergens: document.getElementById('productAllergens').value.trim() || null,
+        origin_country: document.getElementById('productOrigin').value.trim() || null,
+        storage_instructions: document.getElementById('productStorage').value.trim() || null,
         price: price,
         sale_price: salePrice,
         gender: document.getElementById('productGender').value || null,
@@ -2048,9 +2056,9 @@ async function showGcDetail(gcId) {
         const style = gc.template || gc.style || 'elegant';
         const usedAmount = parseFloat(gc.amount) - parseFloat(gc.remaining_balance || gc.amount);
         
-        // Generate QR code URL
-        const redeemUrl = `${window.location.origin}/redeem.html?token=${gc.qr_code_token}`;
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(redeemUrl)}`;
+        // Generate the bearer-token QR through the authenticated first-party endpoint.
+        const { giftCardService } = await import('../js/services/giftcard.js');
+        const qrUrl = esc(await giftCardService.getQRCodeDataUrl(gc.qr_code_token, 150));
 
         body.innerHTML = `
             <div class="gc-detail-header">
