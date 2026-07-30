@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ordine Confermato | Mimmo Fratelli</title>
+    <meta name="description" content="Il tuo ordine su Mimmo Fratelli è stato confermato.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="Images/apple-touch-icon.png">
@@ -523,11 +525,14 @@
                     console.log('[Order] Order created/retrieved:', order.order_number);
                 } else if (error) {
                     console.error('[Order] Error completing purchase:', error);
-                    // Single fallback query if function fails
+                    // Single fallback query if function fails: limita alla finestra recente
+                    // per non mostrare per errore un ordine precedente dell'utente
+                    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
                     const { data: recentOrders } = await supabase
                         .from('orders')
                         .select('*, order_items(*)')
                         .eq('user_id', user.id)
+                        .gte('created_at', fiveMinutesAgo)
                         .order('created_at', { ascending: false })
                         .limit(1);
                     
@@ -621,12 +626,19 @@
                 let retries = 5;
                 
                 while (retries > 0 && !giftCard) {
-                    const { data } = await supabase
+                    // Se abbiamo la sessione Stripe cerca per stripe_session_id (match esatto),
+                    // altrimenti ripiega sulla gift card più recente nella finestra temporale
+                    let query = supabase
                         .from('gift_cards')
                         .select('*')
                         .eq('purchased_by', user.id)
-                        .eq('is_active', true)
-                        .gte('created_at', fiveMinutesAgo)
+                        .eq('is_active', true);
+
+                    query = sessionId
+                        ? query.eq('stripe_session_id', sessionId)
+                        : query.gte('created_at', fiveMinutesAgo);
+
+                    const { data } = await query
                         .order('created_at', { ascending: false })
                         .limit(1)
                         .maybeSingle();

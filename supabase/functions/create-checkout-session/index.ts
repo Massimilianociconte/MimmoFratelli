@@ -6,29 +6,30 @@
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
+import Stripe from "npm:stripe@20.4.1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  buildTrustedSiteUrl,
+  CHECKOUT_TTL_SECONDS,
+  getStripe,
+  PaymentInputError,
+  publicPaymentError,
+  validateShippingAddress,
+} from "../_shared/payment.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2023-10-16",
-});
-
-const ALLOWED_ORIGINS = [
-  "https://www.mimmofratelli.com",
-  "https://mimmofratelli.com",
-  "http://localhost:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:5500",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
+/**
+ * Builds a short, deterministic idempotency key from the request payload plus a
+ * coarse (per-minute) time bucket. Dedupes rapid double-clicks / network retries
+ * of the SAME checkout without blocking a legitimate later repeat purchase.
+ */
+async function buildIdempotencyKey(parts: (string | number)[]): Promise<string> {
+  const minuteBucket = Math.floor(Date.now() / 60000);
+  const raw = `${parts.join("|")}|${minuteBucket}`;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 interface CartItem {
@@ -56,9 +57,6 @@ interface ShippingAddress {
 
 interface CheckoutRequest {
   items: CartItem[];
-  successUrl: string;
-  cancelUrl: string;
-  customerEmail: string;
   giftCardCode?: string;
   promotionCode?: string;
   shippingAddress?: ShippingAddress;
@@ -73,6 +71,7 @@ interface ProductRecord {
   images: string[] | null;
   is_active: boolean;
   category_id: string | null;
+  num_items: number | null;
 }
 
 function jsonResponse(req: Request, status: number, payload: Record<string, unknown>) {
@@ -94,15 +93,19 @@ async function buildServerPricedItems(
   supabaseAdmin: any,
   rawItems: CartItem[]
 ): Promise<{ items?: CartItem[]; error?: string }> {
+  if (!Array.isArray(rawItems) || rawItems.length < 1 || rawItems.length > 50) {
+    return { error: "Numero di articoli non valido" };
+  }
+
   const productIds = [...new Set(rawItems.map((item) => item.productId).filter(Boolean))];
 
-  if (productIds.length !== rawItems.length && productIds.length === 0) {
+  if (productIds.length === 0) {
     return { error: "Prodotti non validi" };
   }
 
   const { data: products, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, price, sale_price, images, is_active, category_id")
+    .select("id, name, price, sale_price, images, is_active, category_id, num_items")
     .in("id", productIds);
 
   if (error) {
@@ -114,7 +117,29 @@ async function buildServerPricedItems(
     (products || []).map((product: ProductRecord) => [product.id, product])
   );
 
+  // Stock a peso: carica le disponibilità weight_inventory dei prodotti richiesti
+  const weightStock = new Map<string, number>();
+  const hasWeightItems = rawItems.some((item) => item.weight_grams);
+  if (hasWeightItems) {
+    const { data: weightRows, error: weightError } = await supabaseAdmin
+      .from("weight_inventory")
+      .select("product_id, weight_grams, quantity")
+      .in("product_id", productIds);
+
+    if (weightError) {
+      console.error("Weight inventory lookup error:", weightError);
+      return { error: "Errore nella verifica della disponibilità" };
+    }
+
+    for (const row of weightRows || []) {
+      weightStock.set(`${row.product_id}:${row.weight_grams}`, Number(row.quantity));
+    }
+  }
+
   const serverItems: CartItem[] = [];
+  // Quantità aggregate richieste per validare lo stock complessivo
+  const requestedByWeight = new Map<string, number>();
+  const requestedByProduct = new Map<string, number>();
 
   for (const item of rawItems) {
     const product = productMap.get(item.productId);
@@ -131,6 +156,26 @@ async function buildServerPricedItems(
 
     if (weightGrams !== null && (!Number.isInteger(weightGrams) || weightGrams <= 0)) {
       return { error: "Formato peso prodotto non valido" };
+    }
+
+    // Validazione stock server-side
+    if (weightGrams !== null) {
+      const key = `${item.productId}:${weightGrams}`;
+      const requested = (requestedByWeight.get(key) || 0) + quantity;
+      requestedByWeight.set(key, requested);
+      const available = weightStock.get(key);
+      if (available === undefined) {
+        return { error: `Variante non disponibile per "${product.name}"` };
+      }
+      if (requested > available) {
+        return { error: `Disponibilità insufficiente per "${product.name}"` };
+      }
+    } else if (product.num_items !== null && product.num_items !== undefined) {
+      const requested = (requestedByProduct.get(item.productId) || 0) + quantity;
+      requestedByProduct.set(item.productId, requested);
+      if (requested > Number(product.num_items)) {
+        return { error: `Disponibilità insufficiente per "${product.name}"` };
+      }
     }
 
     const basePrice = Number(product.sale_price ?? product.price ?? 0);
@@ -162,8 +207,12 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
+  let supabaseAdmin: any = null;
+  let reservationId: string | null = null;
+  let stripeSession: Stripe.Checkout.Session | null = null;
+
   try {
-    console.log("Starting checkout session creation...");
+    const stripe = getStripe();
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -173,36 +222,59 @@ Deno.serve(async (req: Request) => {
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      console.log("User not authenticated");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
+      return jsonResponse(req, 401, { error: "Devi effettuare il login" });
     }
-    console.log("User authenticated:", user.id);
 
-    const body = await req.json();
-    console.log("Request body received, items count:", body.items?.length);
+    const body = await req.json() as CheckoutRequest;
     
     const { 
       items, 
-      successUrl, 
-      cancelUrl, 
-      customerEmail, 
       giftCardCode, 
       promotionCode,
       shippingAddress,
       userCredit 
     }: CheckoutRequest = body;
 
-    if (!items || items.length === 0) {
-      return jsonResponse(req, 400, { error: "Carrello vuoto" });
+    const validatedShippingAddress = validateShippingAddress(shippingAddress);
+    const customerEmail = user.email;
+    if (!customerEmail) throw new PaymentInputError("Email account non disponibile");
+
+    const normalizedPromotionCode = normalizeCode(promotionCode);
+    const normalizedGiftCardCode = normalizeCode(giftCardCode).replace(/-/g, "");
+    const giftCardLookupCodes = [
+      normalizedGiftCardCode,
+      normalizedGiftCardCode.length === 12
+        ? normalizedGiftCardCode.replace(/^(.{4})(.{4})(.{4})$/, "$1-$2-$3")
+        : normalizedGiftCardCode,
+    ];
+    if (normalizedPromotionCode.length > 64 || normalizedGiftCardCode.length > 64) {
+      throw new PaymentInputError("Codice sconto non valido");
     }
 
-    const supabaseAdmin = createClient(
+    const requestedUserCredit = Number(userCredit || 0);
+    if (
+      !Number.isFinite(requestedUserCredit) ||
+      requestedUserCredit < 0 ||
+      requestedUserCredit > 10_000 ||
+      Math.abs(Math.round(requestedUserCredit * 100) - requestedUserCredit * 100) > 1e-6
+    ) {
+      throw new PaymentInputError("Importo credito non valido");
+    }
+
+    supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Opportunistic cleanup is bounded and uses SKIP LOCKED. Stripe expiry
+    // webhooks remain the primary release mechanism.
+    const { error: cleanupError } = await supabaseAdmin.rpc(
+      "release_expired_checkout_reservations",
+      { p_limit: 25 },
+    );
+    if (cleanupError) {
+      console.warn("Expired checkout reservation cleanup failed:", cleanupError.message);
+    }
 
     const pricedItemsResult = await buildServerPricedItems(supabaseAdmin, items);
     if (pricedItemsResult.error || !pricedItemsResult.items) {
@@ -220,14 +292,15 @@ Deno.serve(async (req: Request) => {
         ? supabaseAdmin
             .from("promotions")
             .select("code, discount_type, discount_value, min_purchase, max_discount, usage_limit, usage_count, applies_to, applies_to_ids, starts_at, ends_at, is_active, user_id, is_first_order_code")
-            .eq("code", normalizeCode(promotionCode))
+            .eq("code", normalizedPromotionCode)
             .maybeSingle()
         : Promise.resolve({ data: null }),
       giftCardCode
         ? supabaseAdmin
             .from("gift_cards")
             .select("amount, balance, remaining_balance, is_active, is_redeemed, expires_at")
-            .eq("code", normalizeCode(giftCardCode).replace(/-/g, ""))
+            .in("code", [...new Set(giftCardLookupCodes)])
+            .limit(1)
             .maybeSingle()
         : Promise.resolve({ data: null })
     ]);
@@ -333,56 +406,82 @@ Deno.serve(async (req: Request) => {
     const SHIPPING_COST = 290; // €2.90 in cents (same as frontend config)
     let shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
 
-    // Verify and calculate user credit (after shipping is calculated)
+    // Verify and calculate user credit. Credits apply to merchandise only:
+    // Stripe amount-off coupons do not discount shipping.
     let userCreditAmount = 0;
-    let creditForProducts = 0; // Amount to apply via coupon (max = subtotal)
-    let creditForShipping = 0; // Amount to reduce from shipping cost
+    let creditForProducts = 0;
     
-    if (userCredit && userCredit > 0) {
-      // Verify user has enough credit in database
-      const { data: creditData } = await supabaseClient
+    if (requestedUserCredit > 0) {
+      const { data: creditData, error: creditError } = await supabaseAdmin
         .from("user_credits")
         .select("balance")
         .eq("user_id", user.id)
         .maybeSingle();
-      
-      const availableCredit = creditData?.balance || 0;
-      const requestedCreditCents = Math.round(userCredit * 100);
-      const availableCreditCents = Math.round(availableCredit * 100);
-      
-      // Total order amount (subtotal + shipping - other discounts)
-      const totalOrderAmount = subtotal + shipping - discountAmount - giftCardAmount;
-      
-      // Total credit to use (min of requested, available, and order total)
-      userCreditAmount = Math.min(requestedCreditCents, availableCreditCents, Math.max(0, totalOrderAmount));
-      
-      // Calculate how much credit goes to products vs shipping
-      const remainingSubtotal = subtotal - discountAmount - giftCardAmount;
-      
-      if (userCreditAmount <= remainingSubtotal) {
-        // Credit fits within product subtotal - apply all via coupon
-        creditForProducts = userCreditAmount;
-        creditForShipping = 0;
-      } else {
-        // Credit exceeds product subtotal - split between products and shipping
-        creditForProducts = Math.max(0, remainingSubtotal);
-        creditForShipping = userCreditAmount - creditForProducts;
-        // Reduce shipping cost directly
-        shipping = Math.max(0, shipping - creditForShipping);
+
+      if (creditError) {
+        throw new Error(`User credit lookup failed: ${creditError.message}`);
       }
       
-      console.log('Credit calculation:', {
-        requestedCredit: userCredit,
-        availableCredit,
-        subtotal: subtotal / 100,
-        shipping: shipping / 100,
-        discountAmount: discountAmount / 100,
-        giftCardAmount: giftCardAmount / 100,
-        userCreditAmount: userCreditAmount / 100,
-        creditForProducts: creditForProducts / 100,
-        creditForShipping: creditForShipping / 100
-      });
+      const requestedCreditCents = toCents(requestedUserCredit);
+      const availableCreditCents = toCents(Number(creditData?.balance || 0));
+      const remainingSubtotal = subtotal - discountAmount - giftCardAmount;
+
+      userCreditAmount = Math.min(
+        requestedCreditCents,
+        availableCreditCents,
+        Math.max(0, remainingSubtotal),
+      );
+      creditForProducts = userCreditAmount;
     }
+
+    // The reservation key also becomes the Stripe idempotency key. Database
+    // value is locked before any externally payable session is opened.
+    const idempotencyKey = await buildIdempotencyKey([
+      user.id,
+      subtotal,
+      shipping,
+      discountAmount,
+      giftCardAmount,
+      userCreditAmount,
+      normalizedPromotionCode,
+      normalizedGiftCardCode,
+      checkoutItems
+        .map((item) =>
+          `${item.productId}:${item.quantity}:${item.size || ""}:${item.color || ""}:${item.weight_grams || ""}`
+        )
+        .join(","),
+    ]);
+
+    const { data: reservation, error: reservationError } = await supabaseAdmin.rpc(
+      "reserve_checkout_value",
+      {
+        p_user_id: user.id,
+        p_reservation_key: idempotencyKey,
+        p_credit_amount: userCreditAmount / 100,
+        p_gift_card_code: normalizedGiftCardCode || null,
+        p_gift_card_amount: giftCardAmount / 100,
+        p_promotion_code: normalizedPromotionCode || null,
+        p_subtotal: subtotal / 100,
+        p_items: checkoutItems.map((item) => ({
+          product_id: item.productId,
+          quantity: item.quantity,
+          weight_grams: item.weight_grams ?? null,
+        })),
+      },
+    );
+
+    if (reservationError || !reservation?.success || !reservation?.reservation_id) {
+      console.warn(
+        "Checkout value reservation rejected:",
+        reservationError?.code || reservation?.reason || "unknown",
+      );
+      throw new PaymentInputError(
+        "Saldo, gift card o promozione sono cambiati: aggiorna il checkout e riprova",
+        409,
+      );
+    }
+    const checkoutReservationId = String(reservation.reservation_id);
+    reservationId = checkoutReservationId;
 
     // Build line items with price_data (dynamic products)
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = checkoutItems.map((item) => {
@@ -414,26 +513,19 @@ Deno.serve(async (req: Request) => {
       };
     });
 
-    // Build session config
-    // Payment methods enabled in Stripe Dashboard
-    // Note: Apple Pay and Google Pay are automatically shown with "card" if device supports them
+    const successUrl = buildTrustedSiteUrl(req, "/checkout-success.html");
+    const cancelUrl = buildTrustedSiteUrl(req, "/checkout-cancel.html");
+
+    // Payment methods are selected dynamically from the Stripe Dashboard.
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       line_items: lineItems,
       mode: "payment",
       success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
       customer_email: customerEmail,
+      client_reference_id: checkoutReservationId,
       locale: "it",
-      // Payment methods: card (includes Apple/Google Pay), klarna, link, satispay, bancontact, eps, revolut_pay
-      payment_method_types: [
-        "card",           // Carte + Apple Pay + Google Pay (automatic)
-        "klarna",         // Pagamento a rate
-        "link",           // Stripe Link (checkout veloce)
-        "satispay",       // Italia
-        "bancontact",     // Belgio
-        "eps",            // Austria
-        "revolut_pay",    // Europa
-      ],
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_TTL_SECONDS,
       shipping_options: [
         {
           shipping_rate_data: {
@@ -447,31 +539,23 @@ Deno.serve(async (req: Request) => {
           },
         },
       ],
+      payment_intent_data: {
+        metadata: {
+          checkoutReservationId,
+          userId: user.id,
+        },
+      },
       metadata: {
         userId: user.id,
-        giftCardCode: giftCardCode || "",
+        checkoutReservationId,
         giftCardAmount: giftCardAmount.toString(),
-        promotionCode: promotionCode || "",
         discountAmount: discountAmount.toString(),
         userCreditAmount: userCreditAmount.toString(),
-        // Compressed shipping: only essential fields, abbreviated keys
-        shipTo: shippingAddress ? JSON.stringify({
-          n: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
-          a: shippingAddress.address,
-          c: shippingAddress.city,
-          p: shippingAddress.postalCode,
-          pr: shippingAddress.province,
-          ph: shippingAddress.phone
-        }) : "",
         // Full cart snapshot is stored in pending_checkout_sessions.
         // Stripe line item product metadata also carries the full productId.
         itemCount: checkoutItems.length.toString(),
       },
     };
-
-    // Log metadata sizes for debugging
-    const metadataSizes = Object.entries(sessionConfig.metadata || {}).map(([k, v]) => `${k}: ${String(v).length}`);
-    console.log("Metadata sizes:", metadataSizes);
 
     // Apply discounts using Stripe coupons (created on-the-fly)
     // Note: Coupon only applies to products, shipping reduction is handled above
@@ -484,21 +568,28 @@ Deno.serve(async (req: Request) => {
       if (creditForProducts > 0) discountParts.push("Credito");
       
       // Create a one-time coupon for the product discount
-      console.log("Creating coupon with amount:", couponDiscount);
-      const coupon = await stripe.coupons.create({
-        amount_off: couponDiscount,
-        currency: "eur",
-        duration: "once",
-        name: discountParts.join(" + "),
-      });
+      const coupon = await stripe.coupons.create(
+        {
+          amount_off: couponDiscount,
+          currency: "eur",
+          duration: "once",
+          name: discountParts.join(" + "),
+          max_redemptions: 1,
+          metadata: {
+            checkoutReservationId,
+          },
+        },
+        { idempotencyKey: `coupon_${idempotencyKey}` }
+      );
       
       sessionConfig.discounts = [{ coupon: coupon.id }];
     }
 
     // Create the checkout session
-    console.log("Creating Stripe session...");
-    const session = await stripe.checkout.sessions.create(sessionConfig);
-    console.log("Session created:", session.id);
+    const session = await stripe.checkout.sessions.create(sessionConfig, {
+      idempotencyKey: `session_${idempotencyKey}`,
+    });
+    stripeSession = session;
 
     const totalAmount = Math.max(
       0,
@@ -525,24 +616,35 @@ Deno.serve(async (req: Request) => {
           weight_grams: item.weight_grams || null,
           unit_measure: item.weight_grams ? "kg" : "pz",
         })),
-        shipping_address: shippingAddress || null,
+        shipping_address: validatedShippingAddress,
         subtotal: subtotal / 100,
         discount_amount: discountAmount / 100,
         gift_card_amount: giftCardAmount / 100,
         user_credit_amount: userCreditAmount / 100,
         shipping_cost: shipping / 100,
         total: totalAmount / 100,
-        promotion_code: promotionCode ? normalizeCode(promotionCode) : null,
-        gift_card_code: giftCardCode ? normalizeCode(giftCardCode).replace(/-/g, "") : null,
+        promotion_code: normalizedPromotionCode || null,
+        gift_card_code: normalizedGiftCardCode || null,
         metadata: {
           creditForProducts: creditForProducts / 100,
-          creditForShipping: creditForShipping / 100,
-          stripeSessionUrl: session.url,
+          checkoutReservationId,
         },
       }, { onConflict: "stripe_session_id" });
 
     if (pendingError) {
-      console.warn("Pending checkout snapshot failed; continuing with Stripe metadata fallback:", pendingError);
+      throw new Error(`Pending checkout snapshot failed: ${pendingError.message}`);
+    }
+
+    const { data: binding, error: bindingError } = await supabaseAdmin.rpc(
+      "bind_checkout_value_reservation",
+      {
+        p_reservation_id: checkoutReservationId,
+        p_stripe_session_id: session.id,
+      },
+    );
+
+    if (bindingError || !binding?.success) {
+      throw new Error(`Checkout reservation binding failed: ${bindingError?.message || "unknown error"}`);
     }
 
     return new Response(JSON.stringify({ 
@@ -552,16 +654,38 @@ Deno.serve(async (req: Request) => {
       headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Checkout session error:", error);
-    // Log more details about the error
-    if (error && typeof error === 'object' && 'raw' in error) {
-      console.error("Stripe error details:", JSON.stringify((error as any).raw, null, 2));
+    console.error(
+      "Checkout session failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+
+    if (stripeSession?.id) {
+      try {
+        if (stripeSession.status === "open") {
+          await getStripe().checkout.sessions.expire(stripeSession.id);
+        }
+      } catch (expireError) {
+        console.error(
+          "Stripe session cleanup failed:",
+          expireError instanceof Error ? expireError.message : "unknown error",
+        );
+      }
     }
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Errore interno del server" 
-    }), {
-      status: 500,
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-    });
+
+    if (supabaseAdmin && reservationId) {
+      const { error: releaseError } = await supabaseAdmin.rpc(
+        "release_checkout_value_reservation",
+        {
+          p_reservation_id: reservationId,
+          p_reason: "checkout_session_creation_failed",
+        },
+      );
+      if (releaseError) {
+        console.error("Checkout reservation cleanup failed:", releaseError.message);
+      }
+    }
+
+    const publicError = publicPaymentError(error);
+    return jsonResponse(req, publicError.status, { error: publicError.message });
   }
 });

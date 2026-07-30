@@ -14,10 +14,8 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5500',
-  // Production - all variants of mimmofratelli.com
-  'http://mimmofratelli.com',
+  // Production - HTTPS only
   'https://mimmofratelli.com',
-  'http://www.mimmofratelli.com',
   'https://www.mimmofratelli.com'
 ];
 
@@ -30,17 +28,8 @@ function isAllowedOrigin(origin: string): boolean {
   // Check exact match first
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   
-  // Check if it's a mimmofratelli.com domain (any protocol/subdomain)
-  try {
-    const url = new URL(origin);
-    const hostname = url.hostname.toLowerCase();
-    if (hostname === 'mimmofratelli.com' || hostname.endsWith('.mimmofratelli.com')) {
-      return true;
-    }
-  } catch {
-    // Invalid URL, not allowed
-  }
-  
+  // Do not trust arbitrary subdomains: a stale DNS record would otherwise
+  // become an authorized payment origin.
   return false;
 }
 
@@ -58,6 +47,7 @@ export function getCorsHeaders(request: Request): Record<string, string> {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   };
 }
 

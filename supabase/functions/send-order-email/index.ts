@@ -1,135 +1,119 @@
 /**
  * Order Email Notification Edge Function
- * Avenue M. E-commerce Platform
- * 
- * Sends email notifications for order status changes
+ * Mimmo Fratelli E-commerce Platform
+ *
+ * Invia email di notifica per i cambi di stato ordine (processing/shipped/delivered).
+ * Riservata agli admin (invocata dal pannello admin al cambio stato).
+ * La conferma d'acquisto iniziale viene inviata direttamente da stripe-webhook /
+ * complete-order-purchase tramite il modulo condiviso _shared/email.ts.
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_EMAIL = "Avenue M. <noreply@avenuem.it>";
-
-const ALLOWED_ORIGINS = [
-  "https://www.mimmofratelli.com",
-  "https://mimmofratelli.com",
-  "http://localhost:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:5500",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-}
-
-const emailTemplates: Record<string, { subject: string; body: (order: any) => string }> = {
-  processing: {
-    subject: "Ordine Confermato - Avenue M.",
-    body: (order) => `
-      <h1>Grazie per il tuo ordine!</h1>
-      <p>Ciao ${order.shipping_address?.firstName || ""},</p>
-      <p>Il tuo ordine #${order.id.slice(0, 8)} è stato confermato e sarà presto elaborato.</p>
-      <p><strong>Totale:</strong> €${order.total_amount?.toFixed(2)}</p>
-      <p>Ti invieremo un'email quando il tuo ordine sarà spedito.</p>
-      <p>Grazie per aver scelto Avenue M.!</p>
-    `,
-  },
-  shipped: {
-    subject: "Ordine Spedito - Avenue M.",
-    body: (order) => `
-      <h1>Il tuo ordine è in viaggio!</h1>
-      <p>Ciao ${order.shipping_address?.firstName || ""},</p>
-      <p>Il tuo ordine #${order.id.slice(0, 8)} è stato spedito.</p>
-      ${order.tracking_number ? `
-        <p><strong>Corriere:</strong> ${order.courier?.toUpperCase()}</p>
-        <p><strong>Numero Tracking:</strong> ${order.tracking_number}</p>
-      ` : ""}
-      <p>Grazie per aver scelto Avenue M.!</p>
-    `,
-  },
-  delivered: {
-    subject: "Ordine Consegnato - Avenue M.",
-    body: (order) => `
-      <h1>Ordine Consegnato!</h1>
-      <p>Ciao ${order.shipping_address?.firstName || ""},</p>
-      <p>Il tuo ordine #${order.id.slice(0, 8)} è stato consegnato.</p>
-      <p>Speriamo che tu sia soddisfatto del tuo acquisto!</p>
-      <p>Grazie per aver scelto Avenue M.!</p>
-    `,
-  },
-};
+import {
+  sendOrderConfirmationEmail,
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+} from "../_shared/email.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
+  const jsonHeaders = { ...getCorsHeaders(req), "Content-Type": "application/json" };
+
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
+      supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Solo gli admin possono invocare questa funzione (evita spam/abusi)
+    const supabaseUser = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }
+    );
+
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: jsonHeaders,
+      });
+    }
+
+    const { data: adminRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!adminRole) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: jsonHeaders,
+      });
+    }
+
     const { orderId, status } = await req.json();
 
-    // Get order with user info
+    if (
+      typeof orderId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId) ||
+      !["processing", "shipped", "delivered"].includes(status)
+    ) {
+      return new Response(JSON.stringify({ error: "Invalid orderId or status" }), {
+        status: 400,
+        headers: jsonHeaders,
+      });
+    }
+
+    // Ordine con articoli (l'email include il riepilogo)
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
-      .select("*, profiles(email)")
+      .select("*, order_items(*)")
       .eq("id", orderId)
       .single();
 
     if (orderError || !order) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
     }
 
-    const template = emailTemplates[status];
-    if (!template) {
-      return new Response(JSON.stringify({ error: "Unknown status" }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
+    // Email del cliente da auth.users (profiles non ha la colonna email)
+    let userEmail: string | null = null;
+    if (order.user_id) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(order.user_id);
+      userEmail = authUser?.user?.email || null;
     }
 
-    const userEmail = order.profiles?.email;
     if (!userEmail) {
       return new Response(JSON.stringify({ error: "No user email" }), {
         status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
     }
 
-    // Send email via Resend
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: userEmail,
-        subject: template.subject,
-        html: template.body(order),
-      }),
-    });
+    let sent = false;
+    if (status === "processing") {
+      sent = await sendOrderConfirmationEmail(userEmail, order);
+    } else if (status === "shipped") {
+      sent = await sendOrderShippedEmail(userEmail, order);
+    } else if (status === "delivered") {
+      sent = await sendOrderDeliveredEmail(userEmail, order);
+    }
 
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Email send error:", errorText);
+    if (!sent) {
       return new Response(JSON.stringify({ error: "Email send failed" }), {
         status: 500,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
     }
 
@@ -137,17 +121,17 @@ Deno.serve(async (req: Request) => {
     await supabaseAdmin.from("audit_log").insert({
       user_id: order.user_id,
       action: "email_sent",
-      details: { orderId, status, email: userEmail },
+      table_name: "orders",
+      record_id: orderId,
+      new_data: { status },
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ success: true }), { headers: jsonHeaders });
   } catch (error) {
     console.error("Send email error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: jsonHeaders,
     });
   }
 });

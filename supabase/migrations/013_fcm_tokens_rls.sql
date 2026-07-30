@@ -1,6 +1,17 @@
 -- Migration: Fix FCM Tokens RLS Policies
 -- Allows anonymous users to save FCM tokens for push notifications
 
+-- Definizione difensiva: la tabella era creata manualmente in produzione
+-- ma assente dalle migration, quindi le policy sotto fallivano su DB puliti.
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  token TEXT UNIQUE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  platform TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Drop existing policies if any
 DROP POLICY IF EXISTS "Users can view own fcm tokens" ON fcm_tokens;
 DROP POLICY IF EXISTS "Users can insert own fcm tokens" ON fcm_tokens;

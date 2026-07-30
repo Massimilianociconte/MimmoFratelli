@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riscatta Gift Card | Mimmo Fratelli</title>
+    <meta name="description" content="Riscatta la tua gift card Mimmo Fratelli e usa il credito per i tuoi acquisti.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" sizes="32x32" href="Images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="Images/apple-touch-icon.png">
@@ -912,8 +914,10 @@
 
             try {
                 let tokenToRedeem = qrToken;
+                let result;
 
-                // If no token, validate code first
+                // A manual bearer code is redeemed directly. Public validation
+                // intentionally does not disclose its alternate QR token.
                 if (!tokenToRedeem) {
                     const code = els.redeemCode.value.trim().toUpperCase();
                     if (!code || code.length < 10) {
@@ -922,20 +926,10 @@
                         return;
                     }
 
-                    const { valid, giftCard, error } = await giftCardService.validateCode(code);
-                    if (!valid) {
-                        showMessage(error || 'Codice non valido', 'error');
-                        setButtonLoading(false);
-                        return;
-                    }
-
-                    tokenToRedeem = giftCard.qr_code_token;
-                    currentGiftCard = giftCard;
-                    renderGiftCard(giftCard);
+                    result = await giftCardService.redeemGiftCardCode(code);
+                } else {
+                    result = await giftCardService.redeemGiftCard(tokenToRedeem);
                 }
-
-                // Redeem
-                const result = await giftCardService.redeemGiftCard(tokenToRedeem);
 
                 if (result.success) {
                     localStorage.removeItem(PENDING_REDEEM_KEY);

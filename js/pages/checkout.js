@@ -223,12 +223,15 @@ class CheckoutPage {
     const config = window.AVENUE_CONFIG || {};
     const subtotal = this.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const shipping = subtotal >= (config.FREE_SHIPPING_THRESHOLD || 50) ? 0 : (config.STANDARD_SHIPPING_COST || 2.90);
-    let totalBeforeCredit = subtotal - discount + shipping;
+    const merchandiseAfterDiscount = Math.max(0, subtotal - discount);
+    const totalBeforeCredit = merchandiseAfterDiscount + shipping;
     
     // Calculate credit to apply
     this.creditToApply = 0;
     if (this.useCreditEnabled && this.userCredit > 0) {
-      this.creditToApply = Math.min(this.userCredit, totalBeforeCredit);
+      // Stripe coupons discount merchandise, not shipping. Keep the preview
+      // identical to the server-side amount and leave shipping payable.
+      this.creditToApply = Math.min(this.userCredit, merchandiseAfterDiscount);
     }
     
     const finalTotal = Math.max(0, totalBeforeCredit - this.creditToApply);
@@ -541,21 +544,15 @@ class CheckoutPage {
       return;
     }
 
-    // Validate the gift card first
-    const { valid, giftCard, error } = await giftCardService.validateCode(code);
-    if (!valid || error) {
-      this.showPromoMessage(messageEl, error || 'Codice non valido', 'error');
-      return;
-    }
-
-    // Redeem the gift card to add credit to user account
+    // Redeem atomically; the public validation RPC intentionally does not
+    // return the QR bearer token or personal gift-card metadata.
     this.showPromoMessage(messageEl, 'Riscatto in corso...', 'info');
-    
-    const result = await giftCardService.redeemGiftCard(giftCard.qr_code_token);
+
+    const result = await giftCardService.redeemGiftCardCode(code);
     
     if (result.success) {
       // Update user credit
-      this.userCredit += result.amount_credited || giftCard.amount;
+      this.userCredit += result.amount_credited;
       
       // Update credit section
       const creditSection = document.getElementById('userCreditSection');
@@ -566,7 +563,7 @@ class CheckoutPage {
       }
       
       this.updateTotals();
-      this.showPromoMessage(messageEl, `✓ Gift Card riscattata! €${(result.amount_credited || giftCard.amount).toFixed(2)} aggiunti al tuo credito`, 'success');
+      this.showPromoMessage(messageEl, `✓ Gift Card riscattata! €${result.amount_credited.toFixed(2)} aggiunti al tuo credito`, 'success');
       codeInput.value = '';
     } else {
       this.showPromoMessage(messageEl, result.error || 'Errore durante il riscatto', 'error');

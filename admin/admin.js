@@ -2301,7 +2301,7 @@ async function updateActiveUsersList() {
                     <div class="active-user-status ${user.is_authenticated ? 'authenticated' : 'guest'}"></div>
                     <div class="active-user-info">
                         <span class="active-user-type">${userType}</span>
-                        <span class="active-user-page">📄 ${page}</span>
+                        <span class="active-user-page">📄 ${esc(page)}</span>
                     </div>
                     <span class="active-user-time">${timeAgo}</span>
                 </div>
@@ -3066,9 +3066,11 @@ function buildSearchableText(order) {
 }
 
 function highlightMatch(text, query) {
-    if (!query || !text) return text;
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<span class="search-match">$1</span>');
+    const safeText = esc(text);
+    if (!query || !text) return safeText;
+    const safeQuery = esc(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${safeQuery})`, 'gi');
+    return safeText.replace(regex, '<span class="search-match">$1</span>');
 }
 
 function resetOrderFilters() {
@@ -3144,7 +3146,7 @@ function renderOrders(orderList, searchQuery = '') {
         <tr class="${searchQuery && buildSearchableText(order).toLowerCase().includes(searchQuery) ? 'order-row-highlight' : ''}">
             <td>
                 <strong>#${displayOrderNum}</strong>
-                <br><small style="color:#999" title="${productNames}">${order.order_items?.length || 0} prodotti</small>
+                <br><small style="color:#999" title="${esc(productNames)}">${order.order_items?.length || 0} prodotti</small>
             </td>
             <td>
                 <strong>${displayCustomer}</strong>
@@ -3200,7 +3202,7 @@ function renderOrders(orderList, searchQuery = '') {
             <div class="mobile-order-card">
                 <div class="mobile-order-header">
                     <div>
-                        <div class="mobile-order-number">#${order.order_number}</div>
+                        <div class="mobile-order-number">#${esc(order.order_number)}</div>
                         <div class="mobile-order-date">${date}</div>
                     </div>
                     <span class="order-status ${statusColors[order.status] || ''}" style="font-size:0.75rem;padding:0.25rem 0.5rem;">
@@ -3209,13 +3211,13 @@ function renderOrders(orderList, searchQuery = '') {
                 </div>
                 
                 <div class="mobile-order-customer">
-                    <span class="mobile-customer-name">${customerName}</span>
-                    <span class="mobile-customer-city">📍 ${addr.city || 'N/D'}</span>
-                    ${addr.phone ? `<span class="mobile-customer-phone">📞 ${addr.phone}</span>` : ''}
+                    <span class="mobile-customer-name">${esc(customerName)}</span>
+                    <span class="mobile-customer-city">📍 ${esc(addr.city || 'N/D')}</span>
+                    ${addr.phone ? `<span class="mobile-customer-phone">📞 ${esc(addr.phone)}</span>` : ''}
                 </div>
                 
                 <div class="mobile-order-items">
-                    🛒 ${productNames}${moreItems} (${order.order_items?.length || 0} prodotti)
+                    🛒 ${esc(productNames)}${moreItems} (${order.order_items?.length || 0} prodotti)
                 </div>
                 
                 <div class="mobile-order-footer">
@@ -3242,20 +3244,68 @@ function renderOrders(orderList, searchQuery = '') {
     }
 }
 
+function buildTrackingUrl(courier, trackingNumber) {
+    if (!trackingNumber) return null;
+    const c = String(courier || '').toLowerCase();
+    if (c === 'brt') return `https://vas.brt.it/vas/sped_det_show.hsm?referer=sped_numspe_par.htm&Nspediz=${encodeURIComponent(trackingNumber)}`;
+    if (c === 'sda') return `https://www.sda.it/wps/portal/Servizi_online/ricerca_spedizioni?locale=it&tracing.letteraVettura=${encodeURIComponent(trackingNumber)}`;
+    if (c === 'gls') return `https://gls-group.com/IT/it/servizi-online/ricerca-spedizioni/?match=${encodeURIComponent(trackingNumber)}`;
+    if (c === 'dhl') return `https://www.dhl.com/it-it/home/tracking.html?tracking-id=${encodeURIComponent(trackingNumber)}`;
+    return null;
+}
+
 window.updateOrderStatus = async function(orderId, newStatus) {
     try {
+        const updateData = { status: newStatus, updated_at: new Date().toISOString() };
+
+        // Alla spedizione chiedi corriere e tracking per includerli nell'email al cliente
+        if (newStatus === 'shipped') {
+            const courierInput = prompt('Corriere (brt, sda, gls, dhl o altro):', 'brt');
+            if (courierInput === null) { applyOrderFilters(); return; }
+            const trackingInput = prompt('Numero di tracking (lascia vuoto se non disponibile):', '');
+            if (trackingInput === null) { applyOrderFilters(); return; }
+
+            const courier = courierInput.trim().toLowerCase() || null;
+            const trackingNumber = trackingInput.trim() || null;
+            updateData.courier = courier;
+            updateData.tracking_number = trackingNumber;
+            updateData.tracking_url = buildTrackingUrl(courier, trackingNumber);
+        }
+
         const { error } = await supabase
             .from('orders')
-            .update({ status: newStatus, updated_at: new Date().toISOString() })
+            .update(updateData)
             .eq('id', orderId);
 
         if (error) throw error;
         
         // Update local data
         const order = orders.find(o => o.id === orderId);
-        if (order) order.status = newStatus;
+        if (order) {
+            order.status = newStatus;
+            if (newStatus === 'shipped') {
+                order.courier = updateData.courier;
+                order.tracking_number = updateData.tracking_number;
+                order.tracking_url = updateData.tracking_url;
+            }
+        }
         
         showToast('Stato ordine aggiornato!', 'success');
+
+        // Notifica il cliente via email per gli stati rilevanti
+        if (['processing', 'shipped', 'delivered'].includes(newStatus)) {
+            try {
+                const { error: emailError } = await supabase.functions.invoke('send-order-email', {
+                    body: { orderId, status: newStatus }
+                });
+                if (emailError) throw emailError;
+                showToast('Email inviata al cliente', 'success');
+            } catch (emailErr) {
+                console.error('Send order email error:', emailErr);
+                showToast('Stato salvato ma email non inviata', 'error');
+            }
+        }
+
         applyOrderFilters();
     } catch (err) {
         console.error('Update order status error:', err);

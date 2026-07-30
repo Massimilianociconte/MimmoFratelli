@@ -62,14 +62,18 @@ class CartDrawer {
   }
 
   async updateCart() {
-    const items = await cartService.getAllItems();
-    const total = await cartService.getTotal();
-    const count = await cartService.getCount();
+    try {
+      const items = await cartService.getAllItems();
+      const total = await cartService.getTotal();
+      const count = await cartService.getCount();
 
-    this._renderItems(items);
-    this._updateTotal(total);
-    this._updateBadges(count);
-    this._updateReferralBanner(total);
+      this._renderItems(items);
+      this._updateTotal(total);
+      this._updateBadges(count);
+      this._updateReferralBanner(total);
+    } catch (err) {
+      console.error('Cart update error:', err);
+    }
   }
 
   async _updateReferralBanner(subtotal) {
@@ -355,19 +359,40 @@ class CartDrawer {
       const weightGrams = itemEl.dataset.weight ? parseInt(itemEl.dataset.weight) : null;
       const qtyValue = itemEl.querySelector('.qty-value');
 
-      itemEl.querySelector('[data-action="decrease"]').addEventListener('click', async () => {
+      const decreaseBtn = itemEl.querySelector('[data-action="decrease"]');
+      const increaseBtn = itemEl.querySelector('[data-action="increase"]');
+      const removeBtn = itemEl.querySelector('[data-action="remove"]');
+
+      // Disabilita i pulsanti durante l'operazione per evitare click multipli concorrenti
+      const withLock = (handler) => async () => {
+        if (itemEl.dataset.busy === '1') return;
+        itemEl.dataset.busy = '1';
+        decreaseBtn.disabled = true;
+        increaseBtn.disabled = true;
+        removeBtn.disabled = true;
+        try {
+          await handler();
+        } finally {
+          itemEl.dataset.busy = '';
+          decreaseBtn.disabled = false;
+          increaseBtn.disabled = false;
+          removeBtn.disabled = false;
+        }
+      };
+
+      decreaseBtn.addEventListener('click', withLock(async () => {
         const newQty = parseInt(qtyValue.textContent) - 1;
         await cartService.updateQuantity(productId, size, color, newQty, weightGrams);
-      });
+      }));
 
-      itemEl.querySelector('[data-action="increase"]').addEventListener('click', async () => {
+      increaseBtn.addEventListener('click', withLock(async () => {
         const newQty = parseInt(qtyValue.textContent) + 1;
         await cartService.updateQuantity(productId, size, color, newQty, weightGrams);
-      });
+      }));
 
-      itemEl.querySelector('[data-action="remove"]').addEventListener('click', async () => {
+      removeBtn.addEventListener('click', withLock(async () => {
         await cartService.removeItem(productId, size, color, weightGrams);
-      });
+      }));
     });
   }
 

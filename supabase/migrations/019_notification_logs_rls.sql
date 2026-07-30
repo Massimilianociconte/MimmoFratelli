@@ -3,6 +3,26 @@
 -- Fixes security advisory: rls_disabled_in_public
 
 -- ============================================
+-- NOTIFICATION LOGS TABLE
+-- Definizione difensiva: la tabella era creata manualmente in produzione
+-- ma assente dalle migration, quindi ENABLE RLS falliva su DB puliti.
+-- ============================================
+CREATE TABLE IF NOT EXISTS notification_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT,
+  title TEXT,
+  body TEXT,
+  data JSONB DEFAULT '{}'::jsonb,
+  status TEXT DEFAULT 'pending',
+  product_id UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_logs_created ON notification_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_user ON notification_logs(user_id);
+
+-- ============================================
 -- NOTIFICATION LOGS TABLE RLS
 -- System table for tracking sent notifications
 -- Only admins can view, system can insert

@@ -60,32 +60,15 @@ describe('Payment Property Tests', () => {
 
   /**
    * Property 12: Order creation on payment success
-   * When payment succeeds, an order record must be created with correct total
+   * Orders are created exclusively server-side (stripe-webhook / complete-order-purchase):
+   * the client must not be able to create orders directly
    */
   describe('Property 12: Order creation on payment success', () => {
-    it('should create order with correct total after successful payment', async () => {
+    it('should not expose a client-side order creation method (server-side only)', async () => {
       const { orderService } = await import('../../js/services/orders.js');
 
-      await fc.assert(
-        fc.asyncProperty(
-          fc.array(cartItemArb, { minLength: 1, maxLength: 5 }),
-          paymentResultArb,
-          shippingAddressArb,
-          async (cartItems, paymentResult, shippingAddress) => {
-            const result = await orderService.createOrder(paymentResult, cartItems, shippingAddress);
-            
-            // Order should be created (or error returned)
-            expect(result).toBeDefined();
-            
-            // If successful, order should have an ID
-            if (!result.error) {
-              expect(result.order).toBeDefined();
-              expect(result.order.id).toBeDefined();
-            }
-          }
-        ),
-        { numRuns: 100 }
-      );
+      // Legacy createOrder rimosso: la creazione ordini avviene solo nelle edge functions
+      expect(orderService.createOrder).toBeUndefined();
     });
 
     it('should calculate order total correctly', async () => {

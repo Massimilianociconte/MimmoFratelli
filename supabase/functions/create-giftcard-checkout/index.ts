@@ -6,29 +6,31 @@
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
+import Stripe from "npm:stripe@20.4.1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  buildTrustedSiteUrl,
+  CHECKOUT_TTL_SECONDS,
+  getStripe,
+  normalizeEmail,
+  normalizeMoney,
+  normalizeText,
+  publicPaymentError,
+} from "../_shared/payment.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2023-10-16",
-});
-
-const ALLOWED_ORIGINS = [
-  "https://www.mimmofratelli.com",
-  "https://mimmofratelli.com",
-  "http://localhost:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:5500",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin") || "";
-  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : "https://www.mimmofratelli.com";
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
+/**
+ * Deterministic idempotency key from the request payload plus a coarse
+ * (per-minute) time bucket. Dedupes double-clicks / network retries of the SAME
+ * gift-card purchase without blocking a legitimate later repeat purchase.
+ */
+async function buildIdempotencyKey(parts: (string | number)[]): Promise<string> {
+  const minuteBucket = Math.floor(Date.now() / 60000);
+  const raw = `${parts.join("|")}|${minuteBucket}`;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 interface GiftCardRequest {
@@ -38,8 +40,6 @@ interface GiftCardRequest {
   senderName: string;
   message?: string;
   template?: string;
-  successUrl: string;
-  cancelUrl: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -47,7 +47,10 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
+  let stripeSession: Stripe.Checkout.Session | null = null;
+
   try {
+    const stripe = getStripe();
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -62,37 +65,35 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { 
-      amount, 
-      recipientName, 
-      recipientEmail, 
-      senderName, 
-      message,
-      template,
-      successUrl, 
-      cancelUrl 
-    }: GiftCardRequest = await req.json();
-
-    console.log("Gift card checkout request:", { amount, recipientName, recipientEmail, senderName });
-
-    // Validation
-    if (!amount || amount < 10 || amount > 500) {
-      return new Response(JSON.stringify({ error: "Importo non valido (min €10, max €500)" }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
-    }
-
-    if (!recipientName || !recipientEmail || !senderName) {
-      return new Response(JSON.stringify({ error: "Compila tutti i campi obbligatori" }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json() as GiftCardRequest;
+    const amount = normalizeMoney(body.amount, 10, 500);
+    const recipientName = normalizeText(body.recipientName, "Nome destinatario", 120);
+    const recipientEmail = normalizeEmail(body.recipientEmail, "Email destinatario");
+    const senderName = normalizeText(body.senderName, "Nome mittente", 120);
+    const message = normalizeText(body.message, "Messaggio", 500, false);
+    const template = normalizeText(body.template || "elegant", "Stile", 40);
+    const successUrl = buildTrustedSiteUrl(
+      req,
+      "/checkout-success.html",
+      { type: "giftcard" },
+    );
+    const cancelUrl = buildTrustedSiteUrl(
+      req,
+      "/settings.html",
+      { tab: "giftcards", cancelled: "true" },
+    );
 
     // Create Stripe checkout session for gift card.
     // BNPL methods are intentionally disabled for stored-value products.
-    const session = await stripe.checkout.sessions.create({
+    const idempotencyKey = await buildIdempotencyKey([
+      user.id,
+      Math.round(amount * 100),
+      recipientEmail,
+      senderName,
+      message,
+      template,
+    ]);
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: [
         "card",           // Carte + Apple Pay + Google Pay
         "link",           // Stripe Link
@@ -104,7 +105,7 @@ Deno.serve(async (req: Request) => {
             currency: "eur",
             product_data: {
               name: `Gift Card Mimmo Fratelli - €${amount}`,
-              description: `Regalo per ${recipientName}`,
+              description: "Gift card digitale",
               images: ["https://www.mimmofratelli.com/Images/giftcard-preview.png"],
               metadata: {
                 type: "gift_card",
@@ -120,17 +121,34 @@ Deno.serve(async (req: Request) => {
       cancel_url: cancelUrl,
       customer_email: user.email,
       locale: "it",
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_TTL_SECONDS,
+      client_reference_id: idempotencyKey,
+      payment_intent_data: {
+        metadata: {
+          checkoutType: "gift_card",
+          userId: user.id,
+        },
+      },
       metadata: {
         type: "gift_card",
         userId: user.id,
         amount: amount.toString(),
-        recipientName,
-        recipientEmail,
-        senderName,
-        message: message || "",
-        template: template || "elegant",
+        template,
       },
+    };
+
+    const configuredPaymentMethods = Deno.env.get(
+      "STRIPE_GIFTCARD_PAYMENT_METHOD_CONFIGURATION",
+    );
+    if (configuredPaymentMethods) {
+      delete sessionConfig.payment_method_types;
+      sessionConfig.payment_method_configuration = configuredPaymentMethods;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig, {
+      idempotencyKey: `gc_session_${idempotencyKey}`,
     });
+    stripeSession = session;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -163,13 +181,13 @@ Deno.serve(async (req: Request) => {
           recipientName,
           recipientEmail,
           senderName,
-          message: message || "",
-          template: template || "elegant",
+          message,
+          template,
         },
       }, { onConflict: "stripe_session_id" });
 
     if (pendingError) {
-      console.warn("Pending gift card checkout snapshot failed; continuing with Stripe metadata fallback:", pendingError);
+      throw new Error(`Pending gift-card checkout snapshot failed: ${pendingError.message}`);
     }
 
     return new Response(JSON.stringify({ 
@@ -179,11 +197,25 @@ Deno.serve(async (req: Request) => {
       headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Gift card checkout error:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Errore interno del server" 
-    }), {
-      status: 500,
+    console.error(
+      "Gift-card checkout failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+
+    if (stripeSession?.id && stripeSession.status === "open") {
+      try {
+        await getStripe().checkout.sessions.expire(stripeSession.id);
+      } catch (expireError) {
+        console.error(
+          "Gift-card Stripe session cleanup failed:",
+          expireError instanceof Error ? expireError.message : "unknown error",
+        );
+      }
+    }
+
+    const publicError = publicPaymentError(error);
+    return new Response(JSON.stringify({ error: publicError.message }), {
+      status: publicError.status,
       headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }

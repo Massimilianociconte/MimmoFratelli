@@ -9,70 +9,6 @@ import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
 
 class OrderService {
   /**
-   * Create order from payment result
-   */
-  async createOrder(paymentResult, cartItems, shippingAddress) {
-    const user = await getCurrentUser();
-    if (!user) {
-      return { error: 'Utente non autenticato' };
-    }
-
-    if (!isSupabaseConfigured()) {
-      return { error: 'Sistema non configurato' };
-    }
-
-    try {
-      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const shipping = paymentResult.shipping || 0;
-      const discount = paymentResult.discount || 0;
-      const total = subtotal + shipping - discount;
-
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          status: 'pending',
-          total_amount: total,
-          shipping_address: shippingAddress,
-          payment_method: paymentResult.provider,
-          payment_id: paymentResult.paymentId,
-          discount_amount: discount,
-          shipping_cost: shipping
-        })
-        .select()
-        .single();
-
-      if (orderError) {
-        console.error('Create order error:', orderError);
-        return { error: 'Errore nella creazione dell\'ordine' };
-      }
-
-      // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_id: item.productId,
-        quantity: item.quantity,
-        unit_price: item.price,
-        size: item.size,
-        color: item.color
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Create order items error:', itemsError);
-      }
-
-      return { order, error: null };
-    } catch (err) {
-      console.error('Create order error:', err);
-      return { error: 'Errore nella creazione dell\'ordine' };
-    }
-  }
-
-  /**
    * Get order history for current user
    */
   async getOrderHistory() {
@@ -184,6 +120,7 @@ class OrderService {
   getStatusLabel(status) {
     const labels = {
       pending: 'In attesa',
+      confirmed: 'Confermato',
       processing: 'In elaborazione',
       shipped: 'Spedito',
       delivered: 'Consegnato',
@@ -197,12 +134,13 @@ class OrderService {
    * Get tracking URL for courier
    */
   getTrackingUrl(courier, trackingNumber) {
+    const tn = encodeURIComponent(trackingNumber || '');
     const urls = {
-      brt: `https://www.brt.it/it/tracking?spession=${trackingNumber}`,
-      dhl: `https://www.dhl.com/it-it/home/tracking.html?tracking-id=${trackingNumber}`,
-      gls: `https://www.gls-italy.com/it/servizi/tracking?match=${trackingNumber}`,
-      ups: `https://www.ups.com/track?tracknum=${trackingNumber}`,
-      sda: `https://www.sda.it/wps/portal/Servizi_online/dettaglio-spedizione?locale=it&tression=${trackingNumber}`
+      brt: `https://vas.brt.it/vas/sped_det_show.hsm?referer=sped_numspe_par.htm&Nspediz=${tn}`,
+      dhl: `https://www.dhl.com/it-it/home/tracking.html?tracking-id=${tn}`,
+      gls: `https://gls-group.com/IT/it/servizi-online/ricerca-spedizioni/?match=${tn}`,
+      ups: `https://www.ups.com/track?tracknum=${tn}`,
+      sda: `https://www.sda.it/wps/portal/Servizi_online/ricerca_spedizioni?locale=it&tracing.letteraVettura=${tn}`
     };
     return urls[courier?.toLowerCase()] || null;
   }

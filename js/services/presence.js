@@ -5,7 +5,7 @@
  * Tracks user presence for real-time analytics
  */
 
-import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
+import { supabase, isSupabaseConfigured } from '../supabase.js';
 
 class PresenceService {
   constructor() {
@@ -19,8 +19,10 @@ class PresenceService {
    */
   getOrCreateSessionId() {
     let sessionId = sessionStorage.getItem('avenue_session_id');
-    if (!sessionId) {
-      sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const validSessionId =
+      /^sess_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!sessionId || !validSessionId.test(sessionId)) {
+      sessionId = `sess_${crypto.randomUUID()}`;
       sessionStorage.setItem('avenue_session_id', sessionId);
     }
     return sessionId;
@@ -49,10 +51,6 @@ class PresenceService {
       }
     });
 
-    // Update on beforeunload
-    window.addEventListener('beforeunload', () => {
-      this.sendBeacon();
-    });
   }
 
   /**
@@ -67,26 +65,17 @@ class PresenceService {
   }
 
   /**
-   * Update user presence - uses direct table insert (no RPC needed)
+   * Update user presence through the database trust boundary.
    */
   async updatePresence() {
     if (!isSupabaseConfigured()) return;
 
     try {
-      const user = await getCurrentUser();
-      
-      // Direct upsert to user_presence table (no RPC function needed)
       const { error } = await supabase
-        .from('user_presence')
-        .upsert({
-          session_id: this.sessionId,
-          user_id: user?.id || null,
-          page_url: window.location.pathname,
-          user_agent: navigator.userAgent?.substring(0, 255) || null,
-          is_authenticated: !!user,
-          last_seen: new Date().toISOString()
-        }, {
-          onConflict: 'session_id'
+        .rpc('update_user_presence', {
+          p_session_id: this.sessionId,
+          p_page_url: window.location.pathname,
+          p_user_agent: navigator.userAgent?.substring(0, 255) || null
         });
       
       // Silently ignore errors - table might not exist yet
@@ -99,35 +88,6 @@ class PresenceService {
     }
   }
 
-  /**
-   * Send beacon on page unload (for more reliable tracking)
-   */
-  sendBeacon() {
-    if (!isSupabaseConfigured()) return;
-    
-    const config = window.AVENUE_CONFIG || {};
-    const supabaseUrl = config.SUPABASE_URL;
-    const supabaseKey = config.SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) return;
-    
-    // Use sendBeacon for reliable delivery on page unload
-    const url = `${supabaseUrl}/rest/v1/user_presence?session_id=eq.${this.sessionId}`;
-    const data = JSON.stringify({
-      last_seen: new Date().toISOString(),
-      page_url: window.location.pathname
-    });
-    
-    const blob = new Blob([data], { type: 'application/json' });
-    
-    // sendBeacon doesn't support custom headers well, so this is best-effort
-    // The interval updates are the primary mechanism
-    try {
-      navigator.sendBeacon(url, blob);
-    } catch {
-      // Silently fail - not critical
-    }
-  }
 }
 
 export const presenceService = new PresenceService();

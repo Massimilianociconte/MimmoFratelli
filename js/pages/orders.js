@@ -5,6 +5,7 @@
 
 import { isAuthenticated } from '../supabase.js';
 import { orderService } from '../services/orders.js';
+import { sanitizeString } from '../utils/validation.js';
 
 class OrdersPage {
   constructor() {
@@ -64,13 +65,13 @@ class OrdersPage {
 
     const itemsHtml = order.order_items?.map(item => `
       <div class="order-item">
-        <img src="${item.products?.images?.[0] || 'Images/placeholder.jpg'}" alt="${item.products?.name}" class="order-item-img">
+        <img src="${sanitizeString(item.products?.images?.[0] || 'Images/placeholder.jpg')}" alt="${sanitizeString(item.products?.name || item.product_name || '')}" class="order-item-img">
         <div class="order-item-details">
-          <span class="order-item-name">${item.products?.name || 'Prodotto'}</span>
-          <span class="order-item-variant">Taglia: ${item.size} | Colore: ${item.color}</span>
-          <span class="order-item-qty">Quantità: ${item.quantity}</span>
+          <span class="order-item-name">${sanitizeString(item.products?.name || item.product_name || 'Prodotto')}</span>
+          <span class="order-item-variant">Taglia: ${sanitizeString(item.size || '-')} | Colore: ${sanitizeString(item.color || '-')}</span>
+          <span class="order-item-qty">Quantità: ${Number(item.quantity) || 0}</span>
         </div>
-        <span class="order-item-price">€${(item.unit_price * item.quantity).toFixed(2)}</span>
+        <span class="order-item-price">€${(Number(item.product_price || 0) * Number(item.quantity || 0)).toFixed(2)}</span>
       </div>
     `).join('') || '';
 
@@ -78,7 +79,7 @@ class OrdersPage {
       <div class="order-card">
         <div class="order-header">
           <div class="order-info">
-            <span class="order-number">Ordine #${order.id.slice(0, 8)}</span>
+            <span class="order-number">Ordine #${sanitizeString(order.order_number || order.id.slice(0, 8))}</span>
             <span class="order-date">${date}</span>
           </div>
           <span class="order-status ${statusClass}">${statusLabel}</span>
@@ -87,7 +88,7 @@ class OrdersPage {
         <div class="order-footer">
           <div class="order-total">
             <span>Totale:</span>
-            <span class="total-amount">€${order.total_amount?.toFixed(2)}</span>
+            <span class="total-amount">€${Number(order.total || 0).toFixed(2)}</span>
           </div>
           ${trackingHtml}
         </div>

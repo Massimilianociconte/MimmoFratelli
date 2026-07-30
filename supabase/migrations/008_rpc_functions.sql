@@ -50,6 +50,11 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Use credits for purchase
+-- 0065 introduced this signature with a JSONB return type. PostgreSQL cannot
+-- change a function return type through CREATE OR REPLACE, so recreate it
+-- explicitly to keep a clean, from-scratch migration chain reproducible.
+DROP FUNCTION IF EXISTS public.use_credits(UUID, DECIMAL, UUID);
+
 CREATE OR REPLACE FUNCTION use_credits(p_user_id UUID, p_amount DECIMAL, p_order_id UUID)
 RETURNS JSON AS $$
 DECLARE

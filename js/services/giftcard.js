@@ -67,12 +67,8 @@ class GiftCardService {
                 recipientEmail: recipientEmail.trim(),
                 senderName: senderName.trim(),
                 message: message || '',
-                template: style,
-                successUrl: this._getPageUrl('checkout-success.html?type=giftcard'),
-                cancelUrl: this._getPageUrl('settings.html?tab=giftcards&cancelled=true')
+                template: style
             };
-            
-            console.log('[GiftCard] Creating checkout with:', requestBody);
             
             const { data: checkoutData, error: stripeError } = await supabase.functions.invoke('create-giftcard-checkout', {
                 body: requestBody
@@ -160,6 +156,43 @@ class GiftCardService {
     }
 
     /**
+     * Redeem a gift card directly from its bearer code.
+     */
+    async redeemGiftCardCode(code) {
+        if (!isSupabaseConfigured()) {
+            return { success: false, error: 'Database non configurato' };
+        }
+
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user) {
+            return { success: false, error: 'Devi effettuare il login per riscattare la gift card' };
+        }
+
+        try {
+            const { data, error } = await supabase
+                .rpc('redeem_gift_card_by_code', { p_code: code });
+
+            if (error) throw error;
+
+            const result = {
+                success: data?.success || false,
+                error: data?.error || null,
+                amount_credited: data?.amount || 0,
+                new_balance: data?.new_balance || 0
+            };
+
+            if (result.success) {
+                this.notifyListeners('credit_updated', result);
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Error redeeming gift card code:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
      * Get user's credit balance
      */
     async getUserCredits() {
@@ -219,40 +252,6 @@ class GiftCardService {
         } catch (error) {
             console.error('Error fetching credit history:', error);
             return { transactions: [] };
-        }
-    }
-
-    /**
-     * Use credits for a purchase
-     */
-    async useCredits(amount, orderId) {
-        if (!isSupabaseConfigured()) {
-            return { success: false, error: 'Database non configurato' };
-        }
-
-        const { data: session } = await supabase.auth.getSession();
-        if (!session?.session?.user) {
-            return { success: false, error: 'Non autenticato' };
-        }
-
-        try {
-            const { data, error } = await supabase
-                .rpc('use_credits', {
-                    p_user_id: session.session.user.id,
-                    p_amount: amount,
-                    p_order_id: orderId
-                });
-
-            if (error) throw error;
-
-            if (data.success) {
-                this.notifyListeners('credit_updated', data);
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Error using credits:', error);
-            return { success: false, error: error.message };
         }
     }
 
@@ -342,7 +341,7 @@ class GiftCardService {
             return {
                 valid: true,
                 balance: data.balance,
-                giftCard: data.giftCard
+                giftCard: data.giftCard || null
             };
         } catch (err) {
             console.error('Validate code error:', err);

@@ -21,11 +21,6 @@ declare module "https://esm.sh/@supabase/supabase-js@2" {
   export * from "@supabase/supabase-js";
 }
 
-declare module "https://esm.sh/stripe@14.14.0?target=deno" {
-  import Stripe from "stripe";
-  export default Stripe;
-}
-
 declare module "jsr:@supabase/supabase-js@2" {
   export * from "@supabase/supabase-js";
 }
