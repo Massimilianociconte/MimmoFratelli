@@ -229,6 +229,16 @@ class AuthService {
     }
 
     try {
+      // Rimuove il token FCM dell'utente PRIMA del signOut: mentre è ancora
+      // autenticato le policy RLS (delete consentita solo al proprietario)
+      // sono soddisfatte, evitando token orfani legati al vecchio utente.
+      try {
+        const { fcmNotifications } = await import('./firebase-notifications.js');
+        await fcmNotifications.removeTokenFromDatabase();
+      } catch (fcmErr) {
+        console.warn('[Auth] Pulizia token FCM al logout non riuscita:', fcmErr);
+      }
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {

@@ -7,7 +7,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'mf-cms-v2';
+const CACHE_NAME = 'mf-cms-v3';
 const STATIC_ASSETS = [
   '/admin/',
   '/admin/index.html',
@@ -58,31 +58,9 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(title, options);
 });
 
-// Handle push event directly (fallback)
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    try {
-      const payload = event.data.json();
-      if (payload.data && !payload.notification) {
-        const data = payload.data;
-        const title = data.title || '🍅 Mimmo Fratelli';
-        const options = {
-          body: data.body || 'Nuova notifica',
-          icon: data.icon || '/Images/icons/icon-192.png',
-          badge: '/Images/icons/badge-72.png',
-          image: data.image && data.image.length > 0 ? data.image : undefined,
-          tag: data.tag || `push-${Date.now()}`,
-          renotify: true,
-          requireInteraction: true,
-          data: { url: data.url || '/', ...data }
-        };
-        event.waitUntil(self.registration.showNotification(title, options));
-      }
-    } catch (e) {
-      console.error('[CMS SW] Push parse error:', e);
-    }
-  }
-});
+// Nota: nessun listener 'push' separato. messaging.onBackgroundMessage() gestisce
+// già i messaggi FCM data-only; un secondo handler 'push' mostrerebbe la stessa
+// notifica due volte (duplicato). Vedi firebase-messaging-sw.js per la stessa scelta.
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
@@ -90,7 +68,13 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'dismiss') return;
   
   const url = event.notification.data?.url || '/admin/';
-  const fullUrl = new URL(url, self.location.origin).href;
+  let fullUrl;
+  try {
+    const parsed = new URL(url, self.location.origin);
+    fullUrl = parsed.origin === self.location.origin ? parsed.href : new URL('/admin/', self.location.origin).href;
+  } catch (e) {
+    fullUrl = new URL('/admin/', self.location.origin).href;
+  }
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

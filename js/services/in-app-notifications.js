@@ -11,6 +11,34 @@ const STORAGE_KEY = 'mimmo_seen_notifications';
 const CHECK_INTERVAL = 30000; // Check every 30 seconds
 const MAX_VISIBLE_NOTIFICATIONS = 3; // Max notifications before grouping
 
+/**
+ * Escape HTML per prevenire XSS quando si inserisce contenuto dinamico via innerHTML.
+ */
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+/**
+ * Restituisce un URL sicuro same-origin (solo path) oppure null se esterno/non valido.
+ * Previene open-redirect da payload di notifica controllati da un attaccante.
+ */
+function safeNotificationUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.origin !== window.location.origin) return null;
+    return parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return null;
+  }
+}
+
 class InAppNotificationService {
   constructor() {
     this.container = null;
@@ -526,13 +554,13 @@ class InAppNotificationService {
     notification.dataset.notificationId = id;
     
     notification.innerHTML = `
-      ${image ? `<img src="${image}" alt="" class="notification-image" onerror="this.style.display='none'">` : '<div class="notification-image" style="background:linear-gradient(135deg,#4c8c4a,#6ab04c);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">🍅</div>'}
+      ${image ? `<img src="${escapeHtml(image)}" alt="" class="notification-image" onerror="this.style.display='none'">` : '<div class="notification-image" style="background:linear-gradient(135deg,#4c8c4a,#6ab04c);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">🍅</div>'}
       <div class="notification-content">
         <p class="notification-title">
-          ${title}
-          ${badge ? `<span class="notification-badge">${badge}</span>` : ''}
+          ${escapeHtml(title)}
+          ${badge ? `<span class="notification-badge">${escapeHtml(badge)}</span>` : ''}
         </p>
-        <p class="notification-body">${body}</p>
+        <p class="notification-body">${escapeHtml(body)}</p>
       </div>
       <button class="notification-close" aria-label="Chiudi">✕</button>
     `;
@@ -541,7 +569,8 @@ class InAppNotificationService {
     notification.addEventListener('click', (e) => {
       if (!e.target.closest('.notification-close')) {
         this.dismissNotification(id);
-        if (url) window.location.href = url;
+        const safeUrl = safeNotificationUrl(url);
+        if (safeUrl) window.location.href = safeUrl;
       }
     });
     
@@ -575,9 +604,9 @@ class InAppNotificationService {
       <button class="notifications-group-close" aria-label="Chiudi tutto">✕</button>
       <div class="notifications-group-list">
         ${this.notifications.map(n => `
-          <div class="notifications-group-item" data-id="${n.id}" data-url="${n.url || ''}">
-            ${n.image ? `<img src="${n.image}" alt="" class="notifications-group-item-image" onerror="this.style.display='none'">` : '<div class="notifications-group-item-image" style="background:linear-gradient(135deg,#4c8c4a,#6ab04c);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">🍅</div>'}
-            <span class="notifications-group-item-text">${n.body}</span>
+          <div class="notifications-group-item" data-id="${escapeHtml(n.id)}" data-url="${escapeHtml(n.url || '')}">
+            ${n.image ? `<img src="${escapeHtml(n.image)}" alt="" class="notifications-group-item-image" onerror="this.style.display='none'">` : '<div class="notifications-group-item-image" style="background:linear-gradient(135deg,#4c8c4a,#6ab04c);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">🍅</div>'}
+            <span class="notifications-group-item-text">${escapeHtml(n.body)}</span>
             <button class="notifications-group-item-dismiss" aria-label="Rimuovi">✕</button>
           </div>
         `).join('')}
@@ -602,7 +631,8 @@ class InAppNotificationService {
           const id = item.dataset.id;
           const url = item.dataset.url;
           this.dismissNotification(id);
-          if (url) window.location.href = url;
+          const safeUrl = safeNotificationUrl(url);
+          if (safeUrl) window.location.href = safeUrl;
         }
       });
       

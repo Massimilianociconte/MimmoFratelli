@@ -3,7 +3,7 @@
  * Handles push notifications and offline caching
  */
 
-const CACHE_NAME = 'mimmo-fratelli-v3';
+const CACHE_NAME = 'mimmo-fratelli-v4';
 
 // Get base path dynamically
 const getBasePath = () => {
@@ -157,8 +157,15 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
   
-  // Get the URL to open
-  const urlToOpen = event.notification.data?.url || '/';
+  // Get the URL to open (forza stesso origin per prevenire open-redirect)
+  const rawUrl = event.notification.data?.url || '/';
+  let urlToOpen;
+  try {
+    const parsed = new URL(rawUrl, self.location.origin);
+    urlToOpen = parsed.origin === self.location.origin ? parsed.href : new URL('/', self.location.origin).href;
+  } catch (e) {
+    urlToOpen = new URL('/', self.location.origin).href;
+  }
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

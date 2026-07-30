@@ -10,6 +10,34 @@ import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
 // Firebase configuration - will be loaded from config.js
 const getFirebaseConfig = () => window.AVENUE_CONFIG?.FIREBASE || null;
 
+/**
+ * Escape HTML per prevenire XSS quando si inserisce contenuto dinamico via innerHTML.
+ */
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+/**
+ * Restituisce un URL sicuro same-origin (solo path) oppure null se esterno/non valido.
+ * Previene open-redirect da payload FCM controllati da un attaccante.
+ */
+function safeNotificationUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.origin !== window.location.origin) return null;
+    return parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return null;
+  }
+}
+
 class FirebaseNotificationService {
   constructor() {
     this.messaging = null;
@@ -402,10 +430,10 @@ class FirebaseNotificationService {
     const toast = document.createElement('div');
     toast.className = 'fcm-toast';
     toast.innerHTML = `
-      ${image ? `<img src="${image}" alt="" class="fcm-toast-image">` : ''}
+      ${image ? `<img src="${escapeHtml(image)}" alt="" class="fcm-toast-image">` : ''}
       <div class="fcm-toast-content">
-        <strong class="fcm-toast-title">${title || 'Notifica'}</strong>
-        <p class="fcm-toast-body">${body || ''}</p>
+        <strong class="fcm-toast-title">${escapeHtml(title || 'Notifica')}</strong>
+        <p class="fcm-toast-body">${escapeHtml(body || '')}</p>
       </div>
       <button class="fcm-toast-close">×</button>
     `;
@@ -419,7 +447,8 @@ class FirebaseNotificationService {
     // Click handlers
     toast.addEventListener('click', (e) => {
       if (!e.target.classList.contains('fcm-toast-close')) {
-        if (data.url) window.location.href = data.url;
+        const safeUrl = safeNotificationUrl(data.url);
+        if (safeUrl) window.location.href = safeUrl;
       }
       toast.remove();
     });

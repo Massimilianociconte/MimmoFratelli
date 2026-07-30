@@ -3760,8 +3760,8 @@ function renderNotifications() {
                  onclick="handleNotificationClick('${notification.id}', '${notification.productId || ''}', '${notification.productSlug || ''}')">
                 <div class="notification-icon ${iconClass}">${icon}</div>
                 <div class="notification-content">
-                    <div class="notification-title">${notification.title}</div>
-                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-title">${esc(notification.title)}</div>
+                    <div class="notification-message">${esc(notification.message)}</div>
                     <div class="notification-time">🕐 ${time} · ${formatNotificationTime(notification.timestamp)}</div>
                 </div>
             </div>

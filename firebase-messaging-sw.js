@@ -88,7 +88,13 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   const urlToOpen = event.notification.data?.url || '/';
-  const fullUrl = new URL(urlToOpen, self.location.origin).href;
+  let fullUrl;
+  try {
+    const parsed = new URL(urlToOpen, self.location.origin);
+    fullUrl = parsed.origin === self.location.origin ? parsed.href : new URL('/', self.location.origin).href;
+  } catch (e) {
+    fullUrl = new URL('/', self.location.origin).href;
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
