@@ -97,9 +97,15 @@ CREATE INDEX IF NOT EXISTS idx_price_history_product_changed
 -- RLS attiva ma senza FORCE: i trigger di logging girano come owner
 ALTER TABLE public.product_price_history ENABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON TABLE public.product_price_history FROM PUBLIC, anon, authenticated;
+-- Revoke Supabase's broad defaults before granting read-only access.
+-- Writes occur only through the owner-executed SECURITY DEFINER trigger below.
+REVOKE ALL ON TABLE public.product_price_history
+  FROM PUBLIC, anon, authenticated, service_role;
 GRANT SELECT ON TABLE public.product_price_history TO authenticated;
-GRANT SELECT, INSERT ON TABLE public.product_price_history TO service_role;
+GRANT SELECT ON TABLE public.product_price_history TO service_role;
+
+REVOKE ALL ON SEQUENCE public.product_price_history_id_seq
+  FROM PUBLIC, anon, authenticated, service_role;
 
 DROP POLICY IF EXISTS "Admins can view price history"
   ON public.product_price_history;

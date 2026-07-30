@@ -13,8 +13,8 @@ Lo stato verificato al 30 luglio 2026 è:
 | Integrità economica | completata in produzione | vincoli validati e finalizzatori PostgreSQL atomici |
 | Concorrenza | completata in produzione | prenotazioni di stock/credito/gift card/promo, row lock e test a due sessioni |
 | Autorizzazioni DB/RLS | completata in produzione | RLS su tutte le tabelle pubbliche; nessun `SECURITY DEFINER` pubblico o senza `search_path` controllato |
-| Idempotenza webhook | completata nel codice e nel DB | firma raw-body, registro con lease, retry e finalizzazione idempotente |
-| Edge Functions | completata in produzione | otto funzioni distribuite e attive |
+| Idempotenza webhook | completata in produzione | firma raw-body, registro con lease, retry e finalizzazione idempotente |
+| Edge Functions | parzialmente in attesa di configurazione Stripe | webhook e QR first-party aggiornati; release checkout con consenso e blocco alimentare pronta ma non distribuita prima del salvataggio dei Termini |
 | Cleanup operativo | completata in produzione | due job `pg_cron` attivi e privilegi client revocati |
 | Supply chain | completata | Stripe SDK `20.4.1`, API nel codice `2026-02-25.clover`, `npm audit` senza vulnerabilità note |
 | Configurazione Stripe live | completata in produzione | nuovo endpoint, nuovo signing secret, API `2026-02-25.clover` e sei eventi verificati |
@@ -111,6 +111,9 @@ del 30 luglio introducono e verificano:
 - registro webhook con lease, tentativi, errore e retry;
 - isolamento utente/admin sulle policy RLS;
 - grant minimi per funzioni finanziarie e amministrative;
+- revoca esplicita dei grant predefiniti Supabase sulle prove di accettazione,
+  sullo storico prezzi e sulla relativa sequenza; il dump remoto conferma i
+  soli privilegi selettivi necessari;
 - `search_path` esplicito o vuoto sulle funzioni privilegiate;
 - output minimo per preview/validazione gift card;
 - indici di supporto per ogni foreign key usata;
@@ -144,16 +147,24 @@ più vecchi di 25 ore; esclude esplicitamente record pagati o completati.
 
 ### Edge Functions e applicazione
 
-Sono state distribuite e risultano `ACTIVE`:
+Risultano `ACTIVE` le funzioni di pagamento:
 
 - `create-checkout-session`;
 - `create-giftcard-checkout`;
 - `stripe-webhook`;
+- `generate-giftcard-qr`;
 - `complete-order-purchase`;
 - `complete-giftcard-purchase`;
 - `get-stripe-receipt`;
 - `send-order-email`;
 - `send-giftcard-email`.
+
+Al 30 luglio il webhook è stato ridistribuito nella versione 62 e la nuova
+`generate-giftcard-qr` nella versione 1. Le due funzioni di creazione Checkout
+restano attive nella versione precedente: il sorgente aggiornato, già testato,
+non viene distribuito finché l’URL dei Termini non è salvato nel profilo Stripe,
+perché Stripe rifiuterebbe la creazione di tutte le sessioni che richiedono il
+consenso senza quella configurazione.
 
 Le correzioni includono:
 
@@ -273,18 +284,22 @@ L’informativa AI distingue correttamente entrata in vigore dell’AI Act,
 applicazione generale dal 2 agosto 2026, assenza di decisioni automatizzate e
 revisione umana delle bozze CaricoFacile.
 
-Il checkout ora richiede il consenso Stripe ai Termini e registra nel database
-solo prova minima e versionata dell’accettazione. Il token QR delle gift card non
-viene più inviato a un generatore pubblico: il QR è creato da una Edge Function
+Il sorgente Checkout è pronto a richiedere il consenso Stripe ai Termini e il
+webhook di produzione è pronto a registrare nel database solo prova minima e
+versionata dell’accettazione. L’attivazione lato creazione sessione resta
+intenzionalmente vincolata al salvataggio manuale dell’URL dei Termini nel
+Dashboard Stripe. Il token QR delle gift card non viene più inviato a un
+generatore pubblico: il QR è ora creato in produzione da una Edge Function
 autenticata, autorizzata e `no-store`.
 
 Per i sette prodotti preparati o conservati presenti nel catalogo non esiste
 una fonte affidabile nel database per ingredienti, allergeni e altre
 informazioni obbligatorie. Non sono stati inventati dati: il sistema li marca
 come soggetti a informazione alimentare, li mantiene visibili e ne blocca
-l’acquisto sia nell’interfaccia sia nella Edge Function finché un amministratore
-non trascrive e verifica i dati dall’etichetta o dalla scheda ufficiale del
-produttore.
+l’acquisto nell’interfaccia. Anche il blocco nella Edge Function è implementato
+e testato, ma diventerà live insieme alla release Checkout successiva al
+salvataggio dei Termini. Fino a quel momento la funzione precedente non deve
+essere considerata un confine server-side per questo specifico controllo.
 
 ## Validazioni eseguite
 
@@ -292,24 +307,25 @@ produttore.
 |---|---|
 | Ricostruzione completa con `supabase db reset --local` | superata |
 | `supabase db lint --local --level warning` | nessun rilievo |
-| `supabase db lint --linked --level warning` | nessun rilievo dopo riparazione drift |
+| `supabase db lint --linked --level error` | nessun rilievo dopo hardening ACL |
 | Test SQL integrità/RLS/grant/workflow | superati con rollback |
 | Concorrenza reale su stesso credito | una sola sessione accettata |
 | Concorrenza reale sull’ultimo stock | una sola sessione accettata |
 | Smoke workflow nel DB di produzione | superato; dati sintetici annullati nella subtransazione |
 | Vincoli economici in produzione | cinque su cinque validati |
 | Job cron e launcher | due job attivi; launcher attivo |
-| Test applicativi Vitest | 114/114 |
-| Test legali/crawler/consenso/QR/informazioni alimentari | 13/13 inclusi nei 114 |
+| Test applicativi Vitest | 115/115 |
+| Test legali/crawler/consenso/QR/informazioni alimentari | 14/14 inclusi nei 115 |
 | Test Deno pagamento | 8/8 |
 | Type-check Edge Functions | superato |
 | `npm audit --omit=dev` | 0 vulnerabilità note |
 | Endpoint webhook senza firma | `400` |
+| Endpoint webhook con firma non valida | `400 Invalid webhook signature` |
 | Firma con il nuovo secret live dopo rimozione del secret legacy | `200`, evento test ignorato intenzionalmente |
 | Endpoint live Stripe | nuovo `enabled`, vecchio `disabled` |
 | Endpoint sandbox Stripe | legacy `disabled` |
 | Secret webhook Supabase | solo `STRIPE_WEBHOOK_SECRET_LIVE` |
-| Funzioni protette senza JWT | sette su sette `401` |
+| Nuova funzione QR senza JWT | `401` |
 | Lock/query lunghe live | nessun blocco applicativo |
 | Cache hit tabelle/indici live | 1,00 / 1,00 |
 | Dimensione DB live | circa 16 MB |
@@ -339,6 +355,9 @@ piccolo quel dato non dimostra inutilità futura.
 - Il profilo pubblico e il descrittore dell’account Stripe Standard richiedono
   una modifica autenticata nel Dashboard; l’API pubblica consente di modificare
   soltanto account connessi.
+- Il checkout aggiornato non deve essere distribuito finché l’URL dei Termini
+  non è stato salvato in Stripe; fino ad allora il nuovo blocco server-side
+  degli alimenti non verificati non è ancora attivo, mentre il blocco UI è live.
 - Non esiste un progetto Supabase di staging separato. Crearlo può generare
   costi e richiede una decisione dell’account.
 - Le API del progetto non espongono backup recenti né PITR attivo. L’attivazione
@@ -363,12 +382,15 @@ piccolo quel dato non dimostra inutilità futura.
 - `supabase/migrations/20260730193052_validate_checkout_reservation_cleanup.sql`
 - `supabase/migrations/20260730193209_verify_production_payment_workflow.sql`
 - `supabase/migrations/20260730193446_reconcile_stale_pending_checkouts.sql`
+- `supabase/migrations/20260730210000_checkout_legal_acceptances.sql`
+- `supabase/migrations/20260731000000_omnibus_food_info_compliance.sql`
+- `supabase/migrations/20260731003000_tighten_legal_and_price_history_privileges.sql`
 - `supabase/tests/payment_database_integrity_test.sql`
 - `scripts/test-payment-concurrency.sh`
 - `supabase/functions/_shared/payment.ts`
 - `supabase/functions/_shared/fulfillment.ts`
 - `supabase/functions/_shared/email.ts`
-- le otto Edge Functions elencate sopra.
+- le nove Edge Functions elencate sopra.
 
 ## Riferimenti ufficiali
 

@@ -27,7 +27,10 @@ CREATE INDEX IF NOT EXISTS idx_checkout_legal_acceptances_user_recorded
 ALTER TABLE public.checkout_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.checkout_legal_acceptances FORCE ROW LEVEL SECURITY;
 
-REVOKE ALL ON TABLE public.checkout_legal_acceptances FROM PUBLIC, anon, authenticated;
+-- Supabase grants broad default privileges to service_role on new relations:
+-- revoke them explicitly before applying the minimum required by the webhook.
+REVOKE ALL ON TABLE public.checkout_legal_acceptances
+  FROM PUBLIC, anon, authenticated, service_role;
 GRANT SELECT ON TABLE public.checkout_legal_acceptances TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON TABLE public.checkout_legal_acceptances TO service_role;
 

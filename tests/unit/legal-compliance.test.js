@@ -118,6 +118,34 @@ describe('Stripe terms acceptance evidence', () => {
     expect(migration).not.toContain('GRANT ALL ON TABLE');
     expect(migration).toContain('ON DELETE SET NULL');
   });
+
+  it('removes Supabase default grants from legal evidence and price history', () => {
+    const hardening = read(
+      'supabase/migrations/20260731003000_tighten_legal_and_price_history_privileges.sql',
+    );
+
+    expect(hardening).toContain(
+      'REVOKE ALL ON TABLE public.checkout_legal_acceptances',
+    );
+    expect(hardening).toContain(
+      'GRANT SELECT, INSERT, UPDATE ON TABLE public.checkout_legal_acceptances TO service_role',
+    );
+    expect(hardening).toContain(
+      'REVOKE ALL ON TABLE public.product_price_history',
+    );
+    expect(hardening).toContain(
+      'REVOKE ALL ON SEQUENCE public.product_price_history_id_seq',
+    );
+    expect(hardening).not.toContain(
+      'GRANT ALL ON TABLE public.checkout_legal_acceptances',
+    );
+    expect(hardening).not.toContain(
+      'GRANT ALL ON TABLE public.product_price_history',
+    );
+    expect(hardening).not.toContain(
+      'GRANT ALL ON SEQUENCE public.product_price_history_id_seq',
+    );
+  });
 });
 
 describe('food information and advertised-price safeguards', () => {
