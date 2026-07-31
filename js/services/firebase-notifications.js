@@ -10,6 +10,20 @@ import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
 // Firebase configuration - will be loaded from config.js
 const getFirebaseConfig = () => window.AVENUE_CONFIG?.FIREBASE || null;
 
+// Auto-reload quando un nuovo service worker prende il controllo (nuovo deploy).
+// Insieme allo skipWaiting()+clients.claim() del SW, questo fa sì che dopo un
+// aggiornamento la pagina si ricarichi una volta e mostri subito gli asset nuovi.
+// Guardia: nessun reload al primissimo install (nessun controller precedente).
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  const __hadController = !!navigator.serviceWorker.controller;
+  let __swRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (__swRefreshing || !__hadController) return;
+    __swRefreshing = true;
+    window.location.reload();
+  });
+}
+
 /**
  * Escape HTML per prevenire XSS quando si inserisce contenuto dinamico via innerHTML.
  */

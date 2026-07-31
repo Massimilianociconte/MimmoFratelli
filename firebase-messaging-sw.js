@@ -26,6 +26,15 @@ firebase.initializeApp(firebaseConfig);
 // Get messaging instance
 const messaging = firebase.messaging();
 
+// ============================================
+// Cache + strategia di aggiornamento
+// Questo è l'UNICO service worker attivo a scope '/', quindi gestisce sia le
+// push (sotto) sia il caching degli asset. Strategia: network-first con
+// rivalidazione forzata per HTML/JS/CSS, così un deploy nuovo non resta
+// nascosto dietro il lungo max-age (Browser Cache TTL) impostato da Cloudflare.
+// ============================================
+const CACHE_NAME = 'mimmo-fratelli-fcm-v1';
+
 // Handle background messages (DATA-ONLY messages)
 messaging.onBackgroundMessage((payload) => {
   console.log('[FCM SW] Background message received:', payload);
@@ -119,10 +128,63 @@ self.addEventListener('notificationclose', (event) => {
   console.log('[FCM SW] Notification closed');
 });
 
-// Activate immediately
+// Activate immediately + pulizia delle vecchie cache
 self.addEventListener('activate', (event) => {
   console.log('[FCM SW] Service Worker activated');
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    Promise.all([
+      caches.keys().then((names) =>
+        Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+      ),
+      clients.claim(),
+    ])
+  );
+});
+
+// Fetch: network-first con rivalidazione forzata per documenti/JS/CSS/JSON,
+// cache-first per gli altri asset (immagini/font). Fallback offline dalla cache.
+// La rivalidazione forzata (cache: 'no-cache') aggira il max-age lungo del
+// browser, quindi ad ogni deploy gli utenti ricevono subito i file aggiornati.
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = req.url;
+
+  // Solo same-origin; salta API/Edge Functions (gestite direttamente dalla rete)
+  if (!url.startsWith(self.location.origin)) return;
+  if (url.includes('/rest/') || url.includes('supabase') || url.includes('/functions/')) return;
+
+  const mustRevalidate = req.mode === 'navigate' || /\.(?:js|mjs|css|html|json)(?:\?|$)/i.test(url);
+
+  if (mustRevalidate) {
+    event.respondWith(
+      fetch(req, { cache: 'no-cache' })
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      const fromNetwork = fetch(req)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return response;
+        })
+        .catch(() => cached);
+      return cached || fromNetwork;
+    })
+  );
 });
 
 // Install immediately
