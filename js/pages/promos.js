@@ -268,6 +268,94 @@ class PromosPage {
     container.querySelectorAll('.card-favorite-small').forEach(btn => {
       btn.addEventListener('click', (e) => this.handleWishlistClick(e));
     });
+
+    // Inject JSON-LD for Google Shopping
+    this._injectPromosJsonLd(products);
+  }
+
+  /**
+   * Inject JSON-LD ItemList for discounted products - Google Shopping
+   */
+  _injectPromosJsonLd(products) {
+    const existing = document.getElementById('promosProductsJsonLd');
+    if (existing) existing.remove();
+    if (!products || products.length === 0) return;
+
+    const priceValidDate = new Date();
+    priceValidDate.setFullYear(priceValidDate.getFullYear() + 1);
+    const priceValidUntil = priceValidDate.toISOString().split('T')[0];
+
+    const genderCategoryMap = {
+      'frutta': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Frutta fresca',
+      'verdura': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Verdura fresca',
+      'conserve': 'Alimenti e bevande > Alimenti > Cibi in scatola e preparati',
+      'secchi-estratti': 'Alimenti e bevande > Alimenti > Frutta secca e semi'
+    };
+
+    const itemListElements = products.map((product, index) => {
+      const effectivePrice = product.sale_price || product.price;
+      const productUrl = product.slug
+        ? `https://www.mimmofratelli.com/product.html?slug=${encodeURIComponent(product.slug)}`
+        : `https://www.mimmofratelli.com/product.html?id=${encodeURIComponent(product.id)}`;
+      const imageUrl = product.images?.length > 0
+        ? product.images[0] : 'https://www.mimmofratelli.com/Images/logo_mimmofratelli_verde.png';
+
+      const item = {
+        '@type': 'Product',
+        name: product.name,
+        description: product.description ? product.description.slice(0, 155) : `${product.name} in offerta da Mimmo Fratelli.`,
+        image: product.images?.length > 0 ? product.images : [imageUrl],
+        url: productUrl,
+        sku: product.sku || product.slug || `MF-${product.id}`,
+        brand: { '@type': 'Brand', name: 'Mimmo Fratelli' },
+        category: genderCategoryMap[product.gender] || 'Alimenti e bevande > Alimenti',
+        offers: {
+          '@type': 'Offer',
+          url: productUrl,
+          priceCurrency: 'EUR',
+          price: typeof effectivePrice === 'number' ? effectivePrice.toFixed(2) : String(effectivePrice),
+          priceValidUntil,
+          itemCondition: 'https://schema.org/NewCondition',
+          availability: 'https://schema.org/InStock',
+          seller: { '@type': 'Organization', name: 'Mimmo Fratelli', url: 'https://www.mimmofratelli.com' },
+          shippingDetails: {
+            '@type': 'OfferShippingDetails',
+            shippingRate: { '@type': 'MonetaryAmount', value: '3.90', currency: 'EUR' },
+            shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT', addressRegion: ['MI'] },
+            deliveryTime: {
+              '@type': 'ShippingDeliveryTime',
+              handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+              transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' }
+            }
+          },
+          hasMerchantReturnPolicy: {
+            '@type': 'MerchantReturnPolicy',
+            applicableCountry: 'IT',
+            returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+            merchantReturnDays: 14,
+            returnMethod: 'https://schema.org/ReturnByMail',
+            returnFees: 'https://schema.org/FreeReturn'
+          }
+        }
+      };
+      if (product.gtin) item.gtin = product.gtin;
+      if (product.origin_country) item.countryOfOrigin = { '@type': 'Country', name: product.origin_country };
+      return { '@type': 'ListItem', position: index + 1, item };
+    });
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Offerte e Promozioni - Mimmo Fratelli',
+      numberOfItems: products.length,
+      itemListElement: itemListElements
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'promosProductsJsonLd';
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
   }
 
   renderProductCard(product, isFav = false) {

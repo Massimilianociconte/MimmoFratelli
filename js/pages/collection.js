@@ -355,6 +355,122 @@ class CollectionPage {
 
     // Update favorites count
     this._updateFavoritesCount();
+
+    // Inject JSON-LD structured data for Google Shopping
+    this._injectProductsJsonLd(filteredProducts);
+  }
+
+  /**
+   * Inject JSON-LD ItemList + Product structured data for Google Shopping
+   * This enables all products to appear in Google Shopping tab
+   */
+  _injectProductsJsonLd(products) {
+    // Remove any existing product list JSON-LD
+    const existing = document.getElementById('collectionProductsJsonLd');
+    if (existing) existing.remove();
+
+    if (!products || products.length === 0) return;
+
+    // priceValidUntil: 1 year ahead
+    const priceValidDate = new Date();
+    priceValidDate.setFullYear(priceValidDate.getFullYear() + 1);
+    const priceValidUntil = priceValidDate.toISOString().split('T')[0];
+
+    // Category mapping for Google Shopping
+    const genderCategoryMap = {
+      'frutta': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Frutta fresca',
+      'verdura': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Verdura fresca',
+      'conserve': 'Alimenti e bevande > Alimenti > Cibi in scatola e preparati',
+      'secchi-estratti': 'Alimenti e bevande > Alimenti > Frutta secca e semi'
+    };
+
+    const itemListElements = products.map((product, index) => {
+      const effectivePrice = (product.sale_price && product.sale_price < product.price)
+        ? product.sale_price : product.price;
+      const productUrl = product.slug
+        ? `https://www.mimmofratelli.com/product.html?slug=${encodeURIComponent(product.slug)}`
+        : `https://www.mimmofratelli.com/product.html?id=${encodeURIComponent(product.id)}`;
+      const imageUrl = product.images?.length > 0
+        ? product.images[0]
+        : 'https://www.mimmofratelli.com/Images/logo_mimmofratelli_verde.png';
+
+      const productSchema = {
+        '@type': 'Product',
+        name: product.name,
+        description: product.description
+          ? product.description.slice(0, 155)
+          : `${product.name} fresco di stagione da Mimmo Fratelli.`,
+        image: product.images?.length > 0 ? product.images : [imageUrl],
+        url: productUrl,
+        sku: product.sku || product.slug || `MF-${product.id}`,
+        brand: { '@type': 'Brand', name: 'Mimmo Fratelli' },
+        category: genderCategoryMap[product.gender] || 'Alimenti e bevande > Alimenti',
+        offers: {
+          '@type': 'Offer',
+          url: productUrl,
+          priceCurrency: 'EUR',
+          price: typeof effectivePrice === 'number' ? effectivePrice.toFixed(2) : String(effectivePrice),
+          priceValidUntil: priceValidUntil,
+          itemCondition: 'https://schema.org/NewCondition',
+          availability: (product.is_active === false)
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
+          seller: {
+            '@type': 'Organization',
+            name: 'Mimmo Fratelli',
+            url: 'https://www.mimmofratelli.com'
+          },
+          shippingDetails: {
+            '@type': 'OfferShippingDetails',
+            shippingRate: { '@type': 'MonetaryAmount', value: '3.90', currency: 'EUR' },
+            shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT', addressRegion: ['MI'] },
+            deliveryTime: {
+              '@type': 'ShippingDeliveryTime',
+              handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+              transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' }
+            }
+          },
+          hasMerchantReturnPolicy: {
+            '@type': 'MerchantReturnPolicy',
+            applicableCountry: 'IT',
+            returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+            merchantReturnDays: 14,
+            returnMethod: 'https://schema.org/ReturnByMail',
+            returnFees: 'https://schema.org/FreeReturn'
+          }
+        }
+      };
+
+      // Add GTIN/MPN if available
+      if (product.gtin) productSchema.gtin = product.gtin;
+      if (product.gtin13) productSchema.gtin13 = product.gtin13;
+      if (product.mpn) productSchema.mpn = product.mpn;
+
+      // Add origin country if available
+      if (product.origin_country) {
+        productSchema.countryOfOrigin = { '@type': 'Country', name: product.origin_country };
+      }
+
+      return {
+        '@type': 'ListItem',
+        position: index + 1,
+        item: productSchema
+      };
+    });
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Prodotti Freschi - Mimmo Fratelli',
+      numberOfItems: products.length,
+      itemListElement: itemListElements
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'collectionProductsJsonLd';
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
   }
 
   /**

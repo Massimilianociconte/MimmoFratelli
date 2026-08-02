@@ -609,7 +609,20 @@
             document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
             document.querySelector('meta[property="og:image"]')?.setAttribute('content', imageUrl);
 
-            // JSON-LD Product per rich results e motori AI
+            // --- Google Shopping: priceValidUntil (1 year ahead, always valid) ---
+            const priceValidDate = new Date();
+            priceValidDate.setFullYear(priceValidDate.getFullYear() + 1);
+            const priceValidUntil = priceValidDate.toISOString().split('T')[0];
+
+            // --- Google Shopping: category mapping ---
+            const genderCategoryMap = {
+                'frutta': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Frutta fresca',
+                'verdura': 'Alimenti e bevande > Alimenti > Frutta e verdura fresca > Verdura fresca',
+                'conserve': 'Alimenti e bevande > Alimenti > Cibi in scatola e preparati',
+                'secchi-estratti': 'Alimenti e bevande > Alimenti > Frutta secca e semi'
+            };
+
+            // JSON-LD Product per rich results, Google Shopping e motori AI
             const jsonLd = {
                 '@context': 'https://schema.org',
                 '@type': 'Product',
@@ -617,18 +630,77 @@
                 description: seoDesc,
                 image: product.images?.length > 0 ? product.images : [imageUrl],
                 url: canonicalUrl,
+                sku: product.sku || product.slug || `MF-${product.id}`,
                 brand: { '@type': 'Brand', name: 'Mimmo Fratelli' },
+                category: genderCategoryMap[product.gender] || 'Alimenti e bevande > Alimenti',
                 offers: {
                     '@type': 'Offer',
                     url: canonicalUrl,
                     priceCurrency: 'EUR',
                     price: typeof effectivePrice === 'number' ? effectivePrice.toFixed(2) : String(effectivePrice),
+                    priceValidUntil: priceValidUntil,
+                    itemCondition: 'https://schema.org/NewCondition',
                     availability: (product.is_active === false)
                         ? 'https://schema.org/OutOfStock'
                         : 'https://schema.org/InStock',
-                    seller: { '@type': 'Organization', name: 'Mimmo Fratelli' }
+                    seller: {
+                        '@type': 'Organization',
+                        name: 'Mimmo Fratelli',
+                        url: 'https://www.mimmofratelli.com'
+                    },
+                    shippingDetails: {
+                        '@type': 'OfferShippingDetails',
+                        shippingRate: {
+                            '@type': 'MonetaryAmount',
+                            value: '3.90',
+                            currency: 'EUR'
+                        },
+                        shippingDestination: {
+                            '@type': 'DefinedRegion',
+                            addressCountry: 'IT',
+                            addressRegion: ['MI']
+                        },
+                        deliveryTime: {
+                            '@type': 'ShippingDeliveryTime',
+                            handlingTime: {
+                                '@type': 'QuantitativeValue',
+                                minValue: 0,
+                                maxValue: 1,
+                                unitCode: 'DAY'
+                            },
+                            transitTime: {
+                                '@type': 'QuantitativeValue',
+                                minValue: 0,
+                                maxValue: 1,
+                                unitCode: 'DAY'
+                            }
+                        }
+                    },
+                    hasMerchantReturnPolicy: {
+                        '@type': 'MerchantReturnPolicy',
+                        applicableCountry: 'IT',
+                        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                        merchantReturnDays: 14,
+                        returnMethod: 'https://schema.org/ReturnByMail',
+                        returnFees: 'https://schema.org/FreeReturn'
+                    }
                 }
             };
+
+            // Add GTIN/MPN if available in product data
+            if (product.gtin) jsonLd.gtin = product.gtin;
+            if (product.gtin13) jsonLd.gtin13 = product.gtin13;
+            if (product.mpn) jsonLd.mpn = product.mpn;
+
+            // Add origin country if available
+            if (product.origin_country) {
+                jsonLd.countryOfOrigin = {
+                    '@type': 'Country',
+                    name: product.origin_country
+                };
+            }
+
+            // Add unit price specification for weight/volume based products
             if (unit) {
                 jsonLd.offers.priceSpecification = {
                     '@type': 'UnitPriceSpecification',
@@ -637,6 +709,16 @@
                     referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: unit }
                 };
             }
+
+            // Add aggregate rating if reviews are available
+            if (product.review_count && product.review_count > 0 && product.average_rating) {
+                jsonLd.aggregateRating = {
+                    '@type': 'AggregateRating',
+                    ratingValue: product.average_rating,
+                    reviewCount: product.review_count
+                };
+            }
+
             let ldScript = document.getElementById('productJsonLd');
             if (!ldScript) {
                 ldScript = document.createElement('script');
