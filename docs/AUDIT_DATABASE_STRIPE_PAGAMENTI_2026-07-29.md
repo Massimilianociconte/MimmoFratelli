@@ -247,7 +247,7 @@ requisiti `currently_due`, `eventually_due` o `past_due`. Sono ora corretti e
 verificati:
 
 - sito: `https://www.mimmofratelli.com/`;
-- email assistenza: `mimmofratelli1996@gmail.com`;
+- email assistenza: `shop@mimmofratelli.com`;
 - Support URL: `https://www.mimmofratelli.com/contacts.html` (verificato `200`).
 
 Restano da finalizzare nel Dashboard:

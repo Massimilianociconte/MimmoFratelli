@@ -421,7 +421,7 @@ function generateAppleWalletData(giftCard: any, redeemUrl: string, baseUrl: stri
         {
           key: "support",
           label: "Assistenza",
-          value: "Per assistenza contattaci su mimmofratelli1996@gmail.com"
+          value: "Per assistenza contattaci su shop@mimmofratelli.com"
         }
       ]
     },
