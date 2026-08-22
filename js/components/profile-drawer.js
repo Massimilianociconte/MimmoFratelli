@@ -930,10 +930,19 @@ class ProfileDrawer {
    */
   async _addToGoogleWallet(giftCardId) {
     try {
+      // Usa la configurazione pubblica ufficiale: nessuna chiave duplicata nel
+      // componente (una vecchia anon key hardcoded qui è stata rimossa).
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-      const supabaseUrl = window.SUPABASE_URL || 'https://onvufwqybriaoadsdjyk.supabase.co';
-      const supabaseKey = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9udnVmd3F5YnJpYW9hZHNkanlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI5OTQ3NjUsImV4cCI6MjA0ODU3MDc2NX0.lPPcPmjCjMqhPoBotbKauVHBTmRS-E0-uFKJXudnBPY';
-      
+      const cfg = window.AVENUE_CONFIG || {};
+      const supabaseUrl = cfg.SUPABASE_URL || window.SUPABASE_URL;
+      const supabaseKey = cfg.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('Supabase configuration missing');
+        alert('Servizio non configurato. Riprova più tardi.');
+        return;
+      }
+
       // Use existing supabase instance if available
       const supabase = window.supabase || createClient(supabaseUrl, supabaseKey);
       

@@ -9,6 +9,10 @@ import { supabase, isSupabaseConfigured, getCurrentUser } from '../supabase.js';
 
 const LOCAL_STORAGE_KEY = 'avenue_cart';
 
+// Single source of truth for the quantity cap (js/config.js). Fallback kept in
+// sync with the server-side clamp (create-checkout-session / add_to_cart_item).
+const MAX_QTY = window.AVENUE_CONFIG?.MAX_CART_QUANTITY ?? 10;
+
 class CartService {
   constructor() {
     this.listeners = [];
@@ -42,7 +46,7 @@ class CartService {
     );
 
     if (existingIndex > -1) {
-      cart[existingIndex].quantity = Math.min(10, cart[existingIndex].quantity + (item.quantity || 1));
+      cart[existingIndex].quantity = Math.min(MAX_QTY, cart[existingIndex].quantity + (item.quantity || 1));
     } else {
       cart.push({
         productId: item.productId,
@@ -74,7 +78,7 @@ class CartService {
       if (quantity <= 0) {
         cart.splice(index, 1);
       } else {
-        cart[index].quantity = Math.min(10, quantity);
+        cart[index].quantity = Math.min(MAX_QTY, quantity);
       }
       this._saveLocalCart(cart);
     }
@@ -143,7 +147,7 @@ class CartService {
         p_product_id: item.productId,
         p_size: item.size || '',
         p_color: item.color || 'Fresco',
-        p_quantity: Math.min(10, item.quantity || 1),
+        p_quantity: Math.min(MAX_QTY, item.quantity || 1),
         p_weight_grams: item.weight_grams || null
       });
 

@@ -23,16 +23,28 @@ const PRIVACY_VERSION = "2026-07-30";
 
 /**
  * Builds a short, deterministic idempotency key from the request payload plus a
- * coarse (per-minute) time bucket. Dedupes rapid double-clicks / network retries
- * of the SAME checkout without blocking a legitimate later repeat purchase.
+ * coarse time bucket. Dedupes rapid double-clicks / network retries of the SAME
+ * checkout without blocking a legitimate later repeat purchase. The 10-second
+ * bucket keeps the replay window of an identical re-purchase negligible while
+ * still absorbing double submissions.
  */
 async function buildIdempotencyKey(parts: (string | number)[]): Promise<string> {
-  const minuteBucket = Math.floor(Date.now() / 60000);
-  const raw = `${parts.join("|")}|${minuteBucket}`;
+  const bucket = Math.floor(Date.now() / 10000);
+  const raw = `${parts.join("|")}|${bucket}`;
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/**
+ * Normalizes a validated phone string to its significant Italian subscriber
+ * digits so "+39 320 1234567", "320 1234567" and "320.1234567" compare equal.
+ */
+function normalizePhoneKey(phone: string): string {
+  const digits = (phone || "").replace(/\D/g, "");
+  if (digits.length > 9) return digits.slice(-9);
+  return digits;
 }
 
 interface CartItem {
@@ -357,6 +369,41 @@ Deno.serve(async (req: Request) => {
           .eq("payment_status", "completed");
 
         if ((completedOrders || 0) > 0) {
+          return jsonResponse(req, 400, { error: "Codice valido solo per il primo ordine" });
+        }
+
+        // Anti multi-accounting: the same phone (or the same account email as
+        // guest contact) on a previous completed order blocks the code even
+        // when the abuser rotates email addresses. Bounded recent window.
+        const phoneKey = normalizePhoneKey(validatedShippingAddress.phone);
+        const windowStart = new Date(
+          Date.now() - 180 * 24 * 60 * 60 * 1000,
+        ).toISOString();
+
+        const { data: recentContacts } = await supabaseAdmin
+          .from("orders")
+          .select("shipping_address")
+          .eq("payment_status", "completed")
+          .neq("user_id", user.id)
+          .gte("created_at", windowStart)
+          .order("created_at", { ascending: false })
+          .limit(500);
+
+        const reused = (recentContacts || []).some((row: any) => {
+          const rowPhone = normalizePhoneKey(row.shipping_address?.phone || "");
+          const rowEmail = String(row.shipping_address?.email || "")
+            .toLowerCase();
+          return (
+            phoneKey.length >= 8 && rowPhone === phoneKey
+          ) || (
+            rowEmail && rowEmail === customerEmail.toLowerCase()
+          );
+        });
+
+        if (reused) {
+          console.warn("First-order promo blocked: recycled contact data", {
+            userId: user.id,
+          });
           return jsonResponse(req, 400, { error: "Codice valido solo per il primo ordine" });
         }
       }

@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   finalizeGiftCardFromStripe,
   loadPendingCheckout,
+  recordCheckoutLegalAcceptance,
 } from "../_shared/fulfillment.ts";
 import {
   getStripe,
@@ -18,6 +19,16 @@ import {
 } from "../_shared/payment.ts";
 import { sendGiftCardEmailTo } from "../_shared/email.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+
+/**
+ * Derives the Stripe mode from the canonical session id prefix so the correct
+ * secret key is used even when generic and test keys coexist.
+ */
+function livemodeFromSessionId(sessionId: string): boolean | undefined {
+  if (sessionId.startsWith("cs_live_")) return true;
+  if (sessionId.startsWith("cs_test_")) return false;
+  return undefined;
+}
 
 function response(request: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -68,9 +79,10 @@ Deno.serve(async (request: Request) => {
       return response(request, { error: "Sessione non autorizzata" }, 403);
     }
 
-    const session = await getStripe().checkout.sessions.retrieve(sessionId, {
-      expand: ["payment_intent"],
-    });
+    const session = await getStripe(livemodeFromSessionId(sessionId))
+      .checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent"],
+      });
     if (
       session.payment_status !== "paid" &&
       session.payment_status !== "no_payment_required"
@@ -81,6 +93,9 @@ Deno.serve(async (request: Request) => {
         message: "Pagamento in elaborazione",
       }, 202);
     }
+
+    // Same compliance ledger as the webhook path.
+    await recordCheckoutLegalAcceptance(supabaseAdmin, session);
 
     const result = await finalizeGiftCardFromStripe(supabaseAdmin, session);
 

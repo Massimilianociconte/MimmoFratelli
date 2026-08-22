@@ -248,6 +248,15 @@ class AuthService {
       this.currentUser = null;
       this.session = null;
 
+      // Pulizia stato residuo su dispositivi condivisi: il codice promo
+      // applicato e i preferiti guest non devono sopravvivere all'utente.
+      try {
+        sessionStorage.removeItem('appliedPromoCode');
+        sessionStorage.removeItem('mimmo_referral_code');
+      } catch {
+        /* storage non disponibile (modalità privata): non bloccare il logout */
+      }
+
       return { error: null };
     } catch (err) {
       console.error('SignOut error:', err);

@@ -474,47 +474,84 @@
                     return;
                 }
 
-                const unitMeasure = currentProduct.unit_measure || 'kg';
-                const isPieceBased = unitMeasure === 'pz';
+                // Anti-double-submit: rapid taps must not queue parallel addItem
+                // calls (guest carts would double the quantity).
+                const addBtn = document.getElementById('addToCartBtn');
+                if (addBtn.dataset.busy === '1') return;
+                addBtn.dataset.busy = '1';
+                const originalBtnHtml = addBtn.innerHTML;
+                addBtn.disabled = true;
+                addBtn.innerHTML = '<span>Aggiungo...</span>';
 
-                let item;
-                if (isPieceBased) {
-                    // Piece-based product
-                    item = {
-                        productId: currentProduct.id,
-                        name: currentProduct.name,
-                        price: currentProduct.sale_price || currentProduct.price,
-                        image: currentProduct.images?.[0] || '',
-                        size: `${currentQty} pz`,
-                        color: 'Fresco',
-                        quantity: currentQty,
-                        weight_grams: null
-                    };
-                } else {
-                    // Weight-based product
-                    const pricePerKg = currentProduct.sale_price || currentProduct.price;
-                    const totalPrice = (pricePerKg * currentWeightGrams) / 1000;
-                    const labels = getUnitLabels(currentUnitMeasure);
-                    const weightDisplay = currentWeightGrams >= 1000
-                        ? `${(currentWeightGrams / 1000).toFixed(currentWeightGrams % 1000 === 0 ? 0 : 2)} ${labels.major}`
-                        : `${currentWeightGrams} ${labels.minor}`;
+                try {
+                    const unitMeasure = currentProduct.unit_measure || 'kg';
+                    const isPieceBased = unitMeasure === 'pz';
 
-                    item = {
-                        productId: currentProduct.id,
-                        name: currentProduct.name,
-                        price: totalPrice, // Total price for selected weight
-                        unitPrice: pricePerKg, // Price per kg for reference
-                        image: currentProduct.images?.[0] || '',
-                        size: weightDisplay,
-                        color: 'Fresco',
-                        quantity: 1,
-                        weight_grams: currentWeightGrams
-                    };
+                    let item;
+                    if (isPieceBased) {
+                        // Piece-based product
+                        item = {
+                            productId: currentProduct.id,
+                            name: currentProduct.name,
+                            price: currentProduct.sale_price || currentProduct.price,
+                            image: currentProduct.images?.[0] || '',
+                            size: `${currentQty} pz`,
+                            color: 'Fresco',
+                            quantity: currentQty,
+                            weight_grams: null
+                        };
+                    } else {
+                        // Weight-based product
+                        const pricePerKg = currentProduct.sale_price || currentProduct.price;
+                        const totalPrice = (pricePerKg * currentWeightGrams) / 1000;
+                        const labels = getUnitLabels(currentUnitMeasure);
+                        const weightDisplay = currentWeightGrams >= 1000
+                            ? `${(currentWeightGrams / 1000).toFixed(currentWeightGrams % 1000 === 0 ? 0 : 2)} ${labels.major}`
+                            : `${currentWeightGrams} ${labels.minor}`;
+
+                        item = {
+                            productId: currentProduct.id,
+                            name: currentProduct.name,
+                            price: totalPrice, // Total price for selected weight
+                            unitPrice: pricePerKg, // Price per kg for reference
+                            image: currentProduct.images?.[0] || '',
+                            size: weightDisplay,
+                            color: 'Fresco',
+                            quantity: 1,
+                            weight_grams: currentWeightGrams
+                        };
+                    }
+
+                    const result = await cartService.addItem(item);
+                    if (result && result.success === false) {
+                        // Surface stock/unavailability errors visibly instead of
+                        // silently opening an unchanged cart drawer.
+                        showAddToCartToast(result.error || 'Errore nell\'aggiunta al carrello', true);
+                        return;
+                    }
+                    cartDrawer.show();
+                } catch (err) {
+                    console.error('Add to cart failed:', err);
+                    showAddToCartToast('Errore nell\'aggiunta al carrello', true);
+                } finally {
+                    addBtn.dataset.busy = '';
+                    addBtn.disabled = false;
+                    addBtn.innerHTML = originalBtnHtml;
                 }
-
-                await cartService.addItem(item);
-                cartDrawer.show();
             });
+
+            function showAddToCartToast(message, isError = false) {
+                document.querySelectorAll('.cart-toast').forEach(t => t.remove());
+                const toast = document.createElement('div');
+                toast.className = 'cart-toast' + (isError ? ' cart-toast-error' : '');
+                toast.textContent = isError ? `⚠️ ${message}` : '✓ Aggiunto al carrello';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 2600);
+            }
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {

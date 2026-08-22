@@ -290,8 +290,11 @@ class ProductService {
         return { products: [], error: null };
       }
 
-      // Fallback to basic search if RPC fails
-      const searchTerm = `%${query.trim()}%`;
+      // Fallback to basic search if RPC fails. The term is sanitized before
+      // interpolation: PostgREST logical filters treat commas and parentheses
+      // as syntax, so raw user input must never reach them.
+      const sanitized = String(query).replace(/[,()]/g, ' ').trim().slice(0, 60);
+      const searchTerm = `%${sanitized}%`;
       
       let dbQuery = supabase
         .from('products')

@@ -288,6 +288,16 @@
         // Store loaded products for quick add to cart
         let loadedPromoProducts = [];
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
         async function loadPromoProducts() {
             const grid = document.getElementById('promoGrid');
 
@@ -328,24 +338,27 @@
                     const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
                     const unit = product.unit_measure || 'kg';
                     const img = product.images?.[0] || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp';
-                    const productUrl = `product.html?id=${product.id}&gender=${product.gender || 'frutta'}`;
+                    const productUrl = `product.html?id=${encodeURIComponent(product.id)}&gender=${encodeURIComponent(product.gender || 'frutta')}`;
+                    const safeId = escapeHtml(product.id);
+                    const safeImg = escapeHtml(img);
+                    const safeName = escapeHtml(product.name);
 
                     return `
-                        <div class="product-card-small" data-product-id="${product.id}" style="animation-delay: ${i * 0.05}s">
+                        <div class="product-card-small" data-product-id="${safeId}" style="animation-delay: ${i * 0.05}s">
                             <a href="${productUrl}" class="card-image-small">
-                                <img src="${img}" alt="${product.name}" loading="lazy">
+                                <img src="${safeImg}" alt="${safeName}" loading="lazy">
                                 <span class="sale-badge">-${discountPercent}%</span>
                             </a>
-                            <button class="card-favorite-small ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${product.id}', this)">
+                            <button class="card-favorite-small ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${safeId}', this)">
                                 ${isFav ? '♥' : '♡'}
                             </button>
-                            <button class="card-quick-add" data-product-id="${product.id}" onclick="event.stopPropagation(); quickAddToCart('${product.id}')" title="Aggiungi al carrello">
+                            <button class="card-quick-add" data-product-id="${safeId}" onclick="event.stopPropagation(); quickAddToCart('${safeId}')" title="Aggiungi al carrello">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 5v14M5 12h14"/>
                                 </svg>
                             </button>
                             <div class="card-info-small">
-                                <h3 class="card-name-small">${product.name}</h3>
+                                <h3 class="card-name-small">${safeName}</h3>
                                 <p class="card-price-small">
                                     <span class="original">€${product.price.toFixed(2)}</span>
                                     <span class="sale">€${product.sale_price.toFixed(2)}</span>

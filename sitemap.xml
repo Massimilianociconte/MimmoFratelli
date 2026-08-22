@@ -2,10 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
-  <!-- Homepage -->
+  <!-- Generato automaticamente: npm run build:sitemap -->
+  <!-- Ultima generazione: 2026-08-22T19:57:20.385Z -->
+
   <url>
     <loc>https://www.mimmofratelli.com/</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -13,72 +15,312 @@
       <image:title>Mimmo Fratelli - Frutta e Verdura Fresca</image:title>
     </image:image>
   </url>
-
-  <!-- Catalogo per categoria -->
   <url>
     <loc>https://www.mimmofratelli.com/collection.html?gender=frutta</loc>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/collection.html?gender=verdura</loc>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/collection.html?gender=conserve</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.mimmofratelli.com/collection.html?gender=secchi-estratti</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Pagina prodotto (i singoli prodotti vengono caricati dinamicamente via ?slug= o ?id=) -->
-  <url>
-    <loc>https://www.mimmofratelli.com/product.html</loc>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-
-  <!-- Pagine informative -->
+  <url>
+    <loc>https://www.mimmofratelli.com/collection.html?gender=secchi-estratti</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
   <url>
     <loc>https://www.mimmofratelli.com/about.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/contacts.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/promos.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/trasparenza-ai.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/privacy-policy.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.mimmofratelli.com/termini-servizio.html</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.6</priority>
   </url>
 
+  <!-- Prodotti attivi -->
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=albicocche</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=verdure-grigliate</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Verdure Grigliate</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=lasagna-bolognese</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Lasagna alla Bolognese</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=mozzarella-bufala</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1571167530149-c1105da4c2c7?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Mozzarella di Bufala</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=olive-taggiasche</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://onvufwqybriaoadsdjyk.supabase.co/storage/v1/object/public/product-images/product_1767229056704_daewcm.jpg</image:loc>
+      <image:title>Olive Taggiasche</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=prosciutto-parma</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Prosciutto Crudo di Parma</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=parmigiano-24</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Parmigiano Reggiano 24 mesi</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=insalata-greca</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&amp;q=70&amp;fm=webp</image:loc>
+      <image:title>Insalata Greca</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=avocado</loc>
+    <lastmod>2026-07-30T21:32:10.080Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://onvufwqybriaoadsdjyk.supabase.co/storage/v1/object/public/product-images/product_1771022483522_w4ybdl.jpg</image:loc>
+      <image:title>Avocado</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=mele-fuji</loc>
+    <lastmod>2025-12-31T08:50:54.231Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Mele Fuji</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=fragole</loc>
+    <lastmod>2025-12-31T08:50:54.226Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Fragole</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=insalata-iceberg</loc>
+    <lastmod>2025-12-31T08:50:54.226Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Insalata Iceberg</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=banane</loc>
+    <lastmod>2025-12-31T08:50:54.226Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Banane</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=pomodori-cuore-bue</loc>
+    <lastmod>2025-12-31T08:50:54.221Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1546470427-227c7369a9b9?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Pomodori Cuore di Bue</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=pere-williams</loc>
+    <lastmod>2025-12-31T08:50:54.217Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1514756331096-242fdeb70d4a?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Pere Williams</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=mandarini</loc>
+    <lastmod>2025-12-31T08:50:54.214Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Mandarini</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=peperoni-misti</loc>
+    <lastmod>2025-12-31T08:50:54.214Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Peperoni Misti</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=zucchine</loc>
+    <lastmod>2025-12-31T08:50:54.212Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1563252722-6434563a985d?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Zucchine</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=cassetta-verdura-stagione</loc>
+    <lastmod>2025-12-31T08:50:54.205Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Cassetta Verdura Stagione</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=cassetta-frutta-stagione</loc>
+    <lastmod>2025-12-31T08:50:54.189Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Cassetta Frutta Stagione</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=cassetta-famiglia</loc>
+    <lastmod>2025-12-31T08:50:54.189Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Cassetta Famiglia</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=pompelmi-rosa</loc>
+    <lastmod>2025-12-31T08:50:54.172Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Pompelmi Rosa</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=limoni-sorrento</loc>
+    <lastmod>2025-12-31T08:50:54.171Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Limoni di Sorrento</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=arance-tarocco</loc>
+    <lastmod>2025-12-31T08:50:54.171Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1547514701-42782101795e?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Arance Tarocco</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.mimmofratelli.com/product.html?slug=carote</loc>
+    <lastmod>2025-12-31T08:50:54.122Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&amp;q=60&amp;fm=webp</image:loc>
+      <image:title>Carote</image:title>
+    </image:image>
+  </url>
 </urlset>

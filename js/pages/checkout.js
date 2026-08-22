@@ -606,16 +606,44 @@ class CheckoutPage {
       return;
     }
 
-    const options = {
-      promotionCode: this.appliedPromo?.code,
-      shippingAddress: this.getShippingAddress(),
-      creditToUse: this.creditToApply > 0 ? this.creditToApply : 0
-    };
+    // Anti-double-submit + feedback visibile: la creazione della sessione
+    // Stripe può richiedere qualche secondo.
+    const payBtn = document.getElementById('payStripe');
+    if (payBtn) {
+      if (payBtn.dataset.busy === '1') return;
+      payBtn.dataset.busy = '1';
+      payBtn.disabled = true;
+      payBtn.dataset.originalHtml = payBtn.innerHTML;
+      payBtn.innerHTML = '<span class="payment-spinner" aria-hidden="true"></span> Reindirizzamento al pagamento...';
+      payBtn.style.opacity = '0.75';
+      payBtn.style.pointerEvents = 'none';
+    }
 
-    const result = await paymentService.redirectToStripeCheckout(this.cartItems, options);
+    try {
+      const options = {
+        promotionCode: this.appliedPromo?.code,
+        shippingAddress: this.getShippingAddress(),
+        creditToUse: this.creditToApply > 0 ? this.creditToApply : 0
+      };
 
-    if (result?.error) {
-      alert(result.error);
+      const result = await paymentService.redirectToStripeCheckout(this.cartItems, options);
+
+      if (result?.error) {
+        alert(result.error);
+      }
+    } catch (err) {
+      console.error('Payment redirect failed:', err);
+      alert('Errore durante il reindirizzamento al pagamento. Riprova.');
+    } finally {
+      if (payBtn) {
+        payBtn.dataset.busy = '';
+        payBtn.disabled = false;
+        payBtn.style.opacity = '';
+        payBtn.style.pointerEvents = '';
+        if (payBtn.dataset.originalHtml) {
+          payBtn.innerHTML = payBtn.dataset.originalHtml;
+        }
+      }
     }
   }
 }

@@ -197,6 +197,10 @@ class QuickViewModal {
       return;
     }
 
+    // Anti-double-submit: ignore taps while an add operation is in flight.
+    const addBtn = this.modal.querySelector('.quick-view-add-cart');
+    if (addBtn.disabled) return;
+
     if (!this.selectedSize) {
       alert('Seleziona una taglia');
       return;
@@ -216,16 +220,29 @@ class QuickViewModal {
       quantity: this.quantity
     };
 
-    const result = await cartService.addItem(item);
-    
-    if (result.success) {
-      this.close();
-      // Trigger cart update event
-      document.dispatchEvent(new CustomEvent('cartUpdated'));
-      // Show confirmation
-      this.showConfirmation();
-    } else {
-      alert(result.error || 'Errore nell\'aggiunta al carrello');
+    addBtn.disabled = true;
+    const originalLabel = addBtn.textContent;
+    addBtn.textContent = 'Aggiungo...';
+
+    try {
+      const result = await cartService.addItem(item);
+
+      if (result.success) {
+        this.close();
+        // Trigger cart update event
+        document.dispatchEvent(new CustomEvent('cartUpdated'));
+        // Show confirmation
+        this.showConfirmation();
+      } else {
+        alert(result.error || 'Errore nell\'aggiunta al carrello');
+      }
+    } finally {
+      // Re-arm the button on failure; on success the modal is closed already
+      // and render() resets the label next time it opens.
+      if (this.modal.classList.contains('active')) {
+        addBtn.disabled = false;
+        addBtn.textContent = originalLabel;
+      }
     }
   }
 

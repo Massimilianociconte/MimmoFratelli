@@ -125,7 +125,9 @@ class OrderService {
       shipped: 'Spedito',
       delivered: 'Consegnato',
       cancelled: 'Annullato',
-      refunded: 'Rimborsato'
+      refunded: 'Rimborsato',
+      partially_refunded: 'Parzialmente rimborsato',
+      disputed: 'In contestazione'
     };
     return labels[status] || status;
   }

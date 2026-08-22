@@ -276,6 +276,16 @@
             }
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
         async function loadWishlist() {
             const { items } = await wishlistService.getAllFavorites();
             const grid = document.getElementById('wishlistContent');
@@ -326,16 +336,19 @@
                 const img = product.images?.[0] || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp';
                 const unit = product.unit || 'kg';
                 const productId = product.wishlist_product_id || product.id;
+                const safeImg = escapeHtml(img);
+                const safeName = escapeHtml(product.name);
+                const safeProductId = escapeHtml(productId);
 
                 return `
                     <div class="product-card-small" style="animation-delay: ${i * 0.05}s">
-                        <a href="product.html?id=${product.id}" class="card-image-small">
-                            <img src="${img}" alt="${product.name}" loading="lazy" decoding="async">
+                        <a href="product.html?id=${encodeURIComponent(product.id)}" class="card-image-small">
+                            <img src="${safeImg}" alt="${safeName}" loading="lazy" decoding="async">
                             ${hasDiscount ? '<span class="sale-badge">Offerta</span>' : ''}
                         </a>
-                        <button class="card-favorite-small active" onclick="removeFromWishlist('${productId}')">♥</button>
+                        <button class="card-favorite-small active" onclick="removeFromWishlist('${safeProductId}')">♥</button>
                         <div class="card-info-small">
-                            <h3 class="card-name-small">${product.name}</h3>
+                            <h3 class="card-name-small">${safeName}</h3>
                             <p class="card-price-small">
                                 ${hasDiscount ? `<span class="original">€${product.price.toFixed(2)}</span><span class="sale">€${product.sale_price.toFixed(2)}</span>` : `€${product.price.toFixed(2)}`}
                                 <span class="card-unit">/${unit}</span>

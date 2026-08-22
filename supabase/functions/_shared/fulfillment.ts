@@ -224,3 +224,50 @@ export async function getUserEmail(
   }
   return data?.user?.email || null;
 }
+
+/**
+ * Persists the ToS/privacy acceptance captured by Stripe Checkout into the
+ * compliance ledger. Shared by the webhook, the fallback functions and the
+ * reconciler so the consent trail exists on EVERY fulfillment path.
+ */
+export async function recordCheckoutLegalAcceptance(
+  supabaseAdmin: any,
+  session: any,
+): Promise<void> {
+  const termsVersion = session.metadata?.termsVersion;
+  const privacyVersion = session.metadata?.privacyVersion;
+
+  // Sessions opened immediately before this release remain fulfillable. Every
+  // newly created session carries both version markers and must prove consent.
+  if (!termsVersion && !privacyVersion) return;
+  if (!termsVersion || !privacyVersion) {
+    throw new Error("Checkout legal document versions are incomplete");
+  }
+  if (session.consent?.terms_of_service !== "accepted") {
+    throw new Error("Stripe Checkout terms consent is missing");
+  }
+
+  const checkoutType = session.metadata?.type === "gift_card"
+    ? "gift_card"
+    : "order";
+  const userId = session.metadata?.userId || null;
+
+  const { error } = await supabaseAdmin
+    .from("checkout_legal_acceptances")
+    .upsert({
+      stripe_session_id: session.id,
+      user_id: userId,
+      checkout_type: checkoutType,
+      terms_version: termsVersion,
+      privacy_version: privacyVersion,
+      stripe_terms_status: "accepted",
+      checkout_session_created_at: new Date(session.created * 1000).toISOString(),
+      recorded_at: new Date().toISOString(),
+      livemode: session.livemode,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "stripe_session_id" });
+
+  if (error) {
+    throw new Error(`Checkout legal acceptance persistence failed: ${error.message}`);
+  }
+}

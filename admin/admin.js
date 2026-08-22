@@ -22,6 +22,15 @@ function esc(text) {
     return div.innerHTML;
 }
 
+// Full attribute-context escaping: unlike esc(), this also neutralizes quote
+// characters so values can never terminate a double- or single-quoted HTML
+// attribute they are interpolated into.
+function attrEsc(text) {
+    return esc(text)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
 const adminContainer = document.getElementById('adminContainer');
@@ -382,7 +391,7 @@ function renderRecentProducts(products) {
             : `€${p.price}`;
         return `
         <tr>
-            <td><img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
+            <td><img src="${attrEsc(getImagePath(p.images?.[0]))}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
             <td>${esc(p.name)}</td>
             <td class="price-cell">${priceHtml}</td>
             <td>${esc(p.categories?.name || '-')}</td>
@@ -584,7 +593,7 @@ function renderProducts(productList) {
         const discountPercent = hasDiscount ? Math.round((1 - p.sale_price / p.price) * 100) : 0;
         return `
         <tr class="${hasDiscount ? 'has-discount' : ''}">
-            <td><img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
+            <td><img src="${attrEsc(getImagePath(p.images?.[0]))}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'"></td>
             <td><strong>${esc(p.name)}</strong><br><small style="color:#999">${esc(p.slug)}</small></td>
             <td class="price-cell">${hasDiscount ? `<span class="price-original">€${p.price}</span>` : `€${p.price}`}</td>
             <td class="price-cell">${hasDiscount ? `<span class="price-sale">€${p.sale_price}</span> <span class="discount-tag">-${discountPercent}%</span>` : '-'}</td>
@@ -593,7 +602,7 @@ function renderProducts(productList) {
             <td><span class="status-badge ${p.is_active ? 'status-active' : 'status-inactive'}">${p.is_active ? 'Attivo' : 'Inattivo'}</span></td>
             <td class="actions-cell">
                 <button class="btn-edit" onclick="editProduct('${p.id}')">Modifica</button>
-                <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${esc(p.name).replace(/'/g, "\\'")}')">Elimina</button>
+                <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}')">Elimina</button>
             </td>
         </tr>
     `}).join('');
@@ -606,7 +615,7 @@ function renderProducts(productList) {
             return `
             <div class="mobile-product-card ${hasDiscount ? 'has-discount' : ''}">
                 <div class="mobile-card-header">
-                    <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="mobile-card-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+                    <img src="${attrEsc(getImagePath(p.images?.[0]))}" alt="${esc(p.name)}" class="mobile-card-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
                     <div class="mobile-card-title">
                         <h4>${esc(p.name)}</h4>
                         <span class="status-badge mobile-card-status ${p.is_active ? 'status-active' : 'status-inactive'}">${p.is_active ? 'Attivo' : 'Inattivo'}</span>
@@ -633,7 +642,7 @@ function renderProducts(productList) {
                 </div>
                 <div class="mobile-card-actions">
                     <button class="btn-edit" onclick="editProduct('${p.id}')">✏️ Modifica</button>
-                    <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}', '${esc(p.name).replace(/'/g, "\\'")}')">🗑️ Elimina</button>
+                    <button class="btn-delete" onclick="confirmDeleteProduct('${p.id}')">🗑️ Elimina</button>
                 </div>
             </div>
         `}).join('');
@@ -1362,7 +1371,10 @@ window.editProduct = function(id) {
 };
 
 window.confirmDeleteProduct = function(id, name) {
-    document.getElementById('deleteMessage').textContent = `Sei sicuro di voler eliminare "${name}"?`;
+    // Name is resolved from the loaded catalog: inline onclick handlers carry
+    // only the UUID, so no product-controlled string ever reaches a JS context.
+    const safeName = name || products.find(p => p.id === id)?.name || 'questo prodotto';
+    document.getElementById('deleteMessage').textContent = `Sei sicuro di voler eliminare "${safeName}"?`;
     deleteCallback = () => deleteProduct(id);
     document.getElementById('deleteModal').classList.add('active');
 };
@@ -2519,7 +2531,7 @@ function renderProductSelectionPage() {
     grid.innerHTML = visibleProducts.map(p => `
         <label class="product-select-item" data-name="${esc(p.name).toLowerCase()}" data-id="${p.id}">
             <input type="checkbox" value="${p.id}" ${selectedProductIds.includes(p.id) ? 'checked' : ''} onchange="toggleProductSelection(this, '${p.id}')">
-            <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-select-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+            <img src="${attrEsc(getImagePath(p.images?.[0]))}" alt="${esc(p.name)}" class="product-select-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
             <div class="product-select-info">
                 <div class="product-select-name">${esc(p.name)}</div>
                 <div class="product-select-price">
@@ -2785,7 +2797,7 @@ async function loadDiscountedProducts() {
             <div class="discounted-product-card">
                 <span class="discount-badge">-${discountPercent}%</span>
                 <div class="product-info">
-                    <img src="${getImagePath(p.images?.[0])}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+                    <img src="${attrEsc(getImagePath(p.images?.[0]))}" alt="${esc(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
                     <div class="product-details">
                         <div class="product-name">${esc(p.name)}</div>
                         <div class="product-prices">

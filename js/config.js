@@ -44,7 +44,12 @@ window.AVENUE_CONFIG = {
   // Shipping
   FREE_SHIPPING_THRESHOLD: 50, // Spedizione gratuita sopra €50
   STANDARD_SHIPPING_COST: 2.90, // €2.90 spedizione standard
-  
+
+  // WhatsApp del corriere per la notifica ordine in checkout-success.
+  // Formato internazionale senza "+". ATTENZIONE: i dati cliente vengono
+  // condivisi con questo numero — deve appartenere al corriere/azienda.
+  WHATSAPP_RIDER_NUMBER: '393208867172',
+
   // Rate Limiting
   MAX_LOGIN_ATTEMPTS: 5,
   LOGIN_LOCKOUT_MINUTES: 15

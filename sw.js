@@ -3,7 +3,20 @@
  * Handles push notifications and offline caching
  */
 
-const CACHE_NAME = 'mimmo-fratelli-v4';
+const CACHE_NAME = 'mimmo-fratelli-v5';
+
+// Pagine personali/transazionali: la shell può essere mostrata offline, ma non
+// deve finire in Cache Storage (residui su dispositivi condivisi).
+const UNCACHABLE_PAGES = [
+  '/checkout.html',
+  '/checkout-success.html',
+  '/checkout-cancel.html',
+  '/orders.html',
+  '/settings.html',
+  '/wishlist.html',
+  '/redeem.html',
+  '/reset-password.html'
+];
 
 // Get base path dynamically
 const getBasePath = () => {
@@ -66,13 +79,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
-  
+
   // Skip API requests and external URLs
-  if (event.request.url.includes('/rest/') || 
+  if (event.request.url.includes('/rest/') ||
       event.request.url.includes('supabase') ||
       !event.request.url.startsWith(self.location.origin)) {
     return;
   }
+
+  const requestUrl = new URL(event.request.url);
+  const isUncachablePage = UNCACHABLE_PAGES.some(page =>
+    requestUrl.pathname === page || requestUrl.pathname === `${page}/`
+  );
+  if (isUncachablePage) return;
 
   event.respondWith(
     fetch(event.request)

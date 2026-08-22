@@ -472,8 +472,13 @@
         // Initialize global search
         globalSearch.init();
         
-        // Numero WhatsApp del corriere (formato internazionale senza +)
-        const RIDER_WHATSAPP = '393802647367'; // Cambia con il numero reale
+        // Numero WhatsApp del corriere (formato internazionale senza +).
+        // Centralizzato in js/config.js: verificare che il numero appartenga
+        // davvero al corriere prima dell'invio (viene condiviso il riepilogo
+        // ordine con nome, indirizzo e telefono del cliente).
+        const RIDER_WHATSAPP = String(
+            window.AVENUE_CONFIG?.WHATSAPP_RIDER_NUMBER || '393208867172'
+        ).replace(/\D/g, '');
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, (char) => ({

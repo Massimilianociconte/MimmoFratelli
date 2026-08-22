@@ -18,6 +18,7 @@ import {
   finalizeOrderFromStripe,
   getUserEmail,
   loadPendingCheckout,
+  recordCheckoutLegalAcceptance,
   releaseCheckoutReservation,
 } from "../_shared/fulfillment.ts";
 import {
@@ -174,48 +175,6 @@ async function retrieveCheckoutSession(
   });
 }
 
-async function recordCheckoutLegalAcceptance(
-  supabaseAdmin: any,
-  session: Stripe.Checkout.Session,
-): Promise<void> {
-  const termsVersion = session.metadata?.termsVersion;
-  const privacyVersion = session.metadata?.privacyVersion;
-
-  // Sessions opened immediately before this release remain fulfillable. Every
-  // newly created session carries both version markers and must prove consent.
-  if (!termsVersion && !privacyVersion) return;
-  if (!termsVersion || !privacyVersion) {
-    throw new Error("Checkout legal document versions are incomplete");
-  }
-  if (session.consent?.terms_of_service !== "accepted") {
-    throw new Error("Stripe Checkout terms consent is missing");
-  }
-
-  const checkoutType = session.metadata?.type === "gift_card"
-    ? "gift_card"
-    : "order";
-  const userId = session.metadata?.userId || null;
-
-  const { error } = await supabaseAdmin
-    .from("checkout_legal_acceptances")
-    .upsert({
-      stripe_session_id: session.id,
-      user_id: userId,
-      checkout_type: checkoutType,
-      terms_version: termsVersion,
-      privacy_version: privacyVersion,
-      stripe_terms_status: "accepted",
-      checkout_session_created_at: new Date(session.created * 1000).toISOString(),
-      recorded_at: new Date().toISOString(),
-      livemode: session.livemode,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "stripe_session_id" });
-
-  if (error) {
-    throw new Error(`Checkout legal acceptance persistence failed: ${error.message}`);
-  }
-}
-
 async function fulfillCheckoutSession(
   supabaseAdmin: any,
   stripe: Stripe,
@@ -260,8 +219,7 @@ async function processFullRefund(
   charge: Stripe.Charge,
 ): Promise<void> {
   if (!charge.refunded) {
-    // Partial refunds need an explicit allocation between cash, credits,
-    // gift-card value and line items.
+    await processPartialRefund(supabaseAdmin, charge);
     return;
   }
 
@@ -285,6 +243,134 @@ async function processFullRefund(
   await sendTelegramNotification(
     `↩️ <b>RIMBORSO COMPLETO RICONCILIATO</b>\n\n` +
       `Ordine interno: ${escapeTelegramHtml(data.order_id || "non trovato")}`,
+  );
+}
+
+/**
+ * Partial refunds cannot be auto-allocated between cash, credits, gift-card
+ * value and line items without a business decision. They are still recorded:
+ * the order moves to partially_refunded and operations get an alert, so no
+ * refund can silently disappear from bookkeeping anymore.
+ */
+async function processPartialRefund(
+  supabaseAdmin: any,
+  charge: Stripe.Charge,
+): Promise<void> {
+  const paymentIntent = charge.payment_intent;
+  const paymentId = typeof paymentIntent === "string"
+    ? paymentIntent
+    : paymentIntent?.id;
+  if (!paymentId) return;
+
+  const refundedCents = Number(charge.amount_refunded || 0);
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("id, order_number, status, payment_status, total")
+    .eq("payment_id", paymentId)
+    .maybeSingle();
+
+  if (!order) {
+    // Unknown internal order (gift cards have no orders row): alert only.
+    await sendTelegramNotification(
+      `⚠️ <b>PARZIALE NON ALLOCABILE</b>\n` +
+        `Rimborso parziale €${(refundedCents / 100).toFixed(2)} su pagamento senza ordine collegato.\n` +
+        `Richiede allocazione manuale.`,
+    );
+    return;
+  }
+
+  if (order.payment_status === "refunded" || order.status === "refunded") {
+    // A full refund was already reconciled for this payment.
+    return;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("orders")
+    .update({
+      payment_status: "partially_refunded",
+      status: order.status === "cancelled" || order.status === "refunded"
+        ? order.status
+        : "partially_refunded",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", order.id);
+
+  if (error) {
+    throw new Error(`Partial refund status update failed: ${error.message}`);
+  }
+
+  await sendTelegramNotification(
+    `🟠 <b>RIMBORSO PARZIALE REGISTRATO</b>\n` +
+      `📦 Ordine: ${escapeTelegramHtml(order.order_number || String(order.id))}\n` +
+      `💰 Rimborsato finora: €${(refundedCents / 100).toFixed(2)} di €${Number(order.total || 0).toFixed(2)}\n` +
+      `⚠️ Stock e crediti NON ripristinati: richiede valutazione manuale.`,
+  );
+}
+
+/**
+ * Chargebacks must never be invisible to operations. dispute.created marks the
+ * order; dispute.closed records the outcome. Funds evidence stays in Stripe.
+ */
+async function processDispute(
+  supabaseAdmin: any,
+  dispute: Stripe.Dispute,
+): Promise<void> {
+  const paymentIntentId = typeof dispute.payment_intent === "string"
+    ? dispute.payment_intent
+    : dispute.payment_intent?.id;
+  if (!paymentIntentId) return;
+
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("id, order_number, status, payment_status")
+    .eq("payment_id", paymentIntentId)
+    .maybeSingle();
+  if (!order) return;
+
+  if (dispute.status === "lost" || dispute.status === "warning_closed") {
+    // Lost disputes are money out of the door: reconcile as a refund so stock,
+    // credits and referral rewards follow the same compensation path.
+    const { data, error } = await supabaseAdmin.rpc("refund_paid_order", {
+      p_payment_id: paymentIntentId,
+    });
+    if (!error && data?.success) {
+      await supabaseAdmin
+        .from("orders")
+        .update({
+          status: "disputed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id);
+      await sendTelegramNotification(
+        `❌ <b>DISPUTE PERSA → RICONCILIATA</b>\n` +
+          `📦 Ordine: ${escapeTelegramHtml(order.order_number || String(order.id))}\n` +
+          `Stock/crediti ripristinati via refund_paid_order.`,
+      );
+      return;
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("orders")
+    .update({
+      status: "disputed",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", order.id)
+    .neq("status", "refunded");
+
+  if (error) {
+    throw new Error(`Dispute status update failed: ${error.message}`);
+  }
+
+  const emoji = dispute.status === "won" ? "✅" : "⚠️";
+  await sendTelegramNotification(
+    `${emoji} <b>DISPUTE STRIPE: ${escapeTelegramHtml(dispute.status.toUpperCase())}</b>\n` +
+      `📦 Ordine: ${escapeTelegramHtml(order.order_number || String(order.id))}\n` +
+      `💳 PaymentIntent: ${escapeTelegramHtml(paymentIntentId)}\n` +
+      `Scadenza risposta: ${dispute.evidence_details?.due_by
+        ? new Date(dispute.evidence_details.due_by * 1000).toISOString().slice(0, 10)
+        : "N/D"}`,
   );
 }
 
@@ -383,6 +469,12 @@ Deno.serve(async (request: Request) => {
           supabaseAdmin,
           event.data.object as Stripe.Charge,
         );
+        break;
+
+      case "charge.dispute.created":
+      case "charge.dispute.updated":
+      case "charge.dispute.closed":
+        await processDispute(supabaseAdmin, event.data.object as Stripe.Dispute);
         break;
 
       case "payment_intent.payment_failed": {

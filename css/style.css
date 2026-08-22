@@ -4109,6 +4109,26 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     transform: translateY(0);
 }
 
+/* Spinner mostrato durante la creazione della sessione di pagamento */
+.payment-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: payment-spin .7s linear infinite;
+    display: inline-block;
+    flex: none;
+}
+
+@keyframes payment-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .payment-spinner { animation-duration: 1.6s; }
+}
+
 .payment-btn-main svg {
     transition: transform 0.2s;
 }
@@ -5652,6 +5672,38 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
 .redeem-input:focus {
     outline: none;
     border-color: var(--primary);
+}
+
+/* Add-to-cart toast (product page + quick view) */
+.cart-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #2d5016;
+    color: #fff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1200;
+    max-width: min(92vw, 420px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.cart-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.cart-toast-error {
+    background: #b3261e;
 }
 
 /* Quick View Modal */

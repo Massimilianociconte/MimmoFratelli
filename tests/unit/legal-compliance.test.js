@@ -104,10 +104,21 @@ describe('Stripe terms acceptance evidence', () => {
   });
 
   it('verifies Stripe consent before persisting an accepted version', () => {
-    const webhook = read('supabase/functions/stripe-webhook/index.ts');
-    expect(webhook).toContain('session.consent?.terms_of_service !== "accepted"');
-    expect(webhook).toContain('.from("checkout_legal_acceptances")');
-    expect(webhook).toContain('onConflict: "stripe_session_id"');
+    // The consent check lives in the shared fulfillment module imported by the
+    // webhook, both fallback functions and the reconciler: the evidence trail
+    // is enforced on EVERY fulfillment path, not only on the webhook.
+    const shared = read('supabase/functions/_shared/fulfillment.ts');
+    expect(shared).toContain('session.consent?.terms_of_service !== "accepted"');
+    expect(shared).toContain('.from("checkout_legal_acceptances")');
+    expect(shared).toContain('onConflict: "stripe_session_id"');
+
+    for (const consumer of [
+      'supabase/functions/stripe-webhook/index.ts',
+      'supabase/functions/complete-order-purchase/index.ts',
+      'supabase/functions/complete-giftcard-purchase/index.ts',
+    ]) {
+      expect(read(consumer)).toContain('recordCheckoutLegalAcceptance');
+    }
   });
 
   it('uses RLS and least privilege for acceptance records', () => {

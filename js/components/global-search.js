@@ -320,12 +320,16 @@ class GlobalSearch {
             });
 
             if (error) {
-                // Fallback to basic search if RPC fails - include gender and category search
+                // Fallback to basic search if RPC fails - include gender and category search.
+                // The query is sanitized before interpolation: PostgREST .or() treats
+                // commas and parentheses as syntax, so user input must never reach it raw.
+                const sanitizedQuery = this.sanitizeFilterValue(query);
+                const searchTerm = `%${sanitizedQuery}%`;
                 const { data: fallbackData, error: fallbackError } = await supabase
                     .from('products')
                     .select('*, categories(name, slug)')
                     .eq('is_active', true)
-                    .or(`name.ilike.%${query}%,description.ilike.%${query}%,gender.ilike.%${query}%`)
+                    .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},gender.ilike.${searchTerm}`)
                     .limit(10);
 
                 if (fallbackError) throw fallbackError;
@@ -360,6 +364,10 @@ class GlobalSearch {
      * Show category result with link to collection page
      */
     showCategoryResult(query, url) {
+        // Escape every dynamic value: `query` is user input and the fallback
+        // branch below echoes it back into innerHTML.
+        const safeQuery = this.escapeHtml(query);
+        const safeUrl = this.escapeHtml(url);
         const categoryNames = {
             'frutta': { name: 'Frutta', emoji: '🍎', desc: 'Frutta fresca di stagione' },
             'verdura': { name: 'Verdura', emoji: '🥬', desc: 'Verdura fresca selezionata' },
@@ -380,15 +388,15 @@ class GlobalSearch {
             'sottaceti': { name: 'Sott\'aceti', emoji: '🥒', desc: 'Conserve sott\'aceto' }
         };
         
-        const cat = categoryNames[query.toLowerCase()] || { name: query, emoji: '📦', desc: 'Esplora la categoria' };
-        
+        const cat = categoryNames[query.toLowerCase()] || { name: safeQuery, emoji: '📦', desc: 'Esplora la categoria' };
+
         this.resultsContainer.innerHTML = `
             <div class="search-category-result">
-                <div class="category-result-card" onclick="window.location.href='${url}'">
+                <div class="category-result-card" onclick="window.location.href='${safeUrl}'">
                     <div class="category-result-icon">${cat.emoji}</div>
                     <div class="category-result-info">
-                        <h4>${cat.name}</h4>
-                        <p>${cat.desc}</p>
+                        <h4>${this.escapeHtml(cat.name)}</h4>
+                        <p>${this.escapeHtml(cat.desc)}</p>
                     </div>
                     <div class="category-result-arrow">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -437,20 +445,21 @@ class GlobalSearch {
     renderProductItem(product, index, query) {
         const hasDiscount = product.sale_price && product.sale_price < product.price;
         const discountPercent = hasDiscount ? Math.round((1 - product.sale_price / product.price) * 100) : 0;
-        const imageUrl = this.getImageUrl(product.images?.[0]);
+        const imageUrl = this.escapeHtml(this.getImageUrl(product.images?.[0]));
         const highlightedName = this.highlightMatch(product.name, query);
-        
+        const safeName = this.escapeHtml(product.name);
+
         return `
             <div class="search-result-item" data-index="${index}">
                 <div class="result-image">
-                    <img src="${imageUrl}" alt="${product.name}" loading="lazy" 
+                    <img src="${imageUrl}" alt="${safeName}" loading="lazy"
                          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2240%22>🍎</text></svg>'">
                     ${hasDiscount ? `<span class="result-discount-badge">-${discountPercent}%</span>` : ''}
                 </div>
                 <div class="result-info">
                     <h4 class="result-name">${highlightedName}</h4>
                     <div class="result-meta">
-                        ${product.categories?.name ? `<span class="result-category">${product.categories.name}</span>` : ''}
+                        ${product.categories?.name ? `<span class="result-category">${this.escapeHtml(product.categories.name)}</span>` : ''}
                         ${product.gender ? `<span class="result-type">${this.getTypeEmoji(product.gender)}</span>` : ''}
                     </div>
                     <div class="result-price">
@@ -472,19 +481,51 @@ class GlobalSearch {
     }
 
     /**
-     * Highlight matching text
+     * Highlight matching text without ever injecting raw strings: the source
+     * text is escaped chunk-by-chunk, then matched slices are wrapped in <mark>.
      */
     highlightMatch(text, query) {
-        if (!query) return text;
-        const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
-        return text.replace(regex, '<mark>$1</mark>');
+        const str = String(text ?? '');
+        const q = String(query || '').toLowerCase();
+        if (!q) return this.escapeHtml(str);
+
+        const lower = str.toLowerCase();
+        let result = '';
+        let cursor = 0;
+        while (cursor <= str.length) {
+            const idx = lower.indexOf(q, cursor);
+            if (idx === -1 || q.length === 0) {
+                result += this.escapeHtml(str.slice(cursor));
+                break;
+            }
+            result += this.escapeHtml(str.slice(cursor, idx));
+            result += `<mark>${this.escapeHtml(str.slice(idx, idx + q.length))}</mark>`;
+            cursor = idx + q.length;
+        }
+        return result;
     }
 
     /**
-     * Escape regex special characters
+     * Escape a value destined for innerHTML or an HTML attribute.
      */
-    escapeRegex(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Sanitize user input before interpolating it into a PostgREST logical
+     * filter: commas and parentheses are filter syntax there.
+     */
+    sanitizeFilterValue(value) {
+        return String(value ?? '')
+            .replace(/[,()]/g, ' ')
+            .trim()
+            .slice(0, 60);
     }
 
     /**
@@ -565,7 +606,7 @@ class GlobalSearch {
         this.resultsContainer.innerHTML = `
             <div class="search-no-results">
                 <div class="no-results-icon">😕</div>
-                <p>Nessun risultato per "<strong>${query}</strong>"</p>
+                <p>Nessun risultato per "<strong>${this.escapeHtml(query)}</strong>"</p>
                 <span class="no-results-hint">Prova con termini diversi o controlla l'ortografia</span>
             </div>
         `;
