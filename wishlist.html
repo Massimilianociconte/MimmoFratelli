@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -47,7 +47,7 @@
                 </svg>
                 <span class="badge" id="cartBadge" style="display:none;">0</span>
             </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <button type="button" class="menu-btn" onclick="toggleMenu()" aria-expanded="false" aria-controls="menuOverlay">Menu</button>
         </div>
     </nav>
 
@@ -127,7 +127,7 @@
                     <span>Link</span>
                 </div>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">
@@ -191,7 +191,8 @@
 
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
-            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.textContent = isOpen ? 'Menu' : 'Chiudi';
+            menuBtn.setAttribute('aria-expanded', String(isOpen));
             menuBtn.style.color = isOpen ? '' : 'white';
             if (isOpen) {
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
@@ -321,10 +322,10 @@
                         <div class="card-image-small">
                             <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=60&fm=webp" alt="Prodotto" loading="lazy" decoding="async">
                         </div>
-                        <button class="card-favorite-small active" onclick="removeFromWishlist('${item.product_id}')">♥</button>
+                        <button class="card-favorite-small active" onclick="removeFromWishlist('${escapeHtml(item.product_id)}')" aria-label="Rimuovi dai preferiti">♥</button>
                         <div class="card-info-small">
                             <h3 class="card-name-small">Prodotto Preferito</h3>
-                            <p class="card-price-small"><a href="product.html?id=${item.product_id}" class="btn btn-small">Vedi Dettagli</a></p>
+                            <p class="card-price-small"><a href="product.html?id=${encodeURIComponent(item.product_id)}" class="btn btn-small">Vedi Dettagli</a></p>
                         </div>
                     </div>
                 `).join('');
@@ -346,7 +347,7 @@
                             <img src="${safeImg}" alt="${safeName}" loading="lazy" decoding="async">
                             ${hasDiscount ? '<span class="sale-badge">Offerta</span>' : ''}
                         </a>
-                        <button class="card-favorite-small active" onclick="removeFromWishlist('${safeProductId}')">♥</button>
+                        <button class="card-favorite-small active" onclick="removeFromWishlist('${safeProductId}')" aria-label="Rimuovi ${safeName} dai preferiti">♥</button>
                         <div class="card-info-small">
                             <h3 class="card-name-small">${safeName}</h3>
                             <p class="card-price-small">

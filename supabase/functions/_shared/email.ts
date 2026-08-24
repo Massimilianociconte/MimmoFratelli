@@ -234,7 +234,7 @@ export async function sendGiftCardEmailTo(giftCard: GiftCardEmailData): Promise<
       ${giftCard.sender_name ? `<div style="margin-top:16px;font-size:14px;">Da: ${escapeHtml(giftCard.sender_name)}</div>` : ""}
     </div>
     <div style="text-align:center;padding-top:20px;color:#555;font-size:14px;">
-      <p>Utilizza questo codice su <a href="${SITE_URL}" style="color:${BRAND_COLOR};">mimmofratelli.com</a> al momento del checkout.</p>
+      <p>Utilizza questo codice su <a href="${SITE_URL}" style="color:${BRAND_COLOR};">mimmofratelli.com</a> al momento del checkout, oppure riscattalo direttamente qui: <a href="${SITE_URL}/redeem.html" style="color:${BRAND_COLOR};">Riscatta la tua Gift Card</a>.</p>
       ${giftCard.expires_at ? `<p>Valida fino al ${escapeHtml(new Date(giftCard.expires_at).toLocaleDateString("it-IT"))}.</p>` : ""}
     </div>`;
   return sendEmail(

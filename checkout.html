@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -77,7 +77,7 @@
                                 <span>Hai un codice sconto?</span>
                             </div>
                             <div class="promo-input-group">
-                                <input type="text" id="promoCode" placeholder="Inserisci codice sconto"
+                                <input type="text" id="promoCode" aria-label="Codice sconto" placeholder="Inserisci codice sconto"
                                     class="promo-input" autocomplete="off">
                                 <button id="applyPromo" class="btn btn-promo btn-apply-promo-code">Applica</button>
                             </div>
@@ -110,7 +110,7 @@
                                 <span>Hai una Gift Card da riscattare?</span>
                             </div>
                             <div class="promo-input-group">
-                                <input type="text" id="giftCardCode" placeholder="Codice gift card (14 caratteri)"
+                                <input type="text" id="giftCardCode" aria-label="Codice gift card" placeholder="Codice gift card (14 caratteri)"
                                     class="promo-input" autocomplete="off" maxlength="20">
                                 <button id="applyGiftCard" class="btn btn-promo btn-apply-giftcard">Riscatta</button>
                             </div>
@@ -139,35 +139,35 @@
                                 <div class="form-row">
                                     <div class="form-field">
                                         <label for="firstName">Nome</label>
-                                        <input type="text" id="firstName" placeholder="Mario" required>
+                                        <input type="text" id="firstName" placeholder="Mario" autocomplete="given-name" required>
                                     </div>
                                     <div class="form-field">
                                         <label for="lastName">Cognome</label>
-                                        <input type="text" id="lastName" placeholder="Rossi" required>
+                                        <input type="text" id="lastName" placeholder="Rossi" autocomplete="family-name" required>
                                     </div>
                                 </div>
                                 <div class="form-field">
                                     <label for="address">Indirizzo</label>
-                                    <input type="text" id="address" placeholder="Via Roma 1" required>
+                                    <input type="text" id="address" placeholder="Via Roma 1" autocomplete="street-address" required>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-field">
                                         <label for="city">Città</label>
-                                        <input type="text" id="city" placeholder="Roma" required>
+                                        <input type="text" id="city" placeholder="Roma" autocomplete="address-level2" required>
                                     </div>
                                     <div class="form-field">
                                         <label for="postalCode">CAP</label>
-                                        <input type="text" id="postalCode" placeholder="00100" required>
+                                        <input type="text" id="postalCode" placeholder="00100" autocomplete="postal-code" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" required>
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-field">
                                         <label for="province">Provincia</label>
-                                        <input type="text" id="province" placeholder="RM" required>
+                                        <input type="text" id="province" placeholder="RM" autocomplete="address-level1" maxlength="2" required>
                                     </div>
                                     <div class="form-field">
                                         <label for="phone">Telefono</label>
-                                        <input type="tel" id="phone" placeholder="+39 333 1234567" required>
+                                        <input type="tel" id="phone" placeholder="+39 333 1234567" autocomplete="tel" required>
                                     </div>
                                 </div>
                             </form>
@@ -249,7 +249,7 @@
                     <span>Link</span>
                 </div>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">

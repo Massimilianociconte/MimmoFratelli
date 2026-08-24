@@ -71,6 +71,10 @@ class ProductService {
         query = query.eq('is_featured', true);
       }
 
+      if (filters.is_seasonal) {
+        query = query.eq('is_seasonal', true);
+      }
+
       // Apply sorting
       switch (filters.sort_by) {
         case 'price_asc':

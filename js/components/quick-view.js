@@ -6,6 +6,9 @@
  */
 
 import { cartService } from '../services/cart.js';
+import { sanitizeString } from '../utils/validation.js';
+
+const esc = (value) => sanitizeString(String(value ?? ''));
 
 class QuickViewModal {
   constructor() {
@@ -14,6 +17,8 @@ class QuickViewModal {
     this.selectedSize = null;
     this.selectedColor = null;
     this.quantity = 1;
+    const maxQty = window.AVENUE_CONFIG?.MAX_CART_QUANTITY ?? 10;
+    this.maxQuantity = maxQty;
     this.init();
   }
 
@@ -51,9 +56,9 @@ class QuickViewModal {
               <div class="quick-view-quantity">
                 <label>Quantità</label>
                 <div class="quantity-selector">
-                  <button class="qty-btn qty-minus">-</button>
-                  <input type="number" class="qty-input" value="1" min="1" max="10">
-                  <button class="qty-btn qty-plus">+</button>
+                  <button class="qty-btn qty-minus" aria-label="Riduci quantità">-</button>
+                  <input type="number" class="qty-input" value="1" min="1" aria-label="Quantità">
+                  <button class="qty-btn qty-plus" aria-label="Aumenta quantità">+</button>
                 </div>
               </div>
             </div>
@@ -75,7 +80,7 @@ class QuickViewModal {
     this.modal.querySelector('.qty-minus').addEventListener('click', () => this.updateQuantity(-1));
     this.modal.querySelector('.qty-plus').addEventListener('click', () => this.updateQuantity(1));
     this.modal.querySelector('.qty-input').addEventListener('change', (e) => {
-      this.quantity = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
+      this.quantity = Math.max(1, Math.min(this.maxQuantity, parseInt(e.target.value) || 1));
       e.target.value = this.quantity;
     });
     
@@ -108,11 +113,11 @@ class QuickViewModal {
     const p = this.currentProduct;
     
     this.modal.querySelector('.quick-view-image').src = p.images?.[0] || 'Images/placeholder.jpg';
-    this.modal.querySelector('.quick-view-image').alt = p.name;
+    this.modal.querySelector('.quick-view-image').alt = p.name || '';
     this.modal.querySelector('.quick-view-title').textContent = p.name;
     this.modal.querySelector('.quick-view-price').textContent = `€${p.price?.toFixed(2)}`;
     this.modal.querySelector('.quick-view-description').textContent = p.description || '';
-    this.modal.querySelector('.quick-view-link').href = `product.html?id=${p.id}`;
+    this.modal.querySelector('.quick-view-link').href = `product.html?id=${encodeURIComponent(p.id)}`;
     this.modal.querySelector('.qty-input').value = 1;
     const addButton = this.modal.querySelector('.quick-view-add-cart');
     const foodInfoBlocked =
@@ -125,7 +130,7 @@ class QuickViewModal {
     // Render thumbnails
     const thumbsContainer = this.modal.querySelector('.quick-view-thumbnails');
     thumbsContainer.innerHTML = (p.images || []).map((img, i) => `
-      <img src="${img}" alt="" class="thumb ${i === 0 ? 'active' : ''}" data-index="${i}">
+      <img src="${esc(img)}" alt="" class="thumb ${i === 0 ? 'active' : ''}" data-index="${i}">
     `).join('');
     
     thumbsContainer.querySelectorAll('.thumb').forEach(thumb => {
@@ -140,7 +145,7 @@ class QuickViewModal {
     const sizes = p.sizes || ['XS', 'S', 'M', 'L', 'XL'];
     const sizesContainer = this.modal.querySelector('.size-buttons');
     sizesContainer.innerHTML = sizes.map(size => `
-      <button class="size-btn" data-size="${size}">${size}</button>
+      <button class="size-btn" data-size="${esc(size)}">${esc(size)}</button>
     `).join('');
     
     sizesContainer.querySelectorAll('.size-btn').forEach(btn => {
@@ -155,9 +160,9 @@ class QuickViewModal {
     const colors = p.colors || ['Nero', 'Bianco', 'Blu'];
     const colorsContainer = this.modal.querySelector('.color-buttons');
     colorsContainer.innerHTML = colors.map(color => `
-      <button class="color-btn" data-color="${color}" title="${color}">
-        <span class="color-swatch" style="background: ${this.getColorHex(color)}"></span>
-        ${color}
+      <button class="color-btn" data-color="${esc(color)}" title="${esc(color)}">
+        <span class="color-swatch" style="background: ${esc(this.getColorHex(color))}"></span>
+        ${esc(color)}
       </button>
     `).join('');
     
@@ -185,7 +190,7 @@ class QuickViewModal {
   }
 
   updateQuantity(delta) {
-    this.quantity = Math.max(1, Math.min(10, this.quantity + delta));
+    this.quantity = Math.max(1, Math.min(this.maxQuantity, this.quantity + delta));
     this.modal.querySelector('.qty-input').value = this.quantity;
   }
 
@@ -217,7 +222,10 @@ class QuickViewModal {
       image: this.currentProduct.images?.[0] || '',
       size: this.selectedSize,
       color: this.selectedColor,
-      quantity: this.quantity
+      quantity: this.quantity,
+      // Explicit null: keeps the guest-cart identity key consistent
+      // (undefined !== null in the strict-equality item match)
+      weight_grams: null
     };
 
     addBtn.disabled = true;
@@ -236,6 +244,9 @@ class QuickViewModal {
       } else {
         alert(result.error || 'Errore nell\'aggiunta al carrello');
       }
+    } catch (err) {
+      console.error('Add to cart error:', err);
+      alert('Errore di rete. Riprova.');
     } finally {
       // Re-arm the button on failure; on success the modal is closed already
       // and render() resets the label next time it opens.

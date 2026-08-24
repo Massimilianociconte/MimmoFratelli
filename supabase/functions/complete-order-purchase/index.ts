@@ -106,13 +106,18 @@ Deno.serve(async (request: Request) => {
 
     const result = await finalizeOrderFromStripe(supabaseAdmin, session);
 
-    const email = await getUserEmail(supabaseAdmin, user.id).catch((error) => {
-      console.error(
-        "Fallback order email lookup failed:",
-        error instanceof Error ? error.message : "unknown error",
-      );
-      return null;
-    });
+    // Send the confirmation email only when this call actually created the
+    // order: if the webhook already fulfilled it, the customer was notified
+    // once and re-sending on every checkout-success reload would duplicate it.
+    const email = result.created
+      ? await getUserEmail(supabaseAdmin, user.id).catch((error) => {
+          console.error(
+            "Fallback order email lookup failed:",
+            error instanceof Error ? error.message : "unknown error",
+          );
+          return null;
+        })
+      : null;
     if (email) {
       await sendOrderConfirmationEmail(email, result.order).catch((error) => {
         console.error(

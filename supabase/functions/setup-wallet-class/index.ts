@@ -7,6 +7,7 @@
  */
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest, createResponse, createErrorResponse } from "../_shared/cors.ts";
 
 Deno.serve(async (req: Request) => {
@@ -14,7 +15,47 @@ Deno.serve(async (req: Request) => {
     return handleCorsPreflightRequest(req);
   }
 
+  if (req.method !== "POST") {
+    return createErrorResponse("Method not allowed", req, 405);
+  }
+
   try {
+    // Admin-only: this function creates/modifies the shared Google Wallet class
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+    const supabaseUser = createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }
+    );
+
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: adminRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!adminRole) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     const issuerId = Deno.env.get("GOOGLE_WALLET_ISSUER_ID");
     const serviceAccountEmail = Deno.env.get("GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL");
     const privateKeyPem = Deno.env.get("GOOGLE_WALLET_PRIVATE_KEY");
@@ -195,7 +236,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (error) {
     console.error("Setup wallet class error:", error);
-    return createErrorResponse(error.message || "Errore interno", req, 500);
+    return createErrorResponse(error instanceof Error ? error.message : "Errore interno", req, 500);
   }
 });
 

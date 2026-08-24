@@ -24,6 +24,11 @@ class AuthModal {
    * Initialize the modal
    */
   init() {
+    // Guard against double init (e.g. page script + referral-landing both call
+    // init on collection.html?ref=...): _attachEventListeners would add
+    // duplicate submit handlers, double-firing every login/signup attempt
+    if (this._initialized) return;
+    this._initialized = true;
     this._createModal();
     this._attachEventListeners();
   }
@@ -34,6 +39,11 @@ class AuthModal {
    * @param {Object} options - { onSuccess, redirectUrl, referralCode }
    */
   show(mode = 'login', options = {}) {
+    // Lazy init: pages that import the singleton without calling init()
+    // still get a working modal
+    if (!this.modal) {
+      this.init();
+    }
     this.mode = mode;
     this.onSuccess = options.onSuccess || null;
     this.redirectUrl = options.redirectUrl || null;
@@ -274,6 +284,9 @@ class AuthModal {
       } else {
         await this._handleRegister();
       }
+    } catch (err) {
+      console.error('Auth error:', err);
+      this._showError('Errore di connessione. Riprova.');
     } finally {
       this._setLoading(false);
     }
@@ -359,10 +372,13 @@ class AuthModal {
     if (signupData?.firstOrderCode) {
       const discountPercent = signupData.discountPercent || 10;
       const isReferral = signupData.isReferral;
+      const safeCode = String(signupData.firstOrderCode).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
       this._showSuccess(
         `🎉 Registrazione completata!<br><br>` +
         `${isReferral ? '🎁 Grazie al tuo amico, hai ottenuto' : 'Hai ottenuto'} <strong>${discountPercent}% di sconto</strong> sul primo ordine!<br><br>` +
-        `Il tuo codice: <code style="background:#fef3c7;padding:0.2rem 0.5rem;border-radius:4px;font-weight:bold;">${signupData.firstOrderCode}</code><br><br>` +
+        `Il tuo codice: <code style="background:#fef3c7;padding:0.2rem 0.5rem;border-radius:4px;font-weight:bold;">${safeCode}</code><br><br>` +
         `<small>Controlla la tua email per confermare l'account.</small>`
       );
       
@@ -395,11 +411,20 @@ class AuthModal {
     }
 
     this._setLoading(true);
-    
-    await authService.resetPassword(email);
-    
-    this._setLoading(false);
-    this._showSuccess('Se l\'email è registrata, riceverai le istruzioni per reimpostare la password.');
+
+    try {
+      const { error } = await authService.resetPassword(email);
+      if (error) {
+        this._showError(error);
+        return;
+      }
+      this._showSuccess('Se l\'email è registrata, riceverai le istruzioni per reimpostare la password.');
+    } catch (err) {
+      console.error('Reset password error:', err);
+      this._showError('Errore di connessione. Riprova.');
+    } finally {
+      this._setLoading(false);
+    }
   }
 
   /**

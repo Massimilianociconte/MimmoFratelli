@@ -45,6 +45,11 @@ class PaymentService {
 
       if (error) {
         console.error('Stripe session error:', error);
+        // 401/JWT expired: the session died between page load and payment.
+        // Signal it so the UI can prompt a re-login instead of a dead-end alert
+        if (error.status === 401 || error.message?.includes('JWT')) {
+          return { error: 'Sessione scaduta. Accedi di nuovo per completare il pagamento.', authRequired: true };
+        }
         return { error: error.message || 'Errore nella creazione della sessione di pagamento' };
       }
 

@@ -33,23 +33,25 @@ class PresenceService {
    */
   async startTracking() {
     if (this.isTracking || !isSupabaseConfigured()) return;
-    
+
     this.isTracking = true;
-    
+
     // Update presence immediately
     await this.updatePresence();
-    
+
     // Then update every 60 seconds
     this.updateInterval = setInterval(() => {
       this.updatePresence();
     }, 60000);
 
-    // Update on page visibility change
-    document.addEventListener('visibilitychange', () => {
+    // Update on page visibility change (named handler so stopTracking can
+    // actually remove it — the anonymous one leaked forever)
+    this._visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         this.updatePresence();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this._visibilityHandler);
 
   }
 
@@ -62,13 +64,17 @@ class PresenceService {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
     }
+    if (this._visibilityHandler) {
+      document.removeEventListener('visibilitychange', this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
   }
 
   /**
    * Update user presence through the database trust boundary.
    */
   async updatePresence() {
-    if (!isSupabaseConfigured()) return;
+    if (!this.isTracking || !isSupabaseConfigured()) return;
 
     try {
       // Minimizzazione dati (art. 5 GDPR): niente user agent, solo

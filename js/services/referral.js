@@ -88,7 +88,7 @@ class ReferralService {
         if (newCode) {
           data = newCode;
         } else {
-          return { code: null, stats: null };
+          return { code: null, stats: null, error: 'Codice referral non disponibile' };
         }
       }
 
@@ -144,6 +144,16 @@ class ReferralService {
         .single();
 
       if (error) {
+        // Unique violation on user_id: a concurrent call created the code
+        // first. Re-select the existing row instead of returning null.
+        if (error.code === '23505') {
+          const { data: existing } = await supabase
+            .from('user_referral_codes')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (existing) return existing;
+        }
         console.error('Error creating referral code:', error);
         return null;
       }
@@ -198,7 +208,12 @@ class ReferralService {
       const refCode = urlParams.get('ref');
 
       if (refCode && refCode.length === 8 && this._isValidCode(refCode)) {
-        localStorage.setItem(REFERRAL_STORAGE_KEY, refCode.toUpperCase());
+        // Store with a timestamp: attribution expires after 30 days so a code
+        // captured today cannot be credited to a signup months later
+        localStorage.setItem(REFERRAL_STORAGE_KEY, JSON.stringify({
+          c: refCode.toUpperCase(),
+          ts: Date.now()
+        }));
         return true;
       }
       return false;
@@ -209,12 +224,33 @@ class ReferralService {
   }
 
   /**
-   * Get stored referral code from localStorage
+   * Get stored referral code from localStorage (30-day TTL)
    * @returns {string | null}
    */
   getStoredReferralCode() {
     try {
-      return localStorage.getItem(REFERRAL_STORAGE_KEY);
+      const raw = localStorage.getItem(REFERRAL_STORAGE_KEY);
+      if (!raw) return null;
+
+      // Legacy plain-string values (pre-TTL): treat as expired to stay safe
+      if (!raw.startsWith('{')) {
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        return null;
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!parsed?.c || !parsed?.ts) {
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        return null;
+      }
+
+      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - parsed.ts > THIRTY_DAYS) {
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        return null;
+      }
+
+      return parsed.c;
     } catch {
       return null;
     }

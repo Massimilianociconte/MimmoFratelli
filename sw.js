@@ -119,8 +119,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: 'Mimmo Fratelli',
     body: 'Hai una nuova notifica!',
-    icon: '/Images/icons/icon-192.png',
-    badge: '/Images/icons/badge-72.png',
+    icon: '/Images/favicon-192x192.png',
+    badge: '/Images/favicon-32x32.png',
     image: null,
     url: '/',
     tag: 'default'
@@ -137,8 +137,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || '/Images/icons/icon-192.png',
-    badge: data.badge || '/Images/icons/badge-72.png',
+    icon: data.icon || '/Images/favicon-192x192.png',
+    badge: data.badge || '/Images/favicon-32x32.png',
     image: data.image, // Large image preview
     tag: data.tag || 'notification',
     renotify: true,

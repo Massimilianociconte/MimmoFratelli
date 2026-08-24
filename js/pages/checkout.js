@@ -3,7 +3,7 @@
  * Avenue M. E-commerce Platform
  */
 
-import { getCurrentUser, isAuthenticated } from '../supabase.js';
+import { getCurrentUser, isAuthenticated, supabase } from '../supabase.js';
 import { cartService } from '../services/cart.js';
 import { paymentService } from '../services/payment.js';
 import { promotionService } from '../services/promotions.js';
@@ -13,6 +13,8 @@ import { referralService } from '../services/referral.js';
 import { capAutofillService } from '../services/cap-autofill.js';
 import { sanitizeString } from '../utils/validation.js';
 import { notificationCenter } from '../components/notification-center.js';
+import { authModal } from '../components/auth-modal.js';
+import { authService } from '../services/auth.js';
 
 // Initialize notification center
 notificationCenter.init();
@@ -40,7 +42,22 @@ class CheckoutPage {
       return;
     }
 
-    this.cartItems = await cartService.getAllItems();
+    try {
+      this.cartItems = await cartService.getAllItems();
+    } catch (err) {
+      console.error('Failed to load cart on checkout:', err);
+      document.getElementById('loginRequired').style.display = 'none';
+      document.getElementById('checkoutContent').style.display = 'none';
+      const emptyCart = document.getElementById('emptyCart');
+      emptyCart.innerHTML = `
+        <div style="text-align:center; padding:2rem;">
+          <p style="margin-bottom:1.5rem;">Errore nel caricamento del carrello. Riprova.</p>
+          <button class="btn btn-primary" onclick="location.reload()">Ricarica</button>
+        </div>
+      `;
+      emptyCart.style.display = 'block';
+      return;
+    }
     
     if (this.cartItems.length === 0) {
       document.getElementById('loginRequired').style.display = 'none';
@@ -58,19 +75,32 @@ class CheckoutPage {
     this.updateTotals();
     this.bindEvents();
     await this.prefillShippingAddress();
-    this.checkFirstOrderCode();
-    this.checkSavedPromoCode();
+    // Disable pay until saved promo/first-order checks settle: a very fast
+    // click would otherwise create a session without the promotionCode
+    const payBtn = document.getElementById('payStripe');
+    if (payBtn) payBtn.disabled = true;
+    try {
+      await Promise.all([this.checkFirstOrderCode(), this.checkSavedPromoCode()]);
+    } catch (err) {
+      console.error('Promo pre-check failed:', err);
+    }
+    if (payBtn) payBtn.disabled = false;
     this.initCapAutofill();
   }
 
   async loadUserCredit() {
     try {
-      const { balance } = await giftCardService.getUserCredits();
+      const { balance, error } = await giftCardService.getUserCredits();
       this.userCredit = balance || 0;
-      
+
       const creditSection = document.getElementById('userCreditSection');
       const creditBalance = document.getElementById('userCreditBalance');
-      
+
+      if (error) {
+        // DB/network failure: don't silently show €0 to a user with credit
+        console.error('Credit load failed:', error);
+      }
+
       if (this.userCredit > 0 && creditSection) {
         creditSection.style.display = 'block';
         creditBalance.textContent = `€${this.userCredit.toFixed(2)}`;
@@ -119,16 +149,21 @@ class CheckoutPage {
     const promoSection = document.querySelector('.checkout-promo');
     if (!promoSection) return;
 
+    const safeCode = sanitizeString(String(codeData.code ?? ''));
+    // Respect the actual discount type instead of assuming a percentage
+    const discountLabel = codeData.discountType === 'fixed'
+      ? `€${Number(codeData.discount).toFixed(2)}`
+      : `${Number(codeData.discount)}%`;
     const banner = document.createElement('div');
     banner.className = 'first-order-banner';
     banner.innerHTML = `
       <div class="first-order-content">
         <span class="first-order-icon">🎁</span>
         <div class="first-order-text">
-          <strong>Hai un codice sconto del ${codeData.discount}%!</strong>
-          <span>Usa il codice <code>${codeData.code}</code> per il tuo primo ordine</span>
+          <strong>Hai un codice sconto di ${sanitizeString(discountLabel)}!</strong>
+          <span>Usa il codice <code>${safeCode}</code> per il tuo primo ordine</span>
         </div>
-        <button id="applyFirstOrderCode" class="btn btn-small btn-apply-first" data-code="${codeData.code}">Applica</button>
+        <button id="applyFirstOrderCode" class="btn btn-small btn-apply-first" data-code="${safeCode}">Applica</button>
       </div>
     `;
     
@@ -490,12 +525,16 @@ class CheckoutPage {
       const { valid, error: firstOrderError, promotion } = await promotionService.isFirstOrderCodeValid(user.id, code);
       
       if (valid && promotion) {
+        await promotionService.ensureCategoryIds(this.cartItems);
+        const { discount, error: validationError } = promotionService.validatePromotion(this.cartItems, promotion);
+        if (validationError) {
+          this.showPromoMessage(messageEl, validationError, 'error');
+          return;
+        }
         this.appliedPromo = promotion;
         this.updateTotals();
-        const discount = promotion.discount_type === 'percentage' 
-          ? `${promotion.discount_value}%` 
-          : `€${promotion.discount_value.toFixed(2)}`;
-        this.showPromoMessage(messageEl, `✓ Sconto ${discount} applicato!`, 'success');
+        const discountText = promotion.discount_type === 'percentage' ? `${promotion.discount_value}%` : `€${Number(promotion.discount_value).toFixed(2)}`;
+        this.showPromoMessage(messageEl, `✓ Sconto di ${discountText} applicato! (−€${discount.toFixed(2)})`, 'success');
         codeInput.disabled = true;
         return;
       }
@@ -513,12 +552,19 @@ class CheckoutPage {
       return;
     }
 
+    // Validate against the cart (scoping + min_purchase) BEFORE confirming:
+    // the server rejects these at payment time, so preview the same errors now
+    await promotionService.ensureCategoryIds(this.cartItems);
+    const { discount, error: validationError } = promotionService.validatePromotion(this.cartItems, promotion);
+    if (validationError) {
+      this.showPromoMessage(messageEl, validationError, 'error');
+      return;
+    }
+
     this.appliedPromo = promotion;
     this.updateTotals();
-    const discount = promotion.discount_type === 'percentage' 
-      ? `${promotion.discount_value}%` 
-      : `€${promotion.discount_value.toFixed(2)}`;
-    this.showPromoMessage(messageEl, `✓ Sconto ${discount} applicato!`, 'success');
+    const discountText = promotion.discount_type === 'percentage' ? `${promotion.discount_value}%` : `€${Number(promotion.discount_value).toFixed(2)}`;
+    this.showPromoMessage(messageEl, `✓ Sconto di ${discountText} applicato! (−€${discount.toFixed(2)})`, 'success');
     codeInput.disabled = true;
   }
 
@@ -629,6 +675,13 @@ class CheckoutPage {
       const result = await paymentService.redirectToStripeCheckout(this.cartItems, options);
 
       if (result?.error) {
+        if (result.authRequired) {
+          // Session expired mid-checkout: prompt re-login and reload on success
+          authModal.show('login', {
+            onSuccess: () => window.location.reload()
+          });
+          return;
+        }
         alert(result.error);
       }
     } catch (err) {
@@ -650,9 +703,37 @@ class CheckoutPage {
 
 // Auth modal helper
 window.openAuthModal = function() {
-  const event = new CustomEvent('openAuthModal');
-  document.dispatchEvent(event);
+  authModal.show('login', {
+    onSuccess: async (user) => {
+      if (!user?.id) return;
+      // Merge the guest cart into the account BEFORE reloading, otherwise the
+      // freshly logged-in user would see an empty DB cart and the guest items
+      // would be orphaned in localStorage
+      try {
+        await cartService.mergeCartsOnLogin(user.id);
+        await wishlistService.mergeWishlists(user.id);
+      } catch (err) {
+        console.error('Post-login merge failed:', err);
+      }
+      window.location.reload();
+    }
+  });
 };
+
+// When the session changes on this page (e.g. login from another tab, or the
+// auth modal success flow), reload so init() runs with the new auth state.
+// Without this the page stayed frozen on "Devi effettuare il login".
+authService.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    try {
+      await cartService.mergeCartsOnLogin(session.user.id);
+      await wishlistService.mergeWishlists(session.user.id);
+    } catch (err) {
+      console.error('Merge on SIGNED_IN failed:', err);
+    }
+    window.location.reload();
+  }
+});
 
 // Update badges
 async function updateWishlistBadge() {

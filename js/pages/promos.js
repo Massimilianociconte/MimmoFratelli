@@ -11,6 +11,9 @@ import { authModal } from '../components/auth-modal.js';
 import { profileDrawer } from '../components/profile-drawer.js';
 import { cartService } from '../services/cart.js';
 import { cartDrawer } from '../components/cart-drawer.js';
+import { sanitizeString } from '../utils/validation.js';
+
+const esc = (value) => sanitizeString(String(value ?? ''));
 
 class PromosPage {
   constructor() {
@@ -165,10 +168,13 @@ class PromosPage {
       t.classList.toggle('active', t.dataset.tab === tab);
     });
     
-    // Show/hide sections
-    document.getElementById('productsSection').style.display = tab === 'products' ? 'block' : 'none';
-    document.getElementById('codesSection').style.display = tab === 'codes' ? 'block' : 'none';
-    document.getElementById('productFilters').style.display = tab === 'products' ? 'flex' : 'none';
+    // Show/hide sections (null-safe: sections may be absent on some layouts)
+    const productsSection = document.getElementById('productsSection');
+    if (productsSection) productsSection.style.display = tab === 'products' ? 'block' : 'none';
+    const codesSection = document.getElementById('codesSection');
+    if (codesSection) codesSection.style.display = tab === 'codes' ? 'block' : 'none';
+    const productFilters = document.getElementById('productFilters');
+    if (productFilters) productFilters.style.display = tab === 'products' ? 'flex' : 'none';
   }
 
   async loadAllData() {
@@ -269,6 +275,11 @@ class PromosPage {
       btn.addEventListener('click', (e) => this.handleWishlistClick(e));
     });
 
+    // Add click handlers for add-to-cart (replaces inline onclick handlers)
+    container.querySelectorAll('.add-cart-btn-small[data-add-id]').forEach(btn => {
+      btn.addEventListener('click', () => window.addToCartFromPromos(btn.dataset.addId));
+    });
+
     // Inject JSON-LD for Google Shopping
     this._injectPromosJsonLd(products);
   }
@@ -320,7 +331,7 @@ class PromosPage {
           seller: { '@type': 'Organization', name: 'Mimmo Fratelli', url: 'https://www.mimmofratelli.com' },
           shippingDetails: {
             '@type': 'OfferShippingDetails',
-            shippingRate: { '@type': 'MonetaryAmount', value: '3.90', currency: 'EUR' },
+            shippingRate: { '@type': 'MonetaryAmount', value: (window.AVENUE_CONFIG?.STANDARD_SHIPPING_COST ?? 2.90).toFixed(2), currency: 'EUR' },
             shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT', addressRegion: ['MI'] },
             deliveryTime: {
               '@type': 'ShippingDeliveryTime',
@@ -360,23 +371,24 @@ class PromosPage {
 
   renderProductCard(product, isFav = false) {
     const discountPercent = Math.round((1 - product.sale_price / product.price) * 100);
-    const productUrl = `product.html?id=${product.id}`;
-    const img = product.images?.[0] || '';
+    const productUrl = `product.html?id=${encodeURIComponent(product.id)}`;
+    const img = esc(product.images?.[0] || '');
+    const safeId = esc(product.id);
     const foodInfoBlocked =
       product.food_information_required && !product.food_information_verified_at;
 
     return `
-      <div class="product-card-small" data-product-id="${product.id}">
+      <div class="product-card-small" data-product-id="${safeId}">
         <a href="${productUrl}" class="card-image-small">
-          <img src="${img}" alt="${product.name}" loading="lazy" 
-               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
+          <img src="${img}" alt="${esc(product.name)}" loading="lazy"
+               onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/></svg>'">
           <span class="sale-badge">-${discountPercent}%</span>
         </a>
-        <button class="card-favorite-small wishlist-btn ${isFav ? 'active' : ''}" data-product-id="${product.id}" title="Aggiungi ai preferiti">
+        <button class="card-favorite-small wishlist-btn ${isFav ? 'active' : ''}" data-product-id="${safeId}" title="Aggiungi ai preferiti" aria-label="Aggiungi ai preferiti: ${esc(product.name)}">
           ${isFav ? '♥' : '♡'}
         </button>
         <div class="card-info-small">
-          <a href="${productUrl}" class="card-title-link"><h3>${product.name}</h3></a>
+          <a href="${productUrl}" class="card-title-link"><h3>${esc(product.name)}</h3></a>
           <p class="card-price-small">
             <span class="original-price">€${product.price.toFixed(2)}</span>
             €${product.sale_price.toFixed(2)}
@@ -384,7 +396,7 @@ class PromosPage {
           <p class="omnibus-price">Prezzo più basso 30 gg: €${(product.lowest_price_30d || product.price).toFixed(2)}</p>
           ${foodInfoBlocked
             ? `<a class="add-cart-btn-small" href="${productUrl}">Informazioni in verifica</a>`
-            : `<button class="add-cart-btn-small" onclick="window.addToCartFromPromos('${product.id}')">+ Carrello</button>`}
+            : `<button class="add-cart-btn-small" data-add-id="${safeId}">+ Carrello</button>`}
         </div>
       </div>
     `;
@@ -427,12 +439,12 @@ class PromosPage {
     return `
       <div class="promo-code-card">
         <div class="promo-code-header">
-          <span class="promo-discount-badge">${discountText}</span>
-          <span class="promo-validity">Fino al ${endDate}</span>
+          <span class="promo-discount-badge">${esc(discountText)}</span>
+          <span class="promo-validity">Fino al ${esc(endDate)}</span>
         </div>
         <div class="promo-code-body">
-          <h3 class="promo-code-title">${promo.name}</h3>
-          <p class="promo-code-desc">${promo.description || ''}</p>
+          <h3 class="promo-code-title">${esc(promo.name)}</h3>
+          <p class="promo-code-desc">${esc(promo.description || '')}</p>
           ${minPurchaseText}
           ${usageText}
         </div>
@@ -440,9 +452,9 @@ class PromosPage {
         <div class="promo-code-footer">
           <div class="promo-code-value">
             <span class="code-label">Codice:</span>
-            <span class="code-text">${promo.code}</span>
+            <span class="code-text">${esc(promo.code)}</span>
           </div>
-          <button class="copy-code-btn" data-code="${promo.code}">
+          <button class="copy-code-btn" data-code="${esc(promo.code)}">
             📋 Copia
           </button>
         </div>
@@ -510,11 +522,14 @@ class PromosPage {
     }
 
     await cartService.addItem({
-      id: product.id,
+      productId: product.id,
       name: product.name,
       price: product.sale_price || product.price,
       image: product.images?.[0] || '',
-      quantity: 1
+      size: '1 pz',
+      color: 'Fresco',
+      quantity: 1,
+      weight_grams: null
     });
     
     this.updateCartBadge();

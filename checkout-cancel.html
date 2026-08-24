@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#f8fdf5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         .cancel-actions {
@@ -25,7 +25,7 @@
         }
         .cancel-redirect-info {
             font-size: 0.8rem;
-            color: #888;
+            color: var(--text-muted, #5a6b5a);
             margin-top: 1.25rem;
         }
         .cancel-redirect-info span {
@@ -51,9 +51,50 @@
             color: #3d7c47;
             background: rgba(61, 124, 71, 0.04);
         }
+        .cancel-home-link {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted, #5a6b5a);
+            text-decoration: none;            transition: color 0.2s;
+        }
+        .cancel-home-link:hover {
+            color: #3d7c47;
+        }
+        .cancel-redirect-stop {
+            display: inline-block;
+            background: none;
+            border: none;
+            padding: 0;
+            font-family: inherit;
+            font-size: 0.8rem;
+            color: var(--text-muted, #5a6b5a);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        /* Small screens: the 450px content box overflowed the viewport */
+        @media (max-width: 480px) {
+            .checkout-result {
+                padding: 1.5rem 1.25rem;
+            }
+            .checkout-result-content {
+                max-width: 100%;
+            }
+            .checkout-result-title {
+                font-size: 1.6rem;
+            }
+        }
+        .cancel-redirect-stop:hover {
+            color: #3d7c47;
+        }
     </style>
 </head>
 <body>
+    <a href="index.html" class="cancel-home-link">← mimmofratelli.com</a>
     <main class="checkout-result">
         <div class="checkout-result-content">
             <div class="checkout-result-icon">😕</div>
@@ -68,12 +109,14 @@
             <p class="cancel-redirect-info">
                 Verrai reindirizzato al checkout tra <span id="countdown">10</span> secondi
             </p>
+            <button type="button" id="cancelRedirect" class="cancel-redirect-stop">Annulla reindirizzamento</button>
         </div>
     </main>
     <script>
         (function() {
             let seconds = 10;
             const el = document.getElementById('countdown');
+            const stopBtn = document.getElementById('cancelRedirect');
             const timer = setInterval(function() {
                 seconds--;
                 if (el) el.textContent = seconds;
@@ -82,6 +125,12 @@
                     window.location.href = 'checkout.html';
                 }
             }, 1000);
+            if (stopBtn) {
+                stopBtn.addEventListener('click', function() {
+                    clearInterval(timer);
+                    stopBtn.style.display = 'none';
+                });
+            }
         })();
     </script>
 </body>

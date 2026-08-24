@@ -333,10 +333,10 @@ BEGIN
 END $$;
 
 COMMENT ON CONSTRAINT orders_status_check_v2 ON public.orders IS
-  "Aggiunti post-audit: partially_refunded (rimborso parziale Stripe) e disputed (chargeback aperto).";
+  'Aggiunti post-audit: partially_refunded (rimborso parziale Stripe) e disputed (chargeback aperto).';
 
 COMMENT ON CONSTRAINT orders_payment_status_check_v2 ON public.orders IS
-  "Aggiunto post-audit: partially_refunded per rimborsi parziali Stripe.";
+  'Aggiunto post-audit: partially_refunded per rimborsi parziali Stripe.';
 
 -- Ordini già rimborsati parzialmente in passato (se esistono) restano coerenti:
 -- nessun backfill necessario perché il webhook ora registra il nuovo stato solo

@@ -217,11 +217,14 @@ class GiftCardService {
             return {
                 balance: parseFloat(data?.balance) || 0,
                 totalEarned: parseFloat(data?.total_earned) || 0,
-                totalSpent: parseFloat(data?.total_spent) || 0
+                totalSpent: parseFloat(data?.total_spent) || 0,
+                error: null
             };
         } catch (error) {
             console.error('Error fetching user credits:', error);
-            return { balance: 0, totalEarned: 0, totalSpent: 0 };
+            // Distinguish "no credits" from a failure: callers can surface it
+            // instead of silently showing €0 to a user with real credit
+            return { balance: 0, totalEarned: 0, totalSpent: 0, error: 'Errore nel caricamento del credito' };
         }
     }
 

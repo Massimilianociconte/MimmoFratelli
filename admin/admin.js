@@ -505,7 +505,7 @@ function populateCategoryFilter() {
     if (!filterCategory) return;
     
     filterCategory.innerHTML = '<option value="">Tutte le categorie</option>' +
-        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        categories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
 }
 
 // Apply all product filters
@@ -727,7 +727,7 @@ function openProductModal(product = null) {
     // Populate categories dropdown with icons
     const categorySelect = document.getElementById('productCategory');
     categorySelect.innerHTML = '<option value="">📦 Nessuna categoria</option>' +
-        categories.map(c => `<option value="${c.id}">${getCategoryIcon(c.slug)} ${c.name}</option>`).join('');
+        categories.map(c => `<option value="${c.id}">${getCategoryIcon(c.slug)} ${esc(c.name)}</option>`).join('');
     
     if (product?.category_id) {
         categorySelect.value = product.category_id;
@@ -835,23 +835,20 @@ function addInventoryVariantRow(weightGrams, qty, netWeightGrams = null, grossWe
     const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
     const labels = getUnitLabels(unitMeasure);
     const isPieces = unitMeasure === 'pz';
+    // Con 'g' i valori restano in grammi, senza conversione da/verso Kg
+    const isMinorUnit = isPieces || unitMeasure === 'g';
     
-    // Convert grams to display value
-    let displayValue;
-    if (isPieces) {
-        displayValue = weightGrams;
-    } else {
-        displayValue = weightGrams / 1000; // Convert to Kg/L
-    }
+    // Convert grams to display value (Kg/L rows are divided by 1000)
+    const displayValue = isMinorUnit ? weightGrams : weightGrams / 1000;
     
     // Convert net/gross weights to display values
-    const netDisplay = netWeightGrams ? (isPieces ? netWeightGrams : netWeightGrams / 1000) : '';
-    const grossDisplay = grossWeightGrams ? (isPieces ? grossWeightGrams : grossWeightGrams / 1000) : '';
+    const netDisplay = netWeightGrams ? (isMinorUnit ? netWeightGrams : netWeightGrams / 1000) : '';
+    const grossDisplay = grossWeightGrams ? (isMinorUnit ? grossWeightGrams : grossWeightGrams / 1000) : '';
     
     const qtyClass = qty === 0 ? 'out-of-stock' : (qty <= 5 ? 'low-stock' : '');
     
     row.innerHTML = `
-        <input type="text" class="variant-name-input" value="${variantName || ''}" placeholder="es. Cassetta 250g">
+        <input type="text" class="variant-name-input" value="${attrEsc(variantName)}" placeholder="es. Cassetta 250g">
         <div class="weight-inputs">
             <input type="number" class="weight-value" min="0" step="${isPieces ? '1' : '0.01'}" value="${displayValue}" onchange="updateInventoryRow(this)" placeholder="0">
             <span class="unit-label">${labels.major}</span>
@@ -878,14 +875,17 @@ function addWeightRowWithData(weightGrams, qty) {
 }
 
 // Get unit labels based on unit measure
+// Decisione: con unit_measure='g' tutta la griglia lavora direttamente in grammi
+// (input, etichette e salvataggio), coerente con gli header "(g)" e convertToGrams.
 function getUnitLabels(unitMeasure) {
     switch (unitMeasure) {
         case 'l':
             return { major: 'L', minor: 'ml' };
         case 'ml':
             return { major: 'L', minor: 'ml' };
-        case 'kg':
         case 'g':
+            return { major: 'g', minor: 'g' };
+        case 'kg':
         default:
             return { major: 'Kg', minor: 'g' };
     }
@@ -919,7 +919,7 @@ function convertFromGrams(grams, unitMeasure) {
 // Format weight with correct unit
 function formatWeightWithUnit(grams, unitMeasure) {
     const labels = getUnitLabels(unitMeasure);
-    if (grams >= 1000) {
+    if (unitMeasure !== 'g' && grams >= 1000) {
         const major = grams / 1000;
         return major % 1 === 0 ? `${major} ${labels.major}` : `${major.toFixed(1)} ${labels.major}`;
     }
@@ -966,7 +966,7 @@ window.updateUnitMeasureLabels = function() {
     }
     
     // Update input step values based on unit
-    const step = isPieces ? '1' : '0.01';
+    const step = (isPieces || unitMeasure === 'g') ? '1' : '0.01';
     document.querySelectorAll('.inventory-row .weight-value, .inventory-row .net-weight-input, .inventory-row .gross-weight-input').forEach(input => {
         input.step = step;
     });
@@ -1025,7 +1025,6 @@ function updateInventorySummary() {
 function getWeightInventoryData() {
     const rows = document.querySelectorAll('.inventory-row');
     const weightInventory = [];
-    let totalQty = 0;
     const unitMeasure = document.getElementById('productUnitMeasure')?.value || 'kg';
     const isPieces = unitMeasure === 'pz';
     
@@ -1049,24 +1048,37 @@ function getWeightInventoryData() {
             netGrams = netDisplay ? Math.round(netDisplay) : null;
             grossGrams = grossDisplay ? Math.round(grossDisplay) : null;
         } else {
-            weightGrams = Math.round(displayValue * 1000); // Kg/L to g/ml
-            netGrams = netDisplay ? Math.round(netDisplay * 1000) : null;
-            grossGrams = grossDisplay ? Math.round(grossDisplay * 1000) : null;
+            const scale = unitMeasure === 'g' ? 1 : 1000; // Kg/L rows are multiplied by 1000
+            weightGrams = Math.round(displayValue * scale);
+            netGrams = netDisplay ? Math.round(netDisplay * scale) : null;
+            grossGrams = grossDisplay ? Math.round(grossDisplay * scale) : null;
         }
         
         if (weightGrams > 0 || qty > 0) {
-            weightInventory.push({ 
-                weight_grams: weightGrams, 
+            weightInventory.push({
+                weight_grams: weightGrams,
                 quantity: qty,
                 net_weight_grams: netGrams,
                 gross_weight_grams: grossGrams,
                 variant_name: variantName || null
             });
-            totalQty += qty;
         }
     });
     
-    return { weightInventory, totalQty };
+    // Dedup per weight_grams (UNIQUE constraint): stesso peso e stessa variante
+    // somma le quantità, stesso peso con variante diversa tiene la prima riga.
+    const byWeight = new Map();
+    weightInventory.forEach(item => {
+        const dup = byWeight.get(item.weight_grams);
+        if (!dup) {
+            byWeight.set(item.weight_grams, item);
+        } else if ((dup.variant_name || null) === (item.variant_name || null)) {
+            dup.quantity += item.quantity;
+        }
+    });
+    
+    const dedupedInventory = Array.from(byWeight.values());
+    return { weightInventory: dedupedInventory, totalQty: dedupedInventory.reduce((sum, item) => sum + item.quantity, 0) };
 }
 
 // ============================================
@@ -1208,7 +1220,7 @@ function renderUploadedImages() {
     
     grid.innerHTML = uploadedImages.map((img, index) => `
         <div class="uploaded-image-item" draggable="true" data-index="${index}">
-            <img src="${img.url}" alt="Immagine ${index + 1}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❌</text></svg>'">
+            <img src="${attrEsc(img.url)}" alt="Immagine ${index + 1}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❌</text></svg>'">
             <button type="button" class="remove-btn" onclick="removeUploadedImage(${index})">×</button>
             <span class="image-order">${index + 1}</span>
         </div>
@@ -1338,7 +1350,7 @@ window.updateImagePreview = function() {
     previewSection.style.display = 'block';
     previewGrid.innerHTML = images.map(img => `
         <div class="image-preview-item">
-            <img src="${getImagePath(img)}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'color:#999;font-size:0.7rem;padding:0.5rem;\\'>Errore</span>'">
+            <img src="${attrEsc(getImagePath(img))}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'color:#999;font-size:0.7rem;padding:0.5rem;\\'>Errore</span>'">
         </div>
     `).join('');
 };
@@ -1529,9 +1541,13 @@ async function handleProductSubmit(e) {
             savedProductId = result.data[0].id;
         }
         
-        // Save weight inventory
-        if (savedProductId && weightInventory.length > 0) {
-            await saveWeightInventory(savedProductId, weightInventory);
+        // Save weight inventory (always when saved, even if empty: clears removed rows)
+        let inventoryError = null;
+        if (savedProductId) {
+            const inventoryResult = await saveWeightInventory(savedProductId, weightInventory);
+            if (!inventoryResult.success) {
+                inventoryError = inventoryResult.error;
+            }
         }
 
         // Send push notification if requested
@@ -1542,7 +1558,11 @@ async function handleProductSubmit(e) {
         closeProductModal();
         await loadProducts();
         await loadDashboardData();
-        showToast(id ? 'Prodotto aggiornato!' : 'Prodotto creato!', 'success');
+        if (inventoryError) {
+            showToast(`⚠️ ${id ? 'Prodotto aggiornato' : 'Prodotto creato'}, ma errore nel salvataggio dell'inventario: ${inventoryError}`, 'error');
+        } else {
+            showToast(id ? 'Prodotto aggiornato!' : 'Prodotto creato!', 'success');
+        }
     } catch (err) {
         console.error('Save product error:', err);
         errorEl.textContent = 'Errore nel salvataggio: ' + err.message;
@@ -1552,14 +1572,16 @@ async function handleProductSubmit(e) {
     }
 }
 
-// Save weight inventory to database
+// Save weight inventory to database (replaces all rows; empty array clears them)
 async function saveWeightInventory(productId, weightInventory) {
     try {
         // Delete existing weight inventory for this product
-        await supabase
+        const { error: deleteError } = await supabase
             .from('weight_inventory')
             .delete()
             .eq('product_id', productId);
+        
+        if (deleteError) throw deleteError;
         
         // Insert new weight inventory rows
         if (weightInventory.length > 0) {
@@ -1576,12 +1598,13 @@ async function saveWeightInventory(productId, weightInventory) {
                 .from('weight_inventory')
                 .insert(rows);
             
-            if (error) {
-                console.error('Error saving weight inventory:', error);
-            }
+            if (error) throw error;
         }
+        
+        return { success: true };
     } catch (err) {
         console.error('Save weight inventory error:', err);
+        return { success: false, error: err.message };
     }
 }
 
@@ -1729,7 +1752,7 @@ function renderCategories(categoryList) {
             <td><span class="status-badge ${c.is_active ? 'status-active' : 'status-inactive'}">${c.is_active ? 'Attiva' : 'Inattiva'}</span></td>
             <td class="action-btns">
                 <button class="btn-edit" onclick="editCategory('${c.id}')">Modifica</button>
-                <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${esc(c.name).replace(/'/g, "\\'")}')">​Elimina</button>
+                <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}')">​Elimina</button>
             </td>
         </tr>
     `}).join('');
@@ -1759,7 +1782,7 @@ function renderCategories(categoryList) {
                 </div>
                 <div class="mobile-card-actions">
                     <button class="btn-edit" onclick="editCategory('${c.id}')">✏️ Modifica</button>
-                    <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}', '${esc(c.name).replace(/'/g, "\\'")}')">🗑️ Elimina</button>
+                    <button class="btn-delete" onclick="confirmDeleteCategory('${c.id}')">🗑️ Elimina</button>
                 </div>
             </div>
         `}).join('');
@@ -1805,8 +1828,11 @@ window.editCategory = function(id) {
     if (category) openCategoryModal(category);
 };
 
-window.confirmDeleteCategory = function(id, name) {
-    document.getElementById('deleteMessage').textContent = `Sei sicuro di voler eliminare la categoria "${name}"?`;
+window.confirmDeleteCategory = function(id) {
+    // Name is resolved from the loaded catalog: inline onclick handlers carry
+    // only the UUID, so no category-controlled string ever reaches a JS context.
+    const safeName = categories.find(c => c.id === id)?.name || 'questa categoria';
+    document.getElementById('deleteMessage').textContent = `Sei sicuro di voler eliminare la categoria "${safeName}"?`;
     deleteCallback = () => deleteCategory(id);
     document.getElementById('deleteModal').classList.add('active');
 };
@@ -2015,14 +2041,15 @@ async function searchGiftCards() {
             .from('gift_cards')
             .select('*');
 
-        // Search by name or code
+        // Search by name or code (strip characters that break PostgREST .or() syntax)
         if (query) {
+            const safeQuery = query.replace(/[,()%]/g, '');
             queryBuilder = queryBuilder.or(
-                `recipient_name.ilike.%${query}%,` +
-                `sender_name.ilike.%${query}%,` +
-                `purchaser_first_name.ilike.%${query}%,` +
-                `purchaser_last_name.ilike.%${query}%,` +
-                `code.ilike.%${query}%`
+                `recipient_name.ilike.%${safeQuery}%,` +
+                `sender_name.ilike.%${safeQuery}%,` +
+                `purchaser_first_name.ilike.%${safeQuery}%,` +
+                `purchaser_last_name.ilike.%${safeQuery}%,` +
+                `code.ilike.%${safeQuery}%`
             );
         }
 
@@ -2092,7 +2119,7 @@ async function searchGiftCards() {
                         </div>
                         <div class="gc-result-row">
                             <span class="gc-result-label">Credito Rimanente</span>
-                            <span class="gc-result-value">€${gc.remaining_balance || gc.amount}</span>
+                            <span class="gc-result-value">€${parseFloat(gc.remaining_balance ?? gc.amount).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -2122,7 +2149,7 @@ async function showGcDetail(gcId) {
         const statusClass = gc.is_redeemed ? 'redeemed' : isExpired ? 'expired' : 'active';
         const statusText = gc.is_redeemed ? 'Riscattata' : isExpired ? 'Scaduta' : 'Attiva';
         const style = gc.template || gc.style || 'elegant';
-        const usedAmount = parseFloat(gc.amount) - parseFloat(gc.remaining_balance || gc.amount);
+        const usedAmount = parseFloat(gc.amount) - parseFloat(gc.remaining_balance ?? gc.amount);
         
         // Generate the bearer-token QR through the authenticated first-party endpoint.
         const { giftCardService } = await import('../js/services/giftcard.js');
@@ -2218,7 +2245,7 @@ async function showGcDetail(gcId) {
                             <span class="label">Utilizzato</span>
                         </div>
                         <div class="gc-credit-item">
-                            <span class="value">€${gc.remaining_balance || gc.amount}</span>
+                            <span class="value">€${parseFloat(gc.remaining_balance ?? gc.amount).toFixed(2)}</span>
                             <span class="label">Rimanente</span>
                         </div>
                     </div>
@@ -2278,7 +2305,7 @@ async function loadAnalyticsData() {
             .from('orders')
             .select('total, status');
         const revenue = !ordersError && orders
-            ? orders.filter(o => o.status !== 'cancelled' && o.status !== 'refunded')
+            ? orders.filter(o => !['cancelled', 'refunded', 'partially_refunded', 'disputed'].includes(o.status))
                     .reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
             : 0;
         document.getElementById('analyticsRevenue').textContent = `€${revenue.toFixed(0)}`;
@@ -2492,7 +2519,7 @@ function populateCategoryChips() {
     container.innerHTML = categories.map(cat => `
         <label class="selection-chip">
             <input type="checkbox" value="${cat.id}" onchange="updateDiscountSelection()">
-            <span>📁 ${cat.name}</span>
+            <span>📁 ${esc(cat.name)}</span>
         </label>
     `).join('');
 }
@@ -2647,7 +2674,7 @@ window.updateDiscountPreview = function() {
     // Update preview
     let modeText = '';
     if (discountMode === 'all') modeText = 'tutti i prodotti';
-    else if (discountMode === 'gender') modeText = `prodotti ${selectedGenders.map(g => g === 'woman' ? 'Donna' : g === 'man' ? 'Uomo' : 'Unisex').join(', ')}`;
+    else if (discountMode === 'gender') modeText = `prodotti ${selectedGenders.map(g => getProductTypeLabel(g)).join(', ')}`;
     else if (discountMode === 'category') modeText = `categorie selezionate`;
     else if (discountMode === 'products') modeText = `prodotti selezionati`;
     
@@ -2887,6 +2914,7 @@ let orderSortField = 'created_at';
 let orderSortDir = 'desc';
 const ORDERS_PAGE_SIZE = 200;
 let allOrdersLoaded = false;
+let ordersEventListenersBound = false;
 
 async function loadOrders() {
     try {
@@ -2980,6 +3008,10 @@ function renderLoadMoreOrders(loaded, total) {
 window.loadMoreOrders = loadMoreOrders;
 
 function setupOrdersEventListeners() {
+    // Bind only once: loadOrders() runs on every entry into the Orders section
+    if (ordersEventListenersBound) return;
+    ordersEventListenersBound = true;
+
     // Search input
     const searchInput = document.getElementById('orderSearch');
     const clearBtn = document.getElementById('clearSearchBtn');
@@ -3187,7 +3219,9 @@ function renderOrders(orderList, searchQuery = '') {
         'shipped': 'status-shipped',
         'delivered': 'status-active',
         'cancelled': 'status-inactive',
-        'refunded': 'status-inactive'
+        'refunded': 'status-inactive',
+        'partially_refunded': 'status-processing',
+        'disputed': 'status-inactive'
     };
 
     // Desktop table
@@ -3222,7 +3256,7 @@ function renderOrders(orderList, searchQuery = '') {
         <tr class="${searchQuery && buildSearchableText(order).toLowerCase().includes(searchQuery) ? 'order-row-highlight' : ''}">
             <td>
                 <strong>#${displayOrderNum}</strong>
-                <br><small style="color:#999" title="${esc(productNames)}">${order.order_items?.length || 0} prodotti</small>
+                <br><small style="color:#999" title="${attrEsc(productNames)}">${order.order_items?.length || 0} prodotti</small>
             </td>
             <td>
                 <strong>${displayCustomer}</strong>
@@ -3240,7 +3274,9 @@ function renderOrders(orderList, searchQuery = '') {
                     <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>🚚 Spedito</option>
                     <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>📦 Consegnato</option>
                     <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Annullato</option>
-                    <option value="refunded" ${order.status === 'refunded' ? 'selected' : ''}>💸 Rimborsato</option>
+                    <option value="refunded" ${order.status === 'refunded' ? 'selected' : ''}>💸 Rimborsato (contabilità)</option>
+                    <option value="partially_refunded" ${order.status === 'partially_refunded' ? 'selected' : ''}>🟠 Parzialmente Rimborsato</option>
+                    <option value="disputed" ${order.status === 'disputed' ? 'selected' : ''}>⚠️ Contestato</option>
                 </select>
             </td>
             <td class="actions-cell">
@@ -3306,7 +3342,9 @@ function renderOrders(orderList, searchQuery = '') {
                             <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>🚚 Spedito</option>
                             <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>📦 Consegnato</option>
                             <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Annullato</option>
-                            <option value="refunded" ${order.status === 'refunded' ? 'selected' : ''}>💸 Rimborsato</option>
+                            <option value="refunded" ${order.status === 'refunded' ? 'selected' : ''}>💸 Rimborsato (contabilità)</option>
+                            <option value="partially_refunded" ${order.status === 'partially_refunded' ? 'selected' : ''}>🟠 Parzialmente Rimborsato</option>
+                            <option value="disputed" ${order.status === 'disputed' ? 'selected' : ''}>⚠️ Contestato</option>
                         </select>
                     </div>
                 </div>
@@ -3332,6 +3370,12 @@ function buildTrackingUrl(courier, trackingNumber) {
 
 window.updateOrderStatus = async function(orderId, newStatus) {
     try {
+        if (newStatus === 'refunded') {
+            if (!confirm('Questa azione aggiorna solo lo stato contabile: il rimborso Stripe reale va effettuato dalla dashboard Stripe. Continuare?')) { applyOrderFilters(); return; }
+        } else if (newStatus === 'cancelled') {
+            if (!confirm('Annullare questo ordine? Assicurati di aver effettuato l\'eventuale rimborso su Stripe. Continuare?')) { applyOrderFilters(); return; }
+        }
+
         const updateData = { status: newStatus, updated_at: new Date().toISOString() };
 
         // Alla spedizione chiedi corriere e tracking per includerli nell'email al cliente

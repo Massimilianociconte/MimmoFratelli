@@ -82,3 +82,27 @@ Object.freeze(window.AVENUE_CONFIG);
     document.head.append(script);
   }
 })();
+
+// Declare the PWA manifest on every page that loads this config. Only the
+// homepage used to link it, so direct navigation to inner pages produced
+// documents without a manifest association.
+(function injectManifest() {
+  const configSource = document.currentScript?.src;
+  if (!configSource || !document.head) return;
+
+  const manifestUrl = new URL('site.webmanifest', new URL('../', configSource)).href;
+  if (!document.querySelector(`link[rel="manifest"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestUrl;
+    document.head.append(link);
+  }
+})();
+
+// Keep the footer copyright year current on every page
+(function updateCopyrightYear() {
+  const year = String(new Date().getFullYear());
+  document.querySelectorAll('[data-current-year]').forEach((el) => {
+    el.textContent = year;
+  });
+})();

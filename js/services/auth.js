@@ -7,6 +7,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { referralService } from './referral.js';
 
 // Rate limiting configuration
 const RATE_LIMIT_KEY = 'avenue_login_attempts';
@@ -133,8 +134,8 @@ class AuthService {
    */
   async _processSignup(userId, email, referralCode = null, accessToken = null) {
     try {
-      // Get stored referral code from localStorage if not provided
-      const storedRefCode = referralCode || localStorage.getItem('mimmo_referral_code');
+      // Get stored referral code (30-day TTL) if not explicitly provided
+      const storedRefCode = referralCode || referralService.getStoredReferralCode();
 
       const response = await fetch(`${window.AVENUE_CONFIG?.SUPABASE_URL || ''}/functions/v1/handle-signup`, {
         method: 'POST',
@@ -159,7 +160,7 @@ class AuthService {
 
       // Clear stored referral code after use
       if (storedRefCode) {
-        localStorage.removeItem('mimmo_referral_code');
+        referralService.clearStoredReferralCode();
       }
 
       return data;
@@ -249,10 +250,12 @@ class AuthService {
       this.session = null;
 
       // Pulizia stato residuo su dispositivi condivisi: il codice promo
-      // applicato e i preferiti guest non devono sopravvivere all'utente.
+      // applicato e il codice referral catturato (localStorage, con TTL)
+      // non devono sopravvivere all'utente.
       try {
         sessionStorage.removeItem('appliedPromoCode');
-        sessionStorage.removeItem('mimmo_referral_code');
+        sessionStorage.removeItem('mimmo_referral_code'); // legacy
+        referralService.clearStoredReferralCode();
       } catch {
         /* storage non disponibile (modalità privata): non bloccare il logout */
       }

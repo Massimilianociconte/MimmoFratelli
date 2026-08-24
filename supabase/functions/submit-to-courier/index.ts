@@ -104,12 +104,14 @@ Deno.serve(async (req: Request) => {
 
     const config = courierConfigs[courier.toLowerCase()];
     if (!config || !config.apiKey) {
-      // Flag for manual review if courier not configured
+      // Flag for manual review if courier not configured.
+      // APPEND to notes instead of overwriting: notes can hold customer or
+      // packing information that must not be destroyed
       await supabaseAdmin
         .from("orders")
-        .update({ 
+        .update({
           status: "processing",
-          notes: `Courier ${courier} not configured`
+          notes: `${order.notes ? order.notes + "\n" : ""}[auto] Courier ${courier} not configured`
         })
         .eq("id", orderId);
 

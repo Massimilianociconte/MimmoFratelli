@@ -328,18 +328,13 @@ Deno.serve(async (req: Request) => {
         console.error('Error creating referral relationship:', refError);
         // Don't throw - user is still created
       } else {
-        // Increment referrer's total_referrals count
-        const { data: currentStats } = await supabaseAdmin
-          .from('user_referral_codes')
-          .select('total_referrals')
-          .eq('user_id', referrerId)
-          .single();
+        // Increment referrer's total_referrals count atomically (avoids
+        // lost updates on concurrent signups)
+        const { error: incrementError } = await supabaseAdmin
+          .rpc('increment_referral_count', { p_user_id: referrerId });
 
-        if (currentStats) {
-          await supabaseAdmin
-            .from('user_referral_codes')
-            .update({ total_referrals: (currentStats.total_referrals || 0) + 1 })
-            .eq('user_id', referrerId);
+        if (incrementError) {
+          console.error('Error incrementing referral count:', incrementError);
         }
 
         console.log(`Created referral relationship: ${referrerId} -> ${userId}`);

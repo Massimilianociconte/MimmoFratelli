@@ -42,7 +42,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
@@ -100,7 +100,7 @@
                 </svg>
                 <span class="badge" id="cartBadge" style="display:none;">0</span>
             </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <button type="button" class="menu-btn" onclick="toggleMenu()" aria-expanded="false" aria-controls="menuOverlay">Menu</button>
         </div>
     </nav>
 
@@ -199,8 +199,8 @@
             </button>
         </div>
         <div class="view-toggle">
-            <button class="view-btn" data-view="grid">⊞</button>
-            <button class="view-btn" data-view="list">☰</button>
+            <button class="view-btn active" data-view="grid" aria-label="Vista griglia" aria-pressed="true">⊞</button>
+            <button class="view-btn" data-view="list" aria-label="Vista elenco" aria-pressed="false">☰</button>
         </div>
     </div>
 
@@ -280,7 +280,7 @@
     <!-- Floating Quick View -->
     <div class="quick-view-overlay" id="quickView">
         <div class="quick-view-content">
-            <button class="quick-view-close" onclick="closeQuickView()">✕</button>
+            <button class="quick-view-close" onclick="closeQuickView()" aria-label="Chiudi anteprima">✕</button>
             <div class="quick-view-body">
                 <div class="quick-view-image">
                     <img id="quickViewImg" src="" alt="">
@@ -325,7 +325,7 @@
                     <span>Link</span>
                 </div>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">
@@ -462,7 +462,8 @@
 
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
-            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.textContent = isOpen ? 'Menu' : 'Chiudi';
+            menuBtn.setAttribute('aria-expanded', String(isOpen));
             menuBtn.style.color = isOpen ? '' : 'white';
             if (isOpen) {
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
@@ -545,6 +546,25 @@
                 activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
 
+            // Resolve ?category=slug to a real category_id so the mega-menu and
+            // search category links actually filter the grid. Until now the
+            // parameter only highlighted the pill and the query ignored it.
+            if (categorySlug && isSupabaseConfigured()) {
+                try {
+                    const { category } = await productService.getCategoryBySlug(categorySlug);
+                    if (category) {
+                        currentFilters.category_id = category.id;
+                        const categorySelect = document.getElementById('categorySelect');
+                        if (categorySelect) {
+                            // populate after loadCategories; set a placeholder now
+                            categorySelect.dataset.pendingValue = category.id;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Category param resolution failed:', err);
+                }
+            }
+
             // Load products
             await loadProducts();
             await updateFavoritesCount();
@@ -625,8 +645,12 @@
             // View toggle
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.view-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     const grid = document.getElementById('productGrid');
                     grid.className = btn.dataset.view === 'list' ? 'collection-grid-modern list-view' : 'collection-grid-modern';
                 });
@@ -863,6 +887,12 @@
                     select.appendChild(option);
                 });
             }
+
+            // Apply the ?category= resolved earlier to the dropdown
+            if (select.dataset.pendingValue) {
+                select.value = select.dataset.pendingValue;
+                delete select.dataset.pendingValue;
+            }
         }
 
         async function loadProducts() {
@@ -870,16 +900,28 @@
             grid.innerHTML = '<div class="loading-spinner">Caricamento...</div>';
             try {
                 if (isSupabaseConfigured()) {
-                    const { products: dbProducts } = await productService.getProducts({ gender });
-                    products = dbProducts?.length > 0 ? dbProducts : getMockProducts();
+                    const { products: dbProducts, error } = await productService.getProducts({ gender });
+                    if (error) throw new Error(error);
+                    // With Supabase configured, an empty result is a real empty
+                    // state: never substitute fake "purchasable" mock products
+                    products = dbProducts || [];
                 } else {
                     products = getMockProducts();
                 }
                 renderProducts();
             } catch (err) {
                 console.error('Error loading products:', err);
-                products = getMockProducts();
-                renderProducts();
+                if (!isSupabaseConfigured()) {
+                    products = getMockProducts();
+                    renderProducts();
+                } else {
+                    grid.innerHTML = `
+                        <div class="no-products" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;">
+                            <p style="margin-bottom: 1.5rem;">Errore nel caricamento dei prodotti. Riprova.</p>
+                            <button class="btn btn-primary" onclick="location.reload()">Ricarica</button>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -939,12 +981,12 @@
                 return `
                     <div class="product-card-small ${isUnavailable ? 'unavailable' : ''}" data-product-id="${escapeHtml(productId)}" style="animation-delay: ${i * 0.03}s">
                         <a href="${escapeHtml(productUrl)}" class="card-image-small">
-                            <img src="${escapeHtml(img)}" alt="${productName}" loading="lazy" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
+                            <img src="${escapeHtml(img)}" alt="${productName}" loading="${i < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${i < 4 ? 'high' : 'low'}">
                             ${seasonalBadge}
                             ${hasDiscount && !isUnavailable ? '<span class="sale-badge">Offerta</span>' : ''}
                             ${product.is_new ? '<span class="fresh-badge">Novità</span>' : ''}
                         </a>
-                        <button class="card-favorite-small ${isFav ? 'active' : ''}" data-product-id="${escapeHtml(productId)}" onclick='event.stopPropagation(); toggleFavorite(${jsString(productId)}, this)'>
+                        <button class="card-favorite-small ${isFav ? 'active' : ''}" data-product-id="${escapeHtml(productId)}" onclick='event.stopPropagation(); toggleFavorite(${jsString(productId)}, this)' aria-label="${isFav ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}: ${productName}">
                             ${isFav ? '♥' : '♡'}
                         </button>
                         ${!isUnavailable ? `
@@ -1108,7 +1150,15 @@
                     weight_grams: defaultWeightGrams
                 };
 
-                await cartService.addItem(item);
+                const result = await cartService.addItem(item);
+
+                if (result && result.success === false) {
+                    // Stock check failed or DB error: show the error state,
+                    // never the green "added" animation
+                    if (btn) btn.classList.remove('adding');
+                    showQuickAddError(btn, result.error || 'Prodotto non disponibile');
+                    return;
+                }
 
                 if (btn) {
                     btn.classList.remove('adding');
@@ -1118,6 +1168,7 @@
             } catch (err) {
                 console.error('Error adding to cart:', err);
                 if (btn) btn.classList.remove('adding');
+                showQuickAddError(btn, 'Errore di rete. Riprova.');
             }
         };
 

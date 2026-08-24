@@ -295,6 +295,7 @@ class ProfileDrawer {
     // Update stats
     this._updateWishlistCount();
     this._updateCreditBalance();
+    this._updateOrdersCount();
   }
 
   /**
@@ -309,6 +310,27 @@ class ProfileDrawer {
       document.getElementById('statWishlist').textContent = items.length;
     } catch {
       document.getElementById('statWishlist').textContent = '0';
+    }
+  }
+
+  /**
+   * Update completed orders count in stats (was permanently stuck at 0)
+   * @private
+   */
+  async _updateOrdersCount() {
+    const el = document.getElementById('statOrders');
+    if (!el) return;
+    try {
+      const { supabase, isSupabaseConfigured } = await import('../supabase.js');
+      if (!isSupabaseConfigured()) return;
+      const { count, error } = await supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('payment_status', 'completed');
+      if (error) throw error;
+      el.textContent = count ?? 0;
+    } catch {
+      el.textContent = '0';
     }
   }
 
@@ -348,6 +370,19 @@ class ProfileDrawer {
   }
 
   /**
+   * Close the gift card modal and stop any running animations
+   * @private
+   */
+  _closeGiftCardModal() {
+    const modal = document.getElementById('giftCardCreatorModal');
+    if (modal) modal.classList.remove('active');
+    if (this._gcRotateInterval) {
+      clearInterval(this._gcRotateInterval);
+      this._gcRotateInterval = null;
+    }
+  }
+
+  /**
    * Create gift card creator modal
    * @private
    */
@@ -355,7 +390,7 @@ class ProfileDrawer {
     const modalHTML = `
       <div class="gc-modal-overlay" id="giftCardCreatorModal">
         <div class="gc-modal-content">
-          <button class="gc-modal-close" onclick="document.getElementById('giftCardCreatorModal').classList.remove('active')">&times;</button>
+          <button class="gc-modal-close" aria-label="Chiudi">&times;</button>
           
           <div class="gc-modal-body">
             <div class="gc-form-section">
@@ -444,6 +479,12 @@ class ProfileDrawer {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     this._addGiftCardModalStyles();
     this._attachGiftCardFormListeners();
+    // Close button + Escape key: stop the 3D auto-rotation when hidden
+    document.querySelector('#giftCardCreatorModal .gc-modal-close')
+      ?.addEventListener('click', () => this._closeGiftCardModal());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this._closeGiftCardModal();
+    });
   }
 
   /**
@@ -777,11 +818,21 @@ class ProfileDrawer {
     
     // Auto rotate
     autoRotateInterval = setInterval(() => {
+      if (!document.body.contains(card)) {
+        clearInterval(autoRotateInterval);
+        return;
+      }
+      const modal = document.getElementById('giftCardCreatorModal');
+      if (modal && !modal.classList.contains('active')) {
+        clearInterval(autoRotateInterval);
+        return;
+      }
       if (autoRotate && !isDragging) {
         rotateY += 0.5;
         card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       }
     }, 30);
+    this._gcRotateInterval = autoRotateInterval;
     
     // Mouse/touch drag
     scene.addEventListener('mousedown', (e) => {
@@ -890,6 +941,9 @@ class ProfileDrawer {
     
     content += '<button class="gc-back-btn">← Indietro</button>';
     
+    // Remove any previous overlay to avoid stacking duplicates
+    this.drawer.querySelector('.my-gc-overlay')?.remove();
+
     const overlay = document.createElement('div');
     overlay.className = 'my-gc-overlay';
     overlay.innerHTML = `<div class="my-gc-content">${content}</div>`;

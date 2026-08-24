@@ -30,10 +30,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .logo-img-white { display: none; }
+        .logo-img-green { display: block; }
+    </style>
 </head>
 
 <body>
@@ -41,8 +45,9 @@
     <!-- Navigation -->
     <nav
         style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px);">
-        <div class="logo"><a href="index.html#categorie"><img src="Images/logo_mimmofratelli_verde.png"
-                    alt="Mimmo Fratelli" class="logo-img"></a></div>
+        <div class="logo"><a href="index.html#categorie"><img src="Images/logo_mimmo_fratelli.png"
+                    alt="Mimmo Fratelli" class="logo-img logo-img-white"><img src="Images/logo_mimmofratelli_verde.png"
+                    alt="Mimmo Fratelli" class="logo-img logo-img-green"></a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -65,7 +70,7 @@
                 </svg>
                 <span class="badge" id="cartBadge" style="display:none;">0</span>
             </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <button type="button" class="menu-btn" onclick="toggleMenu()" aria-expanded="false" aria-controls="menuOverlay">Menu</button>
         </div>
     </nav>
 
@@ -99,13 +104,22 @@
         </div>
     </div>
 
+    <nav aria-label="Percorso"
+        style="max-width: var(--container-max); margin: 0 auto; padding: calc(var(--nav-height) + 1rem) 2rem 0; font-size: 0.8rem; color: var(--text-muted, #6b7280);">
+        <a href="index.html" style="color: inherit; text-decoration: none;">Home</a>
+        <span style="margin: 0 0.4rem;">/</span>
+        <a href="collection.html?gender=frutta" id="breadcrumbGender" style="color: inherit; text-decoration: none;">Frutta</a>
+        <span style="margin: 0 0.4rem;">/</span>
+        <span id="breadcrumbProduct">…</span>
+    </nav>
+
     <div class="product-container">
         <!-- Thumbnails Column -->
         <div class="thumbs-col" id="thumbsCol"></div>
 
         <!-- Main Image Column -->
         <div class="main-image-col">
-            <img id="mainImage" src="" alt="Product Image" class="main-image">
+            <img id="mainImage" src="" alt="Immagine prodotto" width="800" height="800" class="main-image">
         </div>
 
         <!-- Info Column -->
@@ -382,6 +396,7 @@
                 document.body.classList.remove('menu-open');
                 menuBtn.textContent = 'Menu';
                 menuBtn.style.color = '';
+                menuBtn.setAttribute('aria-expanded', 'false');
                 document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
                 if (isMobile) {
                     document.body.style.top = '';
@@ -394,8 +409,9 @@
                 }
                 menuOverlay.classList.add('active');
                 document.body.classList.add('menu-open');
-                menuBtn.textContent = 'Close';
+                menuBtn.textContent = 'Chiudi';
                 menuBtn.style.color = 'white';
+                menuBtn.setAttribute('aria-expanded', 'true');
             }
         };
 
@@ -425,6 +441,13 @@
             const productSlug = params.get('slug');
             const gender = params.get('gender') || 'frutta';
 
+            const BREADCRUMB_GENDER_LABELS = { 'frutta': 'Frutta', 'verdura': 'Verdura', 'conserve': 'Conserve', 'secchi-estratti': 'Prodotti' };
+            const breadcrumbGender = document.getElementById('breadcrumbGender');
+            if (breadcrumbGender) {
+                breadcrumbGender.textContent = BREADCRUMB_GENDER_LABELS[gender] || 'Prodotti';
+                breadcrumbGender.href = `collection.html?gender=${encodeURIComponent(gender)}`;
+            }
+
             let product = null;
 
             if (isSupabaseConfigured()) {
@@ -440,13 +463,27 @@
                 }
             }
 
-            if (!product) {
+            if (!product && !isSupabaseConfigured()) {
+                // Demo fallback only makes sense without a backend: with Supabase
+                // configured, a missing product is a real 404 and must never be
+                // replaced by a fake "purchasable" product
                 product = getMockProduct(productId, gender);
             }
 
             if (product) {
                 currentProduct = product;
                 renderProduct(product);
+            } else {
+                // Real "product not found" state with recovery CTA
+                document.querySelector('.product-container').innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                        <h2 style="margin-bottom: 0.75rem;">Prodotto non disponibile</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;">Il prodotto che cerchi non esiste più o il link non è valido.</p>
+                        <a href="collection.html${gender ? `?gender=${encodeURIComponent(gender)}` : ''}" class="btn btn-primary">Scopri i Prodotti</a>
+                    </div>
+                `;
+                document.title = 'Prodotto non disponibile | Mimmo Fratelli';
             }
 
             document.getElementById('authBtn').addEventListener('click', async () => {
@@ -831,6 +868,8 @@
             const unit = unitLabels[unitMeasure] || 'Kg';
 
             document.getElementById('pdTitle').textContent = product.name;
+            const breadcrumbProduct = document.getElementById('breadcrumbProduct');
+            if (breadcrumbProduct) breadcrumbProduct.textContent = product.name;
 
             const priceEl = document.getElementById('pdPrice');
             if (hasDiscount) {
@@ -923,6 +962,7 @@
             const mainImage = document.getElementById('mainImage');
 
             mainImage.src = images[0];
+            mainImage.alt = `Immagine di ${product.name || 'prodotto'}`;
             mainImage.onerror = function () { this.src = getPlaceholder(); };
 
             images.forEach((src, index) => {
@@ -987,7 +1027,7 @@
                     <span>Link</span>
                 </div>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">

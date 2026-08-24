@@ -77,7 +77,12 @@ class CollectionPage {
    * Load products with current filters
    */
   async loadProducts() {
-    if (this.isLoading) return;
+    if (this.isLoading) {
+      // A change arrived while loading: remember it and re-run when done,
+      // so the last requested state is always the one rendered.
+      this._pendingReload = true;
+      return;
+    }
     
     this.isLoading = true;
     this._showLoading();
@@ -106,6 +111,10 @@ class CollectionPage {
     } finally {
       this.isLoading = false;
       this._hideLoading();
+      if (this._pendingReload) {
+        this._pendingReload = false;
+        this.loadProducts();
+      }
     }
   }
 
@@ -140,6 +149,7 @@ class CollectionPage {
       price_max: null,
       min_discount: null,
       is_promotion: null,
+      is_seasonal: null,
       sort_by: 'newest'
     };
     
@@ -184,17 +194,18 @@ class CollectionPage {
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const filter = e.target.dataset.filter;
-        this._handleFilterClick(filter);
+        const filter = e.currentTarget.dataset.filter || e.target.dataset.filter;
+        this._handleFilterClick(filter, e);
       });
     });
 
     // View toggle
     document.querySelectorAll('.view-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        const target = e.currentTarget;
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        this.setView(e.target.dataset.view);
+        target.classList.add('active');
+        this.setView(target.dataset.view);
       });
     });
 
@@ -251,9 +262,9 @@ class CollectionPage {
     }
   }
 
-  _handleFilterClick(filter) {
+  _handleFilterClick(filter, evt) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    (evt?.currentTarget || evt?.target)?.classList.add('active');
 
     // Reset discount select when using quick filter buttons
     const discountSelect = document.getElementById('discountSelect');
@@ -265,11 +276,17 @@ class CollectionPage {
       case 'all':
         this.clearFilters();
         break;
+      case 'seasonal':
+        this.filters.sort_by = 'newest';
+        this.applyFilter('is_seasonal', true);
+        break;
       case 'new':
+        this.filters.is_seasonal = null;
         this.filters.is_promotion = null;
         this.applyFilter('sort_by', 'newest');
         break;
       case 'sale':
+        this.filters.is_seasonal = null;
         this.filters.min_discount = null;
         this.applyFilter('is_promotion', true);
         break;
@@ -422,7 +439,7 @@ class CollectionPage {
           },
           shippingDetails: {
             '@type': 'OfferShippingDetails',
-            shippingRate: { '@type': 'MonetaryAmount', value: '3.90', currency: 'EUR' },
+            shippingRate: { '@type': 'MonetaryAmount', value: (window.AVENUE_CONFIG?.STANDARD_SHIPPING_COST ?? 2.90).toFixed(2), currency: 'EUR' },
             shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT', addressRegion: ['MI'] },
             deliveryTime: {
               '@type': 'ShippingDeliveryTime',

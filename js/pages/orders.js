@@ -14,16 +14,16 @@ class OrdersPage {
 
   async init() {
     const authenticated = await isAuthenticated();
-    
-    document.getElementById('loadingOrders').style.display = 'none';
+
+    document.getElementById('ordersLoading').style.display = 'none';
 
     if (!authenticated) {
-      document.getElementById('loginRequired').style.display = 'block';
+      document.getElementById('ordersNeedLogin').style.display = 'block';
       document.getElementById('ordersContent').style.display = 'none';
       return;
     }
 
-    document.getElementById('loginRequired').style.display = 'none';
+    document.getElementById('ordersNeedLogin').style.display = 'none';
     document.getElementById('ordersContent').style.display = 'block';
 
     await this.loadOrders();
@@ -33,12 +33,12 @@ class OrdersPage {
     const { orders, error } = await orderService.getOrderHistory();
 
     if (error) {
-      document.getElementById('ordersList').innerHTML = `<p class="error">${error}</p>`;
+      document.getElementById('ordersContent').innerHTML = `<p class="error">${sanitizeString(error)}</p>`;
       return;
     }
 
-    if (orders.length === 0) {
-      document.getElementById('noOrders').style.display = 'block';
+    if (!orders || orders.length === 0) {
+      document.getElementById('ordersEmpty').style.display = 'block';
       return;
     }
 
@@ -46,7 +46,7 @@ class OrdersPage {
   }
 
   renderOrders(orders) {
-    const container = document.getElementById('ordersList');
+    const container = document.getElementById('ordersContent');
     container.innerHTML = orders.map(order => this.renderOrder(order)).join('');
   }
 
@@ -97,9 +97,10 @@ class OrdersPage {
   }
 }
 
-window.openAuthModal = function() {
-  const event = new CustomEvent('openAuthModal');
-  document.dispatchEvent(event);
+// Auth modal helper
+window.openAuthModal = async function() {
+  const { authModal } = await import('../components/auth-modal.js');
+  authModal.show('login');
 };
 
 new OrdersPage();

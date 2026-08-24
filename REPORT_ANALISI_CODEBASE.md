@@ -402,3 +402,150 @@ Tutti i fix seguenti sono stati implementati direttamente nel codice:
 4. **reset-password.html** — Supabase invierà il link di reset all'utente, che atterrerà su questa nuova pagina dove potrà impostare la nuova password.
 
 *Report generato dall'analisi automatica della codebase. Tutti i riferimenti a file e righe sono basati sullo stato del codice al momento dell'analisi.*
+
+---
+
+## 11. SECONDA TORNATA DI FIX (Agosto 2026)
+
+Nuova analisi completa (frontend, edge functions, HTML/CSS, SEO, PWA, a11y) e fix applicati:
+
+### Funzionalità rotte
+| # | Bug | Fix | File |
+|---|-----|-----|------|
+| A1 | 🔴 Pulsante "Accedi al tuo account" nel checkout morto: dispatch di un CustomEvent che nessuno ascolta | Chiamata diretta `authModal.show('login')` + lazy-init in `show()` | `js/pages/checkout.js`, `js/components/auth-modal.js` |
+| A2 | 🔴 `orders.js` con ID DOM inesistenti (`loadingOrders`, `loginRequired`, `noOrders`, `ordersList`) → crash immediato | Allineati a `ordersLoading/ordersNeedLogin/ordersEmpty/ordersContent` | `js/pages/orders.js` |
+| A3 | 🟠 Filtro "Di Stagione" senza case nello switch + uso di `window.event` deprecato | Aggiunto case `seasonal` (server-side `is_seasonal`), evento passato esplicitamente | `js/pages/collection.js`, `js/services/products.js` |
+| A4 | 🟠 `MAX_CART_QUANTITY` ignorato per utenti loggati (update diretto senza clamp) | Clamp `Math.min(MAX_QTY, quantity)` | `js/services/cart.js` |
+| A5 | 🟡 Cambio filtro durante il caricamento perso per sempre (`if (this.isLoading) return`) | Flag `_pendingReload` con ri-esecuzione in `finally` | `js/pages/collection.js` |
+| A6 | 🟡 Risposte di ricerca out-of-order sovrascrivono i risultati più recenti | Contatore `_searchSeq` anti race-condition | `js/components/global-search.js` |
+| A7 | 🟡 `navigateToProduct` senza `encodeURIComponent` e senza fallback per prodotti senza slug | Encoding + fallback `?id=` | `js/components/global-search.js` |
+| A8 | 🟡 Errori silenziosi: `getAllItems` scartava l'errore DB → checkout mostrava "carrello vuoto" su errore | Errore propagato + stato errore con bottone Ricarica | `js/services/cart.js`, `js/pages/checkout.js`, `js/components/cart-drawer.js` |
+
+### Sicurezza (XSS)
+| # | Punto | Fix |
+|---|-------|-----|
+| S1 | `quick-view.js`: immagini/taglie/colori non escapati in innerHTML | `sanitizeString` su tutti i valori interpolati |
+| S2 | `promos.js`: nomi prodotto, codici promo, `onclick` inline con ID grezzo | Escaping + handler delegati `data-add-id` |
+| S3 | `dynamic-menu.js`: nomi categorie DB non escapati | `sanitizeString` |
+| S4 | `auth-modal.js`: codice primo ordine in innerHTML | Escape HTML manuale |
+| S5 | `checkout.js`: banner codice sconto non escapato | `sanitizeString` |
+| S6 | `wishlist.html`: `product_id` grezzo in onclick | `escapeHtml` |
+
+### Memory leak / performance
+- `profile-drawer.js`: interval auto-rotazione gift card mai cancellato → cleanup su chiusura modal (bottone ×, Escape, auto-stop se modal nascosto)
+- `profile-drawer.js`: overlay "Le mie Gift Card" accumulato ad ogni click → rimozione overlay precedente
+- `index.html`: rimosso Google Font Playfair Display scaricato ma mai usato
+- `collection.html`: prime 4 immagini con `loading="eager"` (prima lazy + fetchpriority=high contraddittori)
+
+### CSS / Estetica
+| # | Problema | Fix |
+|---|----------|-----|
+| C1 | 🔴 `.btn-primary` definito 3 volte con stili conflittuali: l'ultimo (arancio pill, nato per l'hero che però usa `.btn-primary-dark`) sovrascriveva TUTTI i pulsanti primari del sito | Consolidati in un'unica definizione verde gradiente coerente col brand + `:focus-visible` |
+| C2 | Contrasti WCAG fail nel footer (0.4/0.5/0.35 alpha) e hint giftcard `#888` | Alpha aumentati a 0.62/0.68/0.55, hint a `var(--text-muted)` |
+| C3 | "Close" in inglese al posto di "Chiudi" su 8 pagine | Uniformato a "Chiudi" |
+| C4 | Critical CSS inline di index sovrascriveva le righe mobile della griglia categorie (`repeat(4,1fr)` vs `minmax(220px,auto)`) | Rimosso il blocco conflittuale |
+| C5 | `reset-password.html`: variabili CSS inesistenti `--color-primary/--color-accent` | Sostituite con `--text-color/--primary` |
+| C6 | `checkout-cancel.html`: contrasto `#888` | `var(--text-muted)` |
+
+### SEO / PWA / Accessibilità
+- `sw.js` + `notifications.js`: icone push puntavano a `/Images/icons/*` inesistenti → `/Images/favicon-192x192.png` e `/Images/favicon-32x32.png`
+- `site.webmanifest`: aggiunta icona 512×512 (generata) + variante `maskable` per installabilità PWA
+- Manifest ora iniettato su tutte le pagine via `config.js` (prima solo homepage)
+- Pagine legali: aggiunti `og:image` + `twitter:card` + Google Fonts (Inter/DM Serif Display dichiarate in legal.css ma mai caricate)
+- Copyright "© 2025" statico su 10 pagine → anno dinamico (`data-current-year` + legal-navigation)
+- Menu hamburger: `div` cliccabile → `<button>` con `aria-expanded`/`aria-controls` su 9 pagine, con reset CSS
+- `aria-label` su bottoni icona: toggle vista griglia/elenco (+`aria-pressed`), chiusura quick-view, chiusura modale ordini, cuori wishlist, input codice sconto/gift card
+- Form contatti: label associate con `for`/`id` su tutti i campi
+- `product.html`: alt in inglese → italiano dinamico col nome prodotto + dimensioni intrinseche
+- `settings.html`: theme-color allineato a `#f8fdf5`
+- `promos.js`: selettori sezioni null-safe in `switchTab`
+
+### Edge Functions
+| # | Bug | Fix |
+|---|-----|-----|
+| E1 | 🟠 `handle-signup`: incremento `total_referrals` read-modify-write → lost update su signup concorrenti | Nuova RPC atomica `increment_referral_count(UUID)` (migration `20260824000000`) con grant a `service_role` |
+| E2 | 🔴 `setup-wallet-class`: nessun controllo admin — qualsiasi utente autenticato poteva alterare la classe Google Wallet condivisa | Verifica ruolo admin (pattern delle altre funzioni) + solo POST + fix type error `error.message` |
+| E3 | 🟠 `delete-account`: errori dei 13 step ignorati → utente eliminato con PII residue e risposta success | Ogni step verificato; abort PRIMA di `deleteUser` se la pulizia fallisce |
+| E4 | 🟡 `complete-order-purchase`: email conferma inviata a ogni chiamata anche se l'ordine esisteva già (webhook) | Email inviata solo quando `result.created === true` |
+
+### Verifica
+- 115/115 test unitari/property/integration superati
+- `deno check` OK su handle-signup e setup-wallet-class
+- Tutti i file JS modificati validati con `node --check`
+- 17/17 pagine HTTP 200 su server locale, zero errori JS runtime in headless Chrome, zero 404 su risorse locali
+
+---
+
+## 12. TERZA TORNATA — FLUSSI, UX, ADMIN, SERVICE LAYER (Agosto 2026)
+
+Analisi approfondita con 6 agenti paralleli: flussi di navigazione, flussi transazionali, auth/account, admin+gestionale, service layer, UX mobile. Fix applicati:
+
+### 🔴 Funnel di conversione (critici)
+| # | Bug | Fix |
+|---|-----|-----|
+| F1 | Login dal checkout: pagina congelata su "Devi effettuare il login", carrello guest MAI mergiato (perdita carrello nel momento di massima intenzione d'acquisto) | `onAuthStateChange` su SIGNED_IN → merge carrello+wishlist → reload; `openAuthModal` con `onSuccess` che mergea e ricarica |
+| F2 | Scoping promo calcolato su colonne INESISTENTI (`applicable_categories/products`): il client mostrava lo sconto sull'intero carrello, il server lo ristringe → totale mostrato ≠ totale addebitato | `_getApplicableItems` riscritto su `applies_to`/`applies_to_ids` (schema reale), replica della logica server; `categoryId` aggiunto agli item carrello; `ensureCategoryIds` per carrello guest |
+| F3 | `min_purchase` non validato in UI: "✓ Sconto applicato!" anche con sconto azzerato; errore emergeva solo su Stripe dopo compilazione indirizzo | `validatePromotion()` con errori allineati al server in checkout e drawer |
+| F4 | Drawer: sconto stantio dopo modifica quantità → totale anche NEGATIVO | Ricalcolo sconto in ogni `updateCart` + clamp `Math.max(0, …)` |
+| F5 | Prodotto/categoria inesistenti → render di prodotti MOCK "acquistabili" (fallimento solo su Stripe) | Con Supabase configurato: stato "Prodotto non disponibile" con CTA al catalogo; mock solo senza backend |
+| F6 | Parametro `?category=` generato da mega-menu e ricerca ma IGNORATO dalla query: clic su "Agrumi" mostrava tutta la frutta | Risoluzione slug→category_id + filtro applicato + select sincronizzata |
+
+### 🟠 Flussi e auth
+- **Quick-add in collection**: segnava successo (animazione verde) anche su errore stock → ora mostra errore
+- **checkout-success senza sessione**: dead-end di una frase → conferma base + bottone Accedi + link ordini
+- **`settings.html?tab=giftcards`**: link morto (sezione inesistente) → apre direttamente il drawer profilo sulla vista Gift Card
+- **Race promo vs click su Paga**: bottone disabilitato finché i codici salvati non sono risolti
+- **Banner primo ordine**: assumeva sempre "%" — ora usa `discount_type` reale
+- **Doppio init authModal** su `collection.html?ref=` (doppio submit, rate-limit consumato 2×) → guardia `_initialized`
+- **Reset password**: nessun pre-check sessione + errori inglesi raw → pre-check con messaggio "link scaduto" + mappatura errori italiani
+- **Sessione scaduta durante pagamento**: alert generico → rilevamento 401 con ri-login e reload
+- **Referral**: logout puliva sessionStorage invece di localStorage (codice mai rimosso) + nessuna scadenza → storage unificato con TTL 30 giorni
+- **Race creazione codice referral** (23505): ora re-select invece di "Non disponibile"
+- **Contatore "Ordini" nel drawer profilo**: sempre 0 → query count reale (payment_status='completed')
+
+### 🛠 Admin panel (15 fix)
+- **Perdita silenziosa varianti inventario peso** (unique violation su insert multi-riga, solo console.error): dedup per weight_grams + errori propagati all'utente
+- **Inventario svuotato** non cancellava le righe DB → save sempre chiamato
+- **Stati `partially_refunded`/`disputed`** sconosciuti (display errato, rischio sovrascrittura stati webhook) → aggiunti a colori, select e filtri
+- **"Rimborsato" senza refund reale** → rinominato "(contabilità)" + confirm() per stati distruttivi
+- **Analytics revenue** conteggiava dispute/parziali come fatturato pieno → esclusi
+- **Listener Ordini accumulati** ad ogni visita sezione (sort invertito) → bind una sola volta
+- **Gift card esaurita mostrava credito pieno** (`0 || amount`) → nullish coalescing
+- **Ricerca gift card** rompeva il filtro PostgREST con virgole/parentesi → sanitizzazione
+- **Etichette legacy "Unisex"** nei preview sconti → gender reali del sito
+- **6 punti XSS attributo** senza attrEsc (variant_name, URL immagini, nomi categorie, title ordini)
+- **Unità 'g'**: header "(g)" ma etichette riga "Kg" (errori ×1000) → pipeline unificata in grammi
+- **Filtro pagamenti senza Klarna** → aggiunto
+- **Schema drift**: `is_seasonal/is_new/page_type/search_keywords` usate ma senza migration → migration con ADD COLUMN IF NOT EXISTS
+
+### 🌱 Gestionale (CaricoFacile)
+- **Bypass compliance alimentare**: `publish_draft` pubblicava conserve/secchi-estratti ATTIVI senza info alimentari (aggirando il blocco Reg. UE 1169/2011 del CMS) → migration: forzati `food_information_required=true` e `is_active=false` fino a verifica admin
+
+### 📱 UX mobile e consistenza
+- **Tap target**: quick-add 30px, cuore 36px, qty-btn 28-36px → aree tocco ≥44px
+- **Toast sovrapposti**: cart-toast (z 1200) sotto il banner notifiche (z 9999) → feedback d'acquisto invisibile → z-index 10001
+- **Sticky hover su touch**: transform "incollati" dopo il tap → reset con `@media (hover:none)`
+- **Zoom iOS**: campi auth/checkout < 16px tra 601-768px → font-size 16px
+- **Autocomplete/inputmode**: form checkout e contatti senza attributi (CAP su tastiera QWERTY) → autocomplete standard + inputmode numeric + pattern CAP
+- **Inter 700**: faux-bold su 9 pagine → peso aggiunto alle URL fonts
+- **Menu settings**: mancavano Conserve e Secchi/Estratti (con sottocategorie dinamiche) → struttura completa
+- **Logo invisibile con menu aperto** su product/settings (logo verde su nav verde scuro) → dual-logo
+- **Breadcrumb prodotto**: aggiunto Home / Categoria / Nome
+- **checkout-cancel**: countdown non fermabile → bottone "Annulla reindirizzamento" + link home
+- **Banner notifiche dark-mode isolato** (sito è light-only) → rimosso
+- **theme-color legali** allineato all'header crema
+
+### 🔧 Service layer
+- `firebase-notifications`: `onTokenRefresh` assegnato come proprietà (no-op, API rimossa in Firebase v9+) → rimosso, rotazione gestita da getToken
+- `presence.js`: listener visibilitychange mai rimosso da stopTracking + ping dopo stop → named handler + gate isTracking
+- `supabase.js`: import CDN non pinnato (`@2` = breaking change a distanza, SPOF) → pinnato a 2.111.0 (versione testata)
+- `giftcard.getUserCredits`: errore DB indistinguibile da "credito 0" → campo error propagato
+- Arrotondamento prezzi a peso allineato al server (centesimi per riga) → totale mostrato = totale addebitato
+- `quick-view`/`promos.js` (moduli non attivi): item carrello senza `weight_grams: null` (righe duplicate nel guest cart) e chiave `id` invece di `productId` → corretti
+- Email gift card: aggiunto link diretto a redeem.html (prima raggiungibile solo scannerizzando il QR)
+- `submit-to-courier`: non sovrascrive più `orders.notes` (append)
+
+### ✅ Verifica
+- 115/115 test · `node --check` su tutti i JS · migration SQL validate su Postgres 16 (transazione con rollback)
+- 15/15 pagine pulite in headless Chrome (zero errori runtime)
+- Layout mobile 390px verificato via CDP (nessun overflow, media query applicate)

@@ -14,6 +14,9 @@ class GlobalSearch {
         this.isOpen = false;
         this.selectedIndex = -1;
         this.results = [];
+        // Monotonic counter to discard stale responses that arrive
+        // after a newer search has already been issued.
+        this._searchSeq = 0;
     }
 
     /**
@@ -284,6 +287,8 @@ class GlobalSearch {
             return;
         }
 
+        const seq = ++this._searchSeq;
+
         try {
             const lowerQuery = query.toLowerCase();
             
@@ -353,6 +358,7 @@ class GlobalSearch {
             }
 
             this.selectedIndex = -1;
+            if (seq !== this._searchSeq) return; // A newer search superseded this one
             this.renderResults(query);
         } catch (err) {
             console.error('Search error:', err);
@@ -558,7 +564,10 @@ class GlobalSearch {
      */
     navigateToProduct(product) {
         this.close();
-        window.location.href = `product.html?slug=${product.slug}`;
+        const target = product.slug
+            ? `product.html?slug=${encodeURIComponent(product.slug)}`
+            : `product.html?id=${encodeURIComponent(product.id)}`;
+        window.location.href = target;
     }
 
     /**

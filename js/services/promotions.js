@@ -81,6 +81,10 @@ class PromotionService {
 
   /**
    * Apply promotion to cart items
+   * Mirrors the server-side scoping in create-checkout-session: the schema
+   * exposes `applies_to` ('all'|'category'|'product') + `applies_to_ids`,
+   * NOT applicable_categories/applicable_products (columns that never existed
+   * and silently made every promo apply to the whole cart client-side).
    */
   applyPromotion(cartItems, promotion) {
     if (!promotion || !cartItems?.length) {
@@ -97,12 +101,22 @@ class PromotionService {
       discount = Math.min(promotion.discount_value, applicableTotal);
     }
 
-    // Apply minimum purchase requirement
-    if (promotion.min_purchase && applicableTotal < promotion.min_purchase) {
-      return { 
-        items: cartItems, 
-        discount: 0, 
-        error: `Acquisto minimo di €${promotion.min_purchase.toFixed(2)} richiesto` 
+    // Apply minimum purchase requirement (server checks it against the FULL
+    // cart subtotal, see create-checkout-session)
+    const cartSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    if (promotion.min_purchase && cartSubtotal < promotion.min_purchase) {
+      return {
+        items: cartItems,
+        discount: 0,
+        error: `Acquisto minimo di €${Number(promotion.min_purchase).toFixed(2)} richiesto`
+      };
+    }
+
+    if (applicableTotal <= 0) {
+      return {
+        items: cartItems,
+        discount: 0,
+        error: 'Codice promozionale non applicabile a questi prodotti'
       };
     }
 
@@ -111,15 +125,15 @@ class PromotionService {
       discount = promotion.max_discount;
     }
 
-    return { 
-      items: cartItems, 
+    return {
+      items: cartItems,
       discount: Math.round(discount * 100) / 100,
-      promotion 
+      promotion
     };
   }
 
   /**
-   * Calculate discount for cart
+   * Calculate discount for cart (returns the numeric discount only)
    */
   calculateDiscount(cartItems, promotion) {
     const { discount } = this.applyPromotion(cartItems, promotion);
@@ -127,22 +141,60 @@ class PromotionService {
   }
 
   /**
-   * Get items applicable to promotion
+   * Validate a promotion against the cart and return discount + error.
+   * Use this in UIs instead of calculateDiscount when the error matters
+   * (min_purchase not met, code not applicable to these products...).
+   */
+  validatePromotion(cartItems, promotion) {
+    const result = this.applyPromotion(cartItems, promotion);
+    return { discount: result.discount || 0, error: result.error || null };
+  }
+
+  /**
+   * Ensure cart items carry `categoryId` so category-scoped promos can be
+   * previewed correctly. Items coming from the DB already have it via the
+   * products join; guest (localStorage) items need a lookup.
+   */
+  async ensureCategoryIds(cartItems) {
+    if (!isSupabaseConfigured() || !cartItems?.length) return cartItems;
+
+    const missing = cartItems.filter(item => !item.categoryId && item.productId);
+    if (missing.length === 0) return cartItems;
+
+    const ids = [...new Set(missing.map(item => item.productId))];
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('id, category_id')
+        .in('id', ids);
+      const map = new Map((data || []).map(p => [p.id, p.category_id]));
+      cartItems.forEach(item => {
+        if (!item.categoryId) item.categoryId = map.get(item.productId) ?? null;
+      });
+    } catch (err) {
+      console.error('ensureCategoryIds error:', err);
+    }
+    return cartItems;
+  }
+
+  /**
+   * Get items applicable to promotion (schema-aligned scoping)
    */
   _getApplicableItems(cartItems, promotion) {
-    if (!promotion.applicable_categories?.length && !promotion.applicable_products?.length) {
-      return cartItems; // Applies to all items
+    const appliesToIds = Array.isArray(promotion.applies_to_ids) ? promotion.applies_to_ids : [];
+
+    if (promotion.applies_to === 'product' && appliesToIds.length > 0) {
+      return cartItems.filter(item => appliesToIds.includes(item.productId));
     }
 
-    return cartItems.filter(item => {
-      if (promotion.applicable_products?.includes(item.productId)) {
-        return true;
-      }
-      if (promotion.applicable_categories?.includes(item.categoryId)) {
-        return true;
-      }
-      return false;
-    });
+    if (promotion.applies_to === 'category' && appliesToIds.length > 0) {
+      return cartItems.filter(item =>
+        item.categoryId && appliesToIds.includes(item.categoryId)
+      );
+    }
+
+    // 'all' (or unknown/legacy shape without ids) applies to everything
+    return cartItems;
   }
 
   /**

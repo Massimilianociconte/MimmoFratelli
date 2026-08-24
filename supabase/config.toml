@@ -6,3 +6,9 @@ verify_jwt = false
 # Invoked by pg_cron/pg_net with a shared-secret header instead of a user JWT.
 [functions.reconcile-stripe-checkouts]
 verify_jwt = false
+
+# Post-signup processing: called by the client with the anon key when email
+# confirmation is enabled (no user session exists yet), so gateway JWT
+# verification must stay off. Identity is verified inside the function.
+[functions.handle-signup]
+verify_jwt = false

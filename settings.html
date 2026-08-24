@@ -10,10 +10,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="Images/apple-touch-icon.png">
     <link rel="shortcut icon" href="favicon.ico">
-    <meta name="theme-color" content="#fafcf8">
+    <meta name="theme-color" content="#f8fdf5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         .settings-loading { text-align: center; padding: 2rem; color: #666; }
@@ -68,11 +68,15 @@
         .referral-stat { text-align: center; }
         .referral-stat .stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #166534; }
         .referral-stat .stat-label { font-size: 0.8rem; color: #64748b; }
+        .logo-img-white { display: none; }
+        .logo-img-green { display: block; }
     </style>
 </head>
 <body>
     <nav style="color: var(--text-color); mix-blend-mode: normal; background: rgba(250, 252, 248, 0.95); backdrop-filter: blur(10px); position: fixed; z-index: 1000;">
-        <div class="logo"><a href="index.html#categorie"><img src="Images/logo_mimmofratelli_verde.png" alt="Mimmo Fratelli" class="logo-img"></a></div>
+        <div class="logo"><a href="index.html#categorie"><img src="Images/logo_mimmo_fratelli.png" alt="Mimmo Fratelli"
+                    class="logo-img logo-img-white"><img src="Images/logo_mimmofratelli_verde.png" alt="Mimmo Fratelli"
+                    class="logo-img logo-img-green"></a></div>
         <div class="nav-actions">
             <button class="nav-icon-btn" id="authBtn" title="Account" style="cursor: pointer; pointer-events: auto;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -93,7 +97,7 @@
                 </svg>
                 <span class="badge" id="cartBadge" style="display:none;">0</span>
             </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <button type="button" class="menu-btn" onclick="toggleMenu()" aria-expanded="false" aria-controls="menuOverlay">Menu</button>
         </div>
     </nav>
 
@@ -101,8 +105,23 @@
         <div class="menu-content">
             <ul class="menu-links">
                 <li><a href="index.html">🏠 Home</a></li>
-                <li><a href="collection.html?gender=frutta">🍎 Frutta</a></li>
-                <li><a href="collection.html?gender=verdura">🥬 Verdura</a></li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=frutta" class="menu-category-title">🍎 Frutta</a>
+                    <ul class="menu-subcategories" data-gender="frutta"></ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=verdura" class="menu-category-title">🥬 Verdura</a>
+                    <ul class="menu-subcategories" data-gender="verdura"></ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=conserve" class="menu-category-title">🫙 Conserve e Preparati</a>
+                    <ul class="menu-subcategories" data-gender="conserve"></ul>
+                </li>
+                <li class="menu-category">
+                    <a href="collection.html?gender=secchi-estratti" class="menu-category-title">🫒 Prodotti Secchi e
+                        Estratti</a>
+                    <ul class="menu-subcategories" data-gender="secchi-estratti"></ul>
+                </li>
                 <li><a href="promos.html">🏷️ Offerte</a></li>
                 <li><a href="about.html">ℹ️ Chi Siamo</a></li>
                 <li><a href="contacts.html">📞 Contatti</a></li>
@@ -366,7 +385,7 @@
                 <a href="termini-servizio.html">Termini di Servizio</a>
                 <a href="trasparenza-ai.html">Trasparenza AI</a>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">
@@ -393,6 +412,7 @@
         import { referralService } from './js/services/referral.js?v=3';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
+        import './js/components/dynamic-menu.js';
 
         // Initialize notification center
         notificationCenter.init();
@@ -431,8 +451,26 @@
             
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
-            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.textContent = isOpen ? 'Menu' : 'Chiudi';
+            menuBtn.setAttribute('aria-expanded', String(isOpen));
+            if (isOpen) {
+                document.querySelectorAll('.menu-category').forEach(cat => cat.classList.remove('open'));
+            }
         };
+
+        // Menu category toggle (Mobile)
+        document.querySelectorAll('.menu-category-title').forEach(title => {
+            title.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const category = title.closest('.menu-category');
+                    document.querySelectorAll('.menu-category').forEach(cat => {
+                        if (cat !== category) cat.classList.remove('open');
+                    });
+                    category.classList.toggle('open');
+                }
+            });
+        });
 
         function showMessage(elementId, message, type = 'success') {
             const el = document.getElementById(elementId);

@@ -324,7 +324,7 @@ class CartService {
       if (existing) {
         const { error } = await supabase
           .from('cart_items')
-          .update({ quantity })
+          .update({ quantity: Math.min(MAX_QTY, quantity) })
           .eq('id', existing.id);
         
         if (error) {
@@ -344,15 +344,25 @@ class CartService {
   async getAllItems() {
     const user = await getCurrentUser();
     if (user) {
-      const { items } = await this.getCart(user.id);
+      const { items, error } = await this.getCart(user.id);
+      if (error) {
+        console.error('GetAllItems error:', error);
+        // Throw so callers can distinguish "empty cart" from a DB failure
+        throw new Error(error);
+      }
       return items
         .filter(item => item.products?.is_active !== false)
         .map(item => {
-        // Calculate price based on weight if applicable
-        const basePrice = item.products?.sale_price || item.products?.price || 0;
+        // Calculate price based on weight if applicable.
+        // Round in cents per line exactly like the server does
+        // (toCents(basePrice * weightGrams / 1000)) so the displayed total
+        // always matches the amount charged on Stripe.
+        const basePrice = Number(item.products?.sale_price || item.products?.price || 0);
         const weightGrams = item.weight_grams;
-        const price = weightGrams ? (basePrice * weightGrams) / 1000 : basePrice;
-        
+        const price = weightGrams
+          ? Math.round((basePrice * weightGrams) / 10) / 100
+          : basePrice;
+
         return {
           productId: item.product_id,
           name: item.products?.name || 'Prodotto',
@@ -362,7 +372,8 @@ class CartService {
           size: item.size,
           color: item.color,
           quantity: item.quantity,
-          weight_grams: weightGrams
+          weight_grams: weightGrams,
+          categoryId: item.products?.category_id ?? null
         };
       });
     } else {

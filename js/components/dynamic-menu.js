@@ -7,6 +7,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from '../supabase.js';
+import { sanitizeString } from '../utils/validation.js';
 
 // Category icon mapping (must match CMS getCategoryIcon)
 const CATEGORY_ICONS = {
@@ -129,7 +130,8 @@ async function populateMenuCategories() {
         ul.style.display = '';
         ul.innerHTML = categories.map(cat => {
             const icon = getCategoryIcon(cat.slug);
-            return `<li><a href="collection.html?gender=${encodeURIComponent(gender)}&category=${encodeURIComponent(cat.slug)}">${icon} ${cat.name}</a></li>`;
+            const safeName = sanitizeString(cat.name || '');
+            return `<li><a href="collection.html?gender=${encodeURIComponent(gender)}&category=${encodeURIComponent(cat.slug)}">${icon} ${safeName}</a></li>`;
         }).join('');
     });
 }

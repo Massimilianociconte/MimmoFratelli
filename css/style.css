@@ -363,6 +363,13 @@ body.menu-open nav .logo-img-green {
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     transition: background 0.2s var(--ease);
+    /* Native <button> reset so the semantic menu toggle renders identically
+       to the previous div-based markup */
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
 }
 
 .menu-btn:hover {
@@ -854,7 +861,7 @@ body.menu-open {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.68);
     margin-bottom: 1rem;
     font-family: var(--font-sans);
 }
@@ -889,14 +896,14 @@ body.menu-open {
 
 .footer-copy {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.62);
     font-family: var(--font-sans);
 }
 
 /* Identità legale (D.Lgs 70/2003) */
 .footer-legal-id {
     font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.55);
     font-family: var(--font-sans);
     max-width: 640px;
     margin: 6px auto 0;
@@ -4218,7 +4225,7 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
 
 .giftcard-hint {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -4587,20 +4594,44 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     color: #fff;
 }
 
+/* Single source of truth for .btn-primary — previously defined 3 times with
+   conflicting styles (green flat / green gradient / orange pill), the last one
+   silently overriding every primary button site-wide. */
 .btn-primary {
-    padding: 0.875rem 1.5rem;
-    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.75rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #fff;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-radius: 8px;
-    transition: all 0.2s var(--ease);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(61, 124, 71, 0.25);
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #24501f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(61, 124, 71, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:focus-visible {
+    outline: 2px solid var(--primary-dark);
+    outline-offset: 2px;
 }
 
 .checkout-totals {
@@ -5692,7 +5723,7 @@ nav.nav-on-green.scrolled .nav-icon-btn:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     opacity: 0;
     pointer-events: none;
-    z-index: 1200;
+    z-index: 10001;
     max-width: min(92vw, 420px);
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -6737,21 +6768,6 @@ img {
     border: none;
     position: relative;
     overflow: hidden;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(61, 124, 71, 0.25);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(61, 124, 71, 0.35);
-}
-
-.btn-primary:active {
-    transform: translateY(0);
 }
 
 .btn-secondary {
@@ -8100,35 +8116,6 @@ img {
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
-}
-
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-    color: #fff;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 50px;
-    transition: all 0.4s var(--ease);
-    box-shadow: 0 4px 20px rgba(232, 114, 42, 0.4);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(232, 114, 42, 0.5);
-}
-
-.btn-primary svg {
-    transition: transform 0.3s var(--ease);
-}
-
-.btn-primary:hover svg {
-    transform: translateX(4px);
 }
 
 .btn-primary-dark {
@@ -10185,5 +10172,33 @@ body.search-open {
     .seasonal-badge {
         font-size: 9px;
         padding: 3px 8px;
+    }
+}
+
+/* Prevent iOS Safari zoom-on-focus (requires >=16px) */
+@media (max-width: 768px) {
+    .auth-form input,
+    .shipping-form input,
+    .shipping-form select {
+        font-size: 16px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .product-card-small:hover,
+    .filter-btn:hover,
+    .nav-icon-btn:hover,
+    .menu-btn:hover,
+    .gender-pill:hover,
+    .gender-sub-pill:hover {
+        transform: none;
+    }
+    .btn-explore,
+    .split-icon,
+    .split-desc {
+        opacity: 1;
+    }
+    .split:hover {
+        transform: none;
     }
 }

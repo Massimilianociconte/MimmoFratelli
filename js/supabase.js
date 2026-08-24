@@ -6,7 +6,7 @@
  * for use throughout the application.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.111.0';
 
 // Environment configuration
 // In production, these should be set via environment variables or a config file

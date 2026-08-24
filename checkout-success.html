@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#f8fdf5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* Premium Checkout Success Page */
@@ -465,6 +465,22 @@
         import { supabase, getCurrentUser } from './js/supabase.js';
         import { notificationCenter } from './js/components/notification-center.js';
         import { globalSearch } from './js/components/global-search.js';
+
+        // Login helper for the post-payment dead-end states
+        window.openAuthModal = async function() {
+            const { authModal } = await import('./js/components/auth-modal.js');
+            authModal.show('login', { redirectUrl: 'checkout-success.html' });
+        };
+
+        // Gift cards live in the profile drawer, not in settings.html (which has
+        // no gift card section): open the drawer directly on that view
+        window.openMyGiftCards = async function() {
+            const { profileDrawer } = await import('./js/components/profile-drawer.js');
+            await profileDrawer.show();
+            if (typeof profileDrawer._showMyGiftCards === 'function') {
+                profileDrawer._showMyGiftCards();
+            }
+        };
         
         // Initialize notification center
         notificationCenter.init();
@@ -511,7 +527,18 @@
             
             const user = await getCurrentUser();
             if (!user) {
-                document.getElementById('loadingOrder').innerHTML = '<p>Effettua il login per vedere i dettagli</p>';
+                // Session expired/absent: show the base confirmation instead of
+                // a dead-end sentence with no action
+                document.getElementById('loadingOrder').innerHTML = `
+                    <div style="text-align:center; padding: 1rem 0;">
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Ordine confermato!</p>
+                        <p style="color: #5a6b5a; margin-bottom: 1.5rem;">Accedi per visualizzare i dettagli e tracciare la spedizione.</p>
+                        <div style="display:flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-primary" onclick="openAuthModal()">Accedi</button>
+                            <a href="orders.html" class="btn btn-secondary">I miei ordini</a>
+                        </div>
+                    </div>
+                `;
                 return;
             }
             
@@ -600,7 +627,15 @@
             
             const user = await getCurrentUser();
             if (!user) {
-                document.getElementById('loadingOrder').innerHTML = '<p>Effettua il login per vedere i dettagli</p>';
+                document.getElementById('loadingOrder').innerHTML = `
+                    <div style="text-align:center; padding: 1rem 0;">
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Pagamento ricevuto!</p>
+                        <p style="color: #5a6b5a; margin-bottom: 1.5rem;">Accedi per visualizzare la tua Gift Card e il QR code.</p>
+                        <div style="display:flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-primary" onclick="openAuthModal()">Accedi</button>
+                        </div>
+                    </div>
+                `;
                 return;
             }
             
@@ -678,7 +713,7 @@
                 document.getElementById('orderContent').style.display = 'block';
                 document.getElementById('orderDetails').style.display = 'none';
                 document.querySelector('.action-buttons').innerHTML = `
-                    <a href="settings.html?tab=giftcards" class="btn btn-primary">Le mie Gift Card</a>
+                    <button type="button" class="btn btn-primary" onclick="openMyGiftCards()">Le mie Gift Card</button>
                     <a href="collection.html" class="btn-secondary-link">Continua lo shopping →</a>
                 `;
             }

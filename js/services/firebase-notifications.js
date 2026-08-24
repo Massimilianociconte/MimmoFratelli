@@ -105,24 +105,10 @@ class FirebaseNotificationService {
         this.showForegroundNotification(payload);
       });
 
-      // Handle token refresh
-      this.messaging.onTokenRefresh = async () => {
-        console.log('[FCM] Token refreshed');
-        try {
-          const config = getFirebaseConfig();
-          const newToken = await this.messaging.getToken({ vapidKey: config.vapidKey });
-          if (newToken && newToken !== this.currentToken) {
-            // Remove old token
-            if (this.currentToken) {
-              await this.removeTokenFromDatabase();
-            }
-            this.currentToken = newToken;
-            await this.saveTokenToDatabase(newToken);
-          }
-        } catch (err) {
-          console.error('[FCM] Token refresh error:', err);
-        }
-      };
+      // NOTE: legacy `onTokenRefresh` was removed from Firebase v9+ (the old
+      // property assignment here was a silent no-op). Token rotation is handled
+      // by getToken() below: every subscription flow compares the fresh token
+      // with the stored one and replaces it when it differs.
 
       return true;
     } catch (error) {

@@ -67,6 +67,10 @@ class CartDrawer {
       const total = await cartService.getTotal();
       const count = await cartService.getCount();
 
+      // Recompute the discount against the current items so quantity changes
+      // and removals never leave a stale discount behind
+      await this._recalcDiscount(items);
+
       this._renderItems(items);
       this._updateTotal(total);
       this._updateBadges(count);
@@ -237,7 +241,7 @@ class CartDrawer {
     const codeInput = document.getElementById('cartPromoCode');
     const code = codeInput.value.trim().toUpperCase();
     const messageEl = document.getElementById('cartPromoMessage');
-    
+
     if (!code) {
       this.showPromoMessage(messageEl, 'Inserisci un codice', 'error');
       return;
@@ -245,50 +249,73 @@ class CartDrawer {
 
     // Check if it's a first-order code
     const user = await getCurrentUser();
+    let candidate = null;
     if (user) {
       const { valid, error: firstOrderError, promotion } = await promotionService.isFirstOrderCodeValid(user.id, code);
-      
+
       if (valid && promotion) {
-        this.appliedPromo = promotion;
-        await this.updateCartWithDiscount();
-        const discountText = promotion.discount_type === 'percentage' 
-          ? `${promotion.discount_value}%` 
-          : `€${promotion.discount_value.toFixed(2)}`;
-        this.showPromoMessage(messageEl, `✓ Sconto ${discountText} applicato!`, 'success');
-        codeInput.disabled = true;
-        return;
-      }
-      
-      if (firstOrderError && firstOrderError !== 'Codice non valido') {
+        candidate = promotion;
+      } else if (firstOrderError && firstOrderError !== 'Codice non valido') {
         this.showPromoMessage(messageEl, firstOrderError, 'error');
         return;
       }
     }
 
     // Try as regular promo code
-    const { promotion, error } = await promotionService.getPromotionByCode(code);
-    if (error) {
-      this.showPromoMessage(messageEl, error, 'error');
+    if (!candidate) {
+      const { promotion, error } = await promotionService.getPromotionByCode(code);
+      if (error) {
+        this.showPromoMessage(messageEl, error, 'error');
+        return;
+      }
+      candidate = promotion;
+    }
+
+    // Validate against the cart (scoping + min_purchase) before confirming:
+    // the server rejects these at payment time, surface the same errors now
+    const items = await cartService.getAllItems();
+    await promotionService.ensureCategoryIds(items);
+    const { discount, error: validationError } = promotionService.validatePromotion(items, candidate);
+    if (validationError) {
+      this.showPromoMessage(messageEl, validationError, 'error');
       return;
     }
 
-    this.appliedPromo = promotion;
+    this.appliedPromo = candidate;
     await this.updateCartWithDiscount();
-    const discountText = promotion.discount_type === 'percentage' 
-      ? `${promotion.discount_value}%` 
-      : `€${promotion.discount_value.toFixed(2)}`;
-    this.showPromoMessage(messageEl, `✓ Sconto ${discountText} applicato!`, 'success');
+    const discountText = candidate.discount_type === 'percentage'
+      ? `${candidate.discount_value}%`
+      : `€${Number(candidate.discount_value).toFixed(2)}`;
+    this.showPromoMessage(messageEl, `✓ Sconto di ${discountText} applicato! (−€${discount.toFixed(2)})`, 'success');
     codeInput.disabled = true;
   }
 
   async updateCartWithDiscount() {
-    const items = await cartService.getAllItems();
-    if (this.appliedPromo) {
-      this.discount = promotionService.calculateDiscount(items, this.appliedPromo);
-    } else {
-      this.discount = 0;
+    try {
+      const items = await cartService.getAllItems();
+      await this._recalcDiscount(items);
+      await this.updateCart();
+    } catch (err) {
+      console.error('Cart update with discount failed:', err);
+      const messageEl = document.getElementById('promoMessage');
+      if (messageEl) this.showPromoMessage(messageEl, 'Errore nel calcolo dello sconto. Riprova.', 'error');
     }
-    await this.updateCart();
+  }
+
+  /**
+   * Recompute the discount against the CURRENT cart contents so quantity
+   * changes and removals never leave a stale (or oversized) discount behind.
+   */
+  async _recalcDiscount(items) {
+    if (!this.appliedPromo) {
+      this.discount = 0;
+      return;
+    }
+    await promotionService.ensureCategoryIds(items);
+    const { discount, error } = promotionService.validatePromotion(items, this.appliedPromo);
+    // A promo that stops being valid (min_purchase no longer met, cart now
+    // empty of eligible items) is released instead of silently applied
+    this.discount = error ? 0 : discount;
   }
 
   showPromoMessage(element, message, type) {
@@ -400,19 +427,18 @@ class CartDrawer {
     const totalEl = document.getElementById('cartTotal');
     const discountRow = document.getElementById('cartDiscountRow');
     const discountEl = document.getElementById('cartDiscount');
-    
+
+    // Never display a negative total: the discount is capped at the cart value
+    const effectiveDiscount = Math.min(this.discount || 0, total);
+
     if (totalEl) {
-      if (this.discount > 0) {
-        totalEl.textContent = `€ ${(total - this.discount).toFixed(2)}`;
-      } else {
-        totalEl.textContent = `€ ${total.toFixed(2)}`;
-      }
+      totalEl.textContent = `€ ${Math.max(0, total - effectiveDiscount).toFixed(2)}`;
     }
-    
+
     if (discountRow && discountEl) {
-      if (this.discount > 0) {
+      if (effectiveDiscount > 0) {
         discountRow.style.display = 'flex';
-        discountEl.textContent = `-€ ${this.discount.toFixed(2)}`;
+        discountEl.textContent = `-€ ${effectiveDiscount.toFixed(2)}`;
       } else {
         discountRow.style.display = 'none';
       }

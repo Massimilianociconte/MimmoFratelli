@@ -72,7 +72,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/legal-navigation.css">
@@ -105,7 +105,7 @@
                 </svg>
                 <span class="badge" id="cartBadge" style="display:none;">0</span>
             </button>
-            <div class="menu-btn" onclick="toggleMenu()">Menu</div>
+            <button type="button" class="menu-btn" onclick="toggleMenu()" aria-expanded="false" aria-controls="menuOverlay">Menu</button>
         </div>
     </nav>
 
@@ -379,21 +379,21 @@
                 <form class="contact-form" id="contactForm">
                     <div class="form-row">
                         <div class="form-field">
-                            <label><span class="label-icon">👤</span> Nome</label>
-                            <input type="text" name="name" placeholder="Il tuo nome" required>
+                            <label for="contactName"><span class="label-icon">👤</span> Nome</label>
+                            <input type="text" id="contactName" name="name" placeholder="Il tuo nome" autocomplete="name" required>
                         </div>
                         <div class="form-field">
-                            <label><span class="label-icon">📧</span> Email</label>
-                            <input type="email" name="email" placeholder="La tua email" required>
+                            <label for="contactEmail"><span class="label-icon">📧</span> Email</label>
+                            <input type="email" id="contactEmail" name="email" placeholder="La tua email" autocomplete="email" required>
                         </div>
                     </div>
                     <div class="form-field">
-                        <label><span class="label-icon">📱</span> Telefono</label>
-                        <input type="tel" name="phone" placeholder="Il tuo numero (opzionale)">
+                        <label for="contactPhone"><span class="label-icon">📱</span> Telefono</label>
+                        <input type="tel" id="contactPhone" name="phone" placeholder="Il tuo numero (opzionale)" autocomplete="tel">
                     </div>
                     <div class="form-field">
-                        <label><span class="label-icon">📝</span> Oggetto</label>
-                        <select name="subject" required>
+                        <label for="contactSubject"><span class="label-icon">📝</span> Oggetto</label>
+                        <select id="contactSubject" name="subject" required>
                             <option value="">Seleziona un argomento</option>
                             <option value="info">Informazioni prodotti</option>
                             <option value="ordine">Ordine speciale</option>
@@ -402,8 +402,8 @@
                         </select>
                     </div>
                     <div class="form-field">
-                        <label><span class="label-icon">💬</span> Messaggio</label>
-                        <textarea name="message" placeholder="Scrivi il tuo messaggio..." rows="5" required></textarea>
+                        <label for="contactMessage"><span class="label-icon">💬</span> Messaggio</label>
+                        <textarea id="contactMessage" name="message" placeholder="Scrivi il tuo messaggio..." rows="5" required></textarea>
                     </div>
                     <button type="submit" class="form-submit">
                         <span class="btn-text">Invia Messaggio</span>
@@ -442,7 +442,7 @@
                     <span>Link</span>
                 </div>
             </div>
-            <p class="footer-copy">© 2025 Mimmo Fratelli. Tutti i diritti riservati.</p>
+            <p class="footer-copy">© <span data-current-year>2025</span> Mimmo Fratelli. Tutti i diritti riservati.</p>
             <p class="footer-legal-id">Mimmo Fratelli è il nome commerciale di ELHEFNAWI AHMED ABDELAZIZ ABOUKHALIL ABDELMOTY, impresa individuale · P. IVA 10580930963 · Via Marconi 38, 20091 Bresso (MI) · <a href="mailto:shop@mimmofratelli.com">shop@mimmofratelli.com</a></p>
             <div class="footer-credit">
                 <a href="https://www.webnovis.com" target="_blank" rel="noopener noreferrer nofollow" class="footer-credit-btn">
@@ -505,7 +505,8 @@
 
             menuOverlay.classList.toggle('active', !isOpen);
             document.body.classList.toggle('menu-open', !isOpen);
-            menuBtn.textContent = isOpen ? 'Menu' : 'Close';
+            menuBtn.textContent = isOpen ? 'Menu' : 'Chiudi';
+            menuBtn.setAttribute('aria-expanded', String(isOpen));
         };
 
         document.addEventListener('DOMContentLoaded', async () => {

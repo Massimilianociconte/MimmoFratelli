@@ -515,14 +515,6 @@ const styles = `
     padding-right: 44px;
   }
 }
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .notification-banner {
-    background: linear-gradient(135deg, #1a3009 0%, #2d5016 100%);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  }
-}
 `;
 
 // Inject styles

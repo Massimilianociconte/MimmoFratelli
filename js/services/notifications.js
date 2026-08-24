@@ -180,8 +180,8 @@ class NotificationService {
     
     await registration.showNotification(title, {
       body: options.body || '',
-      icon: options.icon || '/Images/icons/icon-192.png',
-      badge: '/Images/icons/badge-72.png',
+      icon: options.icon || '/Images/favicon-192x192.png',
+      badge: '/Images/favicon-32x32.png',
       image: options.image,
       tag: options.tag || 'local',
       renotify: true,
